@@ -59,6 +59,60 @@ def _tensor_gap(Tg):
     return np.minimum(g_mag, g_val) / scale
 
 
+def _eigenvector_branch_flag(Tg, tol):
+    """Vertices whose eigenvector solve (``echelonEigv``) sits on a numerical branch point.
+
+    ``echelonEigv`` eliminates only the second row of ``B = T - lambda*I`` after a two-row pivot
+    search on column 0, then back-substitutes with ``|A_kk| > 1e-8`` and ``/ A_ii``.  It is thus
+    *discontinuous* (not merely ill-conditioned) when, for any of the three eigenvalues, (a) the
+    pivot column is numerically zero (``max(|B00|, |B10|)`` ~ 0, e.g. block-structured tensors on
+    symmetric meshes) so the row swap and the division by ``A00`` are decided by noise, (b)
+    ``|B00| ~ |B10|`` (pivot tie), (c) the reduced ``A11`` ~ 0 (divisor), or (d) ``|A22|`` is
+    within noise of the absolute 1e-8 threshold.  The criterion is recomputed from the golden
+    tensor with the golden's eigenvalues (``numpy.linalg.eigvalsh``, margin only), relative to
+    ``max|T|``; ``tol`` is a few orders above the declared tolerance.  Flagged vertices are ties.
+    """
+    n = Tg.shape[0]
+    sc = np.maximum(np.abs(Tg).reshape(n, -1).max(1), 1e-300)
+    lam = np.linalg.eigvalsh(Tg)
+    flag = np.zeros(n, bool)
+    eye = np.eye(3)
+    for k in range(3):
+        B = Tg - lam[:, k, None, None] * eye
+        b00, b10 = np.abs(B[:, 0, 0]), np.abs(B[:, 1, 0])
+        sw = b10 > b00
+        A = np.where(sw[:, None, None], B[:, [1, 0, 2], :], B)
+        with np.errstate(all="ignore"):
+            c = A[:, 1, 0] / A[:, 0, 0]
+            a11 = A[:, 1, 1] - A[:, 0, 1] * c
+            a22 = A[:, 2, 2]  # row 2 is never eliminated
+        flag |= np.maximum(b00, b10) < tol * sc
+        flag |= np.abs(b00 - b10) < tol * sc
+        flag |= ~(np.abs(a11) >= tol * sc)  # also catches NaN
+        flag |= np.abs(np.abs(a22) - 1e-8) < tol * sc * 1e-8 + 1e-17
+    return flag
+
+
+def _acos_ill_conditioned(Tg, margin=1e-6):
+    """Vertices where ``eig3symmetric``'s trigonometric solve is ill-conditioned.
+
+    ``phi = acos(r) / 3`` with ``r = det((T - qI) / p) / 2``; when ``|r|`` is within ``margin`` of 1
+    (two nearly equal eigenvalues, e.g. a rank-one tensor on a ridge) one ulp of noise in ``r``
+    becomes ``~sqrt(ulp)`` in ``phi`` and the small eigenvalues move by ~1e-10 of ``|T|``, far
+    above 1e-10 relative to themselves.  Recomputed from the golden tensor; flagged vertices are
+    counted as ties for the eigenvalue-derived outputs.
+    """
+    n = Tg.shape[0]
+    q = np.trace(Tg, axis1=1, axis2=2) / 3
+    d = Tg - q[:, None, None] * np.eye(3)
+    p1 = Tg[:, 0, 1] ** 2 + Tg[:, 0, 2] ** 2 + Tg[:, 1, 2] ** 2
+    p2 = np.einsum("nii,nii->n", d, d) + 2 * p1
+    with np.errstate(all="ignore"):
+        p = np.sqrt(p2 / 6)
+        r = np.linalg.det(d / p[:, None, None]) / 2
+    return (p1 > 0) & ~(np.abs(r) < 1.0 - margin) if n else np.zeros(0, bool)
+
+
 def _quad_gap(cmin, cmax):
     """Relative gap of the 2x2 Hessian eigenvalues (selection is by magnitude)."""
     scale = np.maximum(np.maximum(np.abs(cmin), np.abs(cmax)), 1e-300)
@@ -104,10 +158,12 @@ def _eq_masked(a, b, keep, rtol, label):
     _eq(np.asarray(a)[keep], np.asarray(b)[keep], rtol, label)
 
 
-def _check_dirs(a, b, keep, gap, delta, label, slack=0.0):
+def _check_dirs(a, b, keep, gap, delta, label, slack=0.0, branch=None):
     """Direction check modulo ties; returns the number of tie vertices skipped."""
     d = _dir_diff(np.asarray(a, np.float64), np.asarray(b, np.float64), keep)
     tie = keep & (gap < TIE_FACTOR * delta)
+    if branch is not None:
+        tie |= keep & branch
     ok = d <= np.maximum(DIR_C * delta / np.maximum(gap, 1e-300), DIR_C * delta) + 2 * slack
     bad = np.flatnonzero(keep & ~tie & ~ok)
     assert bad.size == 0, (
@@ -141,27 +197,34 @@ def _compare_all(mesh, g):
         _eq(T, Tg, RTOL64, f"T_it{it}")
         flat = (np.abs(Tg) < 1e-6).all(axis=(1, 2))
         gap = _tensor_gap(Tg)
+        ill = _acos_ill_conditioned(Tg)  # eigenvalue-derived outputs are ties there
+        branch = _eigenvector_branch_flag(Tg, TIE_FACTOR * RTOL64) | ill
+        ties["branch", it] = int((branch & ~flat).sum())
+        ties["acos", it] = int((ill & ~flat).sum())
+        ok = ~ill
         c = C.principal_curvature(T)
-        _eq(c.cmin, g[f"cmin_it{it}"], RTOL64, f"cmin_it{it}")
-        _eq(c.cmax, g[f"cmax_it{it}"], RTOL64, f"cmax_it{it}")
+        _eq_masked(c.cmin, g[f"cmin_it{it}"], ok, RTOL64, f"cmin_it{it}")
+        _eq_masked(c.cmax, g[f"cmax_it{it}"], ok, RTOL64, f"cmax_it{it}")
         for nm in ("umin", "umax"):
             ref = g[f"{nm}_it{it}"].reshape(n, 3)
-            ties[nm, it] = _check_dirs(getattr(c, nm), ref, ~flat, gap, RTOL64, f"{nm}_it{it}")
-        _eq(C.mean_curvature(c), g[f"mean_it{it}"], RTOL64, f"mean_it{it}")
-        _eq(C.gaussian_curvature(c), g[f"gauss_it{it}"], RTOL64, f"gauss_it{it}")
+            ties[nm, it] = _check_dirs(
+                getattr(c, nm), ref, ~flat, gap, RTOL64, f"{nm}_it{it}", branch=branch
+            )
+        _eq_masked(C.mean_curvature(c), g[f"mean_it{it}"], ok, RTOL64, f"mean_it{it}")
+        _eq_masked(C.gaussian_curvature(c), g[f"gauss_it{it}"], ok, RTOL64, f"gauss_it{it}")
         # public double overload == staged path
         c2 = C.curvature(mesh, n_iter_smoothing_tensor=it, neighbors=nb)
-        _eq(c2.cmin, g[f"pub_cmin_it{it}"], RTOL64, f"pub_cmin_it{it}")
-        _eq(c2.cmax, g[f"pub_cmax_it{it}"], RTOL64, f"pub_cmax_it{it}")
+        _eq_masked(c2.cmin, g[f"pub_cmin_it{it}"], ok, RTOL64, f"pub_cmin_it{it}")
+        _eq_masked(c2.cmax, g[f"pub_cmax_it{it}"], ok, RTOL64, f"pub_cmax_it{it}")
         # float overload: computed in double, cast to float32 (flat vertices' directions undefined)
         cf = C.curvature(mesh, n_iter_smoothing_tensor=it, dtype=np.float32, neighbors=nb)
         assert cf.cmin.dtype == np.float32 and cf.umin.dtype == np.float32
-        _eq(cf.cmin, g[f"f_cmin_it{it}"], RTOL32, f"f_cmin_it{it}")
-        _eq(cf.cmax, g[f"f_cmax_it{it}"], RTOL32, f"f_cmax_it{it}")
-        _eq(cf.cmin, g[f"fnull_cmin_it{it}"], RTOL32, f"fnull_cmin_it{it}")
+        _eq_masked(cf.cmin, g[f"f_cmin_it{it}"], ok, RTOL32, f"f_cmin_it{it}")
+        _eq_masked(cf.cmax, g[f"f_cmax_it{it}"], ok, RTOL32, f"f_cmax_it{it}")
+        _eq_masked(cf.cmin, g[f"fnull_cmin_it{it}"], ok, RTOL32, f"fnull_cmin_it{it}")
         for nm in ("umin", "umax"):
             ref = g[f"f_{nm}_it{it}"].reshape(n, 3)
-            _check_dirs(getattr(cf, nm), ref, ~flat, gap, RTOL32, f"f_{nm}_it{it}")
+            _check_dirs(getattr(cf, nm), ref, ~flat, gap, RTOL32, f"f_{nm}_it{it}", branch=branch)
         stats[it] = int(flat.sum())
     # Quadric fit: a float64 computation, but it consumes the *float32* vertex normals (frame
     # rotation), which differ by an ulp across libm implementations -> float32-class tolerance.

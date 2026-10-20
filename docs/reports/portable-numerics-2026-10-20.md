@@ -12,6 +12,8 @@ Goal: make PR #2 CI green without bit-exact cross-platform assumptions. Target p
 - docs/validation-tolerances.md: "Cross-platform policy" (PROPOSED).
 - Code audit: no source change needed; all reductions are explicit scalar Numba loops, no fastmath/FMA contraction in the LLVM IR; remaining platform-dependent sites are libm (`acosf`, `expf`, `atan2f`), documented under `### Determinism` in the port notes.
 
+- **Curvature directions (found by CI run 39472001207, after the first fix):** `echelonEigv` (ported verbatim) picks pivots from a column that is numerically zero (~1e-18 vs |T|~1e-2) at symmetric vertices, so noise decides the returned direction; the vector is not even an eigenvector there. Deterministic for identical inputs, so no defined-order fix; test flags such vertices from the recomputed pivot margin (not by index) and counts them as ties. Validated over 200 noise seeds x 5 goldens, 0 failures; flagged up to ~9% of ellipsoid vertices. Second finding: `eig3symmetric` `acos(r)/3` is ill-conditioned for |r|>=1-1e-6 (rank-one ridge tensors); flagged likewise.
+
 ## Items needing an owner decision
 1. AABB eps: `DIST_EPS = 4.8e-7`, `ANGLE_EPS = 1.9e-6` (observed gaps <=1e-8; wrap-flip mismatches explained by ANGLE_EPS).
 2. `curvature_quad` outputs checked at 1e-5 rather than 1e-10: input is float32 vertex normals which can differ by an ulp across libm.
@@ -144,6 +146,42 @@ x86-64 behaviour. I simulated x86-like noise instead: random +-1-ulp perturbatio
 vertex normals (clipped to [-1, 1]) passes all five curvature goldens with the new checks; the old
 exact checks fail on any perturbation, and a +-1-ulp perturbation of *face* normals would exceed
 1e-10 on the tensor path (face normals use only exact IEEE operations, so this is not expected).
+
+### Update after CI run 39472001207: eigenvector direction mismatches on ubuntu and windows
+
+Failures: `curv_ellipsoid` umin_it0 (vertices 110, 134, diff 0.05-0.13) / umin_it3 (windows, 0 and 1,
+~1e-4), `curv_folded` umax_it3 (30, 35), all with eigen-gap ~0.4, so the earlier gap-scaled
+perturbation bound did not apply: the cause is a genuinely discontinuous branch, not conditioning.
+
+**Cause (found by perturbing the golden tensor by 1e-12 relative and listing vertices whose
+direction jumps: 27 in ellipsoid, 10 in cut, 4 in ico3; the CI vertices are among them).**
+`echelonEigv` (ported verbatim from MeshLib) builds `B = T - lambda*I`, does a two-row pivot search
+on column 0, eliminates only row 1 (row 2 is never used), then back-substitutes dividing by
+`A00`/`A11`. For the largest eigenvalue of block-structured tensors at symmetric vertices the whole
+pivot column is numerically zero (`|B00|`, `|B10|` ~ 1e-18 against `|T|` ~ 1e-2): the row swap and
+the divisor are decided by noise, so the eigenvector jumps (it is not even an eigenvector of T).
+Different platform noise lands on different vertices (ubuntu vs windows). Not a code
+non-determinism: the same inputs give the same answer; it is the algorithm's branch structure.
+No code change (changing it would alter arm64/oracle results).
+
+**Test handling.** `_eigenvector_branch_flag` recomputes, from the golden tensor and its
+eigenvalues, whether any of the three solves has (a) pivot column ~0, (b) pivot tie
+`|B00| ~ |B10|`, (c) reduced `A11` ~ 0, or (d) `|A22|` within noise of the absolute 1e-8
+threshold; margin `tol = 1e3 * 1e-10 = 1e-7` relative to `max|T|`. Flagged vertices are counted
+ties for umin/umax (tensor path, double and float overloads). Untied mismatches still fail.
+A second finding from the same emulation: `eig3symmetric`'s `acos(r)/3` is ill-conditioned when
+`|r|` is within ~1e-8 of 1 (rank-one tensors on ridges: two eigenvalues ~1e-10 of the third);
+the small eigenvalues then move by ~1e-10 absolute, above the 1e-10-relative-to-themselves bound.
+`_acos_ill_conditioned` (`|r| >= 1 - 1e-6`) flags these; cmin/cmax/mean/gauss (and their float
+and public-overload variants) and the directions are skipped there as ties. Tolerances are not
+loosened anywhere else.
+
+**Validation** (emulated platform noise, no tolerance change): 200 seeds x 5 goldens, each seed
+adding random symmetric relative noise to the tensor (run at 1e-15, 1e-14 and 1e-13) and random
++-1 ulp noise on the float32 vertex normals: 0 failures at every noise level. Tie counts (max over
+smoothing iteration 0 / 3, vertices flagged by the branch or acos criterion): cut 77, ellipsoid
+104, folded 78, ico3 86, perturbed 0 (of 505 / 1106 / 642 / 642 / 642). These are conservative
+(about 9 % of ellipsoid vertices); the criterion is golden-only, so it does not depend on the noise.
 
 ---
 
