@@ -1,0 +1,42 @@
+{
+  "tool": "spherical-remesh",
+  "case": "up3to4",
+  "argv": [
+    "$ORACLES/spherical-remesh/bin/SphericalRemesh",
+    "-s",
+    "sphere.vtk",
+    "-i",
+    "subject.vtk",
+    "-r",
+    "ref.vtk",
+    "-p",
+    "prop.txt",
+    "-o",
+    "out.vtk",
+    "--outputProperty",
+    "outprop",
+    "--bary",
+    "bary.txt",
+    "--quiet"
+  ],
+  "commit": "b677c39",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "oracle": "upstream-macos-arm64",
+  "inputs": {
+    "generator": "make_golden.sr_fixture",
+    "src_level": 3,
+    "dst_level": 4,
+    "seed": 20261020,
+    "files": [
+      "sphere.vtk",
+      "ref.vtk",
+      "subject.vtk",
+      "prop.txt"
+    ]
+  },
+  "outputs": [
+    "out.vtk",
+    "outprop.prop.txt",
+    "bary.txt"
+  ]
+}

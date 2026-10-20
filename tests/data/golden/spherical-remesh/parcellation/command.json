@@ -1,0 +1,74 @@
+{
+  "tool": "spherical-remesh",
+  "case": "parcellation",
+  "argv": [
+    "$ORACLES/spherical-remesh-nofma/bin/SphericalRemesh",
+    "-p",
+    "data/out.mat.1.txt",
+    "data/out.mat.2.txt",
+    "data/out.mat.3.txt",
+    "-r",
+    "ref.vtk",
+    "-s",
+    "sphere.vtk",
+    "--outputProperty",
+    "data/out.mat",
+    "--quiet"
+  ],
+  "commit": "b677c39",
+  "meshlib_commit": "dcef807",
+  "fp_contract": "off",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "oracle": "upstream-macos-arm64",
+  "inputs": {
+    "generator": "scripts/oracles/make_golden_remesh.py:generate",
+    "seed": 20261020,
+    "spec": {
+      "sphere": [
+        "ico",
+        4
+      ],
+      "ref": [
+        "native",
+        4,
+        0.004,
+        11
+      ],
+      "subject": false,
+      "coeff": null,
+      "props": [
+        [
+          "data/out.mat.1.txt",
+          "cont"
+        ],
+        [
+          "data/out.mat.2.txt",
+          "cont"
+        ],
+        [
+          "data/out.mat.3.txt",
+          "cont"
+        ]
+      ],
+      "color": null,
+      "outputs": [
+        "data/out.mat.1.txt",
+        "data/out.mat.2.txt",
+        "data/out.mat.3.txt"
+      ],
+      "golden": true
+    },
+    "files": [
+      "sphere.vtk",
+      "ref.vtk",
+      "data/out.mat.1.txt",
+      "data/out.mat.2.txt",
+      "data/out.mat.3.txt"
+    ]
+  },
+  "outputs": [
+    "data/out.mat.1.txt",
+    "data/out.mat.2.txt",
+    "data/out.mat.3.txt"
+  ]
+}

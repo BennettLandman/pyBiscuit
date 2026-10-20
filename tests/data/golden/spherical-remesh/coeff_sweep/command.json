@@ -1,0 +1,88 @@
+{
+  "tool": "spherical-remesh",
+  "case": "coeff_sweep",
+  "argv": [
+    "$ORACLES/spherical-remesh-nofma/bin/SphericalRemesh",
+    "-s",
+    "sphere.vtk",
+    "-r",
+    "ref.vtk",
+    "-c",
+    "coeff.txt",
+    "-p",
+    "lh.curv.txt",
+    "--outputProperty",
+    "aug",
+    "--deform",
+    "def.vtk",
+    "--bary",
+    "bary.txt",
+    "--deg0",
+    "0",
+    "--deg",
+    "3",
+    "--quiet"
+  ],
+  "commit": "b677c39",
+  "meshlib_commit": "dcef807",
+  "fp_contract": "off",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "oracle": "upstream-macos-arm64",
+  "inputs": {
+    "generator": "scripts/oracles/make_golden_remesh.py:generate",
+    "seed": 20261020,
+    "spec": {
+      "sphere": [
+        "ico",
+        4
+      ],
+      "ref": [
+        "ico",
+        3
+      ],
+      "subject": false,
+      "coeff": {
+        "deg": 6,
+        "pole": [
+          0.7,
+          0.4
+        ],
+        "seed": 3,
+        "scale": 0.03
+      },
+      "props": [
+        [
+          "lh.curv.txt",
+          "cont"
+        ]
+      ],
+      "color": null,
+      "outputs": [
+        "aug*.curv.txt",
+        "def.vtk*",
+        "bary.txt*"
+      ],
+      "golden": true
+    },
+    "files": [
+      "sphere.vtk",
+      "ref.vtk",
+      "lh.curv.txt",
+      "coeff.txt"
+    ]
+  },
+  "outputs": [
+    "aug0.curv.txt",
+    "aug1.curv.txt",
+    "aug2.curv.txt",
+    "aug3.curv.txt",
+    "def.vtk0",
+    "def.vtk1",
+    "def.vtk2",
+    "def.vtk3",
+    "bary.txt0",
+    "bary.txt1",
+    "bary.txt2",
+    "bary.txt3"
+  ]
+}

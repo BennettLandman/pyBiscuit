@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "harness_aabb",
+    "closest",
+    "mesh.vtk",
+    "queries.txt",
+    "expected.txt",
+    "deformed.vtk"
+  ],
+  "commit": "dcef807b488eb10d81d9608cf9fa7d06b8ed23e8",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "oracle": "upstream-macos-arm64",
+  "build": "scripts/oracles/build_harness_aabb.sh (-O2 -std=c++11 -ffp-contract=off)",
+  "queries": "2000 seeded unit-sphere points + mesh vertices + edge midpoints + poles"
+}

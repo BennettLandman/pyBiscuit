@@ -1,0 +1,51 @@
+{
+  "tool": "spherical-remesh",
+  "case": "color_nokeep_noinput",
+  "argv": [
+    "$ORACLES/spherical-remesh-nofma/bin/SphericalRemesh",
+    "-s",
+    "sphere.vtk",
+    "-r",
+    "ref.vtk",
+    "--color",
+    "color.txt",
+    "-o",
+    "out.vtk",
+    "--quiet"
+  ],
+  "commit": "b677c39",
+  "meshlib_commit": "dcef807",
+  "fp_contract": "off",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "oracle": "upstream-macos-arm64",
+  "inputs": {
+    "generator": "scripts/oracles/make_golden_remesh.py:generate",
+    "seed": 20261020,
+    "spec": {
+      "sphere": [
+        "ico",
+        3
+      ],
+      "ref": [
+        "ico",
+        4
+      ],
+      "subject": false,
+      "coeff": null,
+      "props": [],
+      "color": "ref",
+      "outputs": [
+        "out.vtk"
+      ],
+      "golden": true
+    },
+    "files": [
+      "sphere.vtk",
+      "ref.vtk",
+      "color.txt"
+    ]
+  },
+  "outputs": [
+    "out.vtk"
+  ]
+}

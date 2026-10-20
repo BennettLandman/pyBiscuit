@@ -1,9 +1,21 @@
 name: CI
 
+# Minimal by default: one Linux job per PR/main push (cheap Actions minutes).
+# Full OS/Python matrix is manual: Actions tab -> CI -> Run workflow.
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+    inputs:
+      full_matrix:
+        description: "Run ubuntu/macOS/windows x py3.10/3.13"
+        type: boolean
+        default: true
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -12,8 +24,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.10", "3.13"]
+        os: ${{ (github.event_name == 'workflow_dispatch' && inputs.full_matrix) && fromJSON('["ubuntu-latest","macos-latest","windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
+        python-version: ${{ (github.event_name == 'workflow_dispatch' && inputs.full_matrix) && fromJSON('["3.10","3.13"]') || fromJSON('["3.10"]') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

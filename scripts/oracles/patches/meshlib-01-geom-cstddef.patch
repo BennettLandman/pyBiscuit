@@ -1,0 +1,11 @@
+--- a/include/Util/Geom.h	2026-10-20 11:45:08
++++ b/include/Util/Geom.h	2026-10-20 11:45:08
+@@ -13,6 +13,8 @@
+ #ifndef GEOM_HH_
+ #define GEOM_HH_
+ 
++#include <cstddef>  // build-only: NULL used below
++
+ #define PI 3.141592653589793238462643
+ 
+ class MathVector

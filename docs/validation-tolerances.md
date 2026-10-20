@@ -44,6 +44,41 @@ original's own retest variability is acceptable.
 count, genus, area distortion of spheres, label connectivity). Reported, not
 gating, unless an owner promotes them.
 
+## Cross-platform policy (PROPOSED — owner approval pending)
+
+Goldens and oracle dumps are produced on one platform and checked on several.
+NumPy SIMD reductions, summation order, FMA contraction and libm differ across
+platforms, so bit-identity is not an acceptance criterion.
+
+- **Meaning of E.** E-class means "within tolerance, with ties explained", on
+  any platform. It never means bit-identical.
+- **Bit-exactness is diagnostic only.** Bit-for-bit oracle comparison lives
+  behind `pytest -m bitexact`, run on the oracle platform for regression
+  hunting. It is skipped by default and in CI, and never gates acceptance.
+- **Reference platform.** The platform for the acceptance goal is the x86-64
+  Linux image. Oracle builds made on macOS arm64 use `-ffp-contract=off` to
+  approximate x86 arithmetic but remain provisional until reproduced in the
+  image.
+- **Tie handling.** A mismatch of an argmin / closest-face style decision is
+  accepted only when the recomputed margin between the golden choice and the
+  chosen one is ≤ eps. The test recomputes the margin and reports the tie
+  count. An untied mismatch fails.
+- **Candidate sets.** Candidate lists (e.g. AABB search) are compared as sets.
+  A difference is accepted only for boxes whose bounds are within eps of the
+  query; any other difference fails.
+- **Default float tolerances.** float32 products: rel 1e-5. float64 products:
+  rel 1e-10. The absolute tolerance is scaled by the golden's magnitude
+  (`abs_ = rel * max|golden|`, with a floor documented per test). Per-product
+  thresholds in the E, R and D tables above take precedence where stricter or
+  looser by explicit entry. No tolerance may be loosened beyond this document
+  to make a platform pass; a check that cannot pass is reported with its
+  measured difference and decided by the owner.
+- **Determinism requirements for code.** Where float32 rounding drives a
+  discrete decision (AABB pruning, nearest face, tie-prone argmin), accumulate
+  in a defined fixed order (explicit loops in Numba, or fixed-order sums), not
+  `np.sum` over vectors NumPy may SIMD-reduce. Each such site is documented in
+  the component's port note.
+
 ## Evidence
 
 Each validated row records: command, input hashes, image hash (for reference

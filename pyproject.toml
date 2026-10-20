@@ -33,7 +33,10 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["reference: needs reference/ artifacts or ~/dev/mipav data; skipped when absent"]
+markers = [
+    "reference: needs reference/ artifacts or ~/dev/mipav data; skipped when absent",
+    "bitexact: bit-for-bit oracle comparison, diagnostic only; run with -m bitexact (skipped by default and in CI)",
+]
 
 [tool.ruff]
 line-length = 100

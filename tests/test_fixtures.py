@@ -67,6 +67,21 @@ def test_geometry_hash_constants(name):
     assert geometry_hash(make()) == expected  # repeat: deterministic
 
 
+@pytest.mark.parametrize("name", list(HASHES))
+def test_hash_inputs_far_from_rounding_boundary(name):
+    """Cross-platform guard for the constants above.
+
+    libm / SIMD ``sin``, ``cos``, ``arccos``, ``arctan2`` may differ by a few ulp (~1e-16)
+    between platforms.  The hash can only change if that moves a coordinate across a rounding
+    boundary of the 1e-9 grid; require every coordinate to sit at least 1e-5 grid steps (1e-14
+    absolute, ~100 ulp) away from one, so the hash is provably insensitive to such noise.
+    """
+    _, make = HASHES[name]
+    x = make().vertices * 1e9
+    margin = np.abs(x - np.floor(x) - 0.5).min()
+    assert margin > 1e-5, f"{name}: coordinate {margin:.2e} grid steps from a rounding boundary"
+
+
 @pytest.mark.parametrize("level", range(8))
 def test_icosphere_counts_and_closed(level):
     m = icosphere(level)

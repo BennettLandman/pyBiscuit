@@ -16,6 +16,10 @@ MIPAV = Path.home() / "dev" / "mipav"
 def pytest_collection_modifyitems(config, items):
     missing = not (OPT.exists() and MIPAV.exists())
     skip = pytest.mark.skip(reason="reference/ or ~/dev/mipav not available")
+    run_bitexact = "bitexact" in (config.getoption("-m") or "")
+    skip_bx = pytest.mark.skip(reason="bit-exact diagnostics: run with -m bitexact")
     for item in items:
+        if "bitexact" in item.keywords and not run_bitexact:
+            item.add_marker(skip_bx)
         if "reference" in item.keywords and missing:
             item.add_marker(skip)

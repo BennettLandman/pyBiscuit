@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "harness_sh",
+    "pts.bin",
+    "328",
+    "9",
+    "5",
+    "out_f32.bin",
+    "out_f64.bin"
+  ],
+  "stored": "f32",
+  "degree": 9,
+  "from": 5,
+  "commit": "MeshLib dcef807",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2) -O2 -std=c++14",
+  "oracle": "upstream-macos-arm64",
+  "points": "tests/fixtures/sh_points.py sh_fixture_points(n_random=150, ico_level=2)"
+}

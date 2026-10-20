@@ -1,0 +1,32 @@
+{
+ "argv": [
+  "harness_geometry",
+  "input.vtk",
+  ".",
+  "-s",
+  "1",
+  "-s",
+  "4",
+  "-g",
+  "0.3",
+  "1",
+  "-g",
+  "0.15",
+  "3",
+  "-df",
+  "3",
+  "data.f32",
+  "-dd",
+  "3",
+  "data.f64"
+ ],
+ "commit": "dcef807b488eb10d81d9608cf9fa7d06b8ed23e8",
+ "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+ "cflags": [
+  "-O2",
+  "-std=c++11",
+  "-ffp-contract=off"
+ ],
+ "oracle": "upstream-macos-arm64",
+ "fixture": "geometry_ico2"
+}
