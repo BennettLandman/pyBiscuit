@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 import scipy.special as sps
 
+from _compare import assert_close_float32, assert_close_float64
 from fixtures.sh_points import sh_fixture_points
 from pybiscuit.sphere.spharm import (
     ShDeformation,
@@ -28,8 +29,10 @@ GOLDEN = Path(__file__).parent / "data" / "golden" / "meshlib"
 
 # Metric: |a-b| <= ATOL + RTOL*|b| elementwise.  float32 outputs: measured max abs
 # diff 0 (99.999% bitwise equal; rest 1 ulp = 6e-8 rel); float64: 1.3e-13 abs.
-F32 = dict(rtol=1e-5, atol=1e-7)
-F64 = dict(rtol=1e-9, atol=1e-11)
+# F64 keeps the 1e-9 rel bound set before brief 03: it is looser than the 1e-10 policy because
+# MeshLib's sqrt(1 - cos^2 t) amplifies a 1-ulp libm difference near the poles (see report b03).
+F32 = dict(rel=1e-5, abs_=1e-7)
+F64 = dict(rel=1e-9, abs_=1e-11)
 
 
 def _sph(p):
@@ -153,7 +156,9 @@ def test_golden_vs_meshlib_oracle(case):
         got = basis(z["points"].astype(np.float64), cmd["degree"], cmd["from"])
         tol = F64
     assert got.dtype == z["y"].dtype
-    np.testing.assert_allclose(got, z["y"], **tol)
+    (assert_close_float32 if cmd["stored"] == "f32" else assert_close_float64)(
+        got, z["y"], label=case, **tol
+    )
 
 
 @pytest.mark.skipif(not HARNESS.exists(), reason="MeshLib SH oracle harness not built")
@@ -177,8 +182,8 @@ def test_live_oracle_degree20(tmp_path, frm):
     )
     o32 = np.fromfile(tmp_path / "a", np.float32).reshape(-1, k)
     o64 = np.fromfile(tmp_path / "b", np.float64).reshape(-1, k)
-    np.testing.assert_allclose(basis(pts, 20, frm), o32, **F32)
-    np.testing.assert_allclose(basis(pts.astype(np.float64), 20, frm), o64, **F64)
+    assert_close_float32(basis(pts, 20, frm), o32, **F32)
+    assert_close_float64(basis(pts.astype(np.float64), 20, frm), o64, **F64)
 
 
 def test_coefficient_file_roundtrip_and_crop(tmp_path):

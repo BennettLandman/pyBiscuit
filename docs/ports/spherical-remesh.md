@@ -153,3 +153,32 @@ with tolerance because they were produced by the fma build).
   truncated property/colour/coefficient file) raise `RuntimeError`/`ValueError`.
 * `(short)`/`(int)` casts of out-of-range floats are C++ UB; numpy's cast is used.
 * The `Float`-spelling quirk and the parcellation overwrite are kept deliberately.
+
+### Determinism
+
+Brief 03 audit of `sphere/remesh.py` (the `SphericalRemeshing` class; the AABB closest-face search
+is covered in `aabb-sphere.md`).
+
+* `_recons_all` / `_rotation` / `_rot_point` / `_unit3` are Numba scalar float32 code in the C++
+  operation order (no `np.sum`/`@`); `sin`/`cos` of float32 angles go through double libm and are
+  rounded to float32 (`_sin`, `_cos`), so a platform difference of one double ulp reaches the
+  result only if it straddles a float32 rounding boundary. The `test_oracle_ico7_deg20` docstring
+  documents the measured effect: a one-ulp change of a deformed vertex moves the barycentric
+  coefficients of an ico7 face by ~1e-5, hence the 3e-5 bound there.
+* `_unit_rows`, `_interp`: NumPy *element-wise* float32 expressions (`a*c0 + b*c1 + d*c2`
+  evaluated left to right). Element-wise ufuncs are correctly rounded per element and NumPy never
+  fuses a multiply with the following add, so SIMD does not change them; there is no reduction
+  along an axis.
+* Median of three for `--nneighbor` surface output: `np.sort(..., axis=1)[:, 1]` on floats; exact
+  value selection, no arithmetic.
+* **Discrete sites**: (1) the closest face / barycentric coefficients (from the AABB search) --
+  exact ties (reference vertex on a sphere vertex/edge) can legitimately pick a different face;
+  (2) nearest-neighbour data pick `(c0 > c1) & (c0 > c2)`, otherwise `(c1 > c2) & (c1 > c0)`,
+  otherwise the third vertex -- ties in the coefficients resolve identically in port and C++ but
+  the coefficients themselves carry the platform noise from (1); (3) `(int)` truncation of
+  interpolated colours / `--ftype int*` values next to an integer (documented by `trunc_slack` in
+  the tests). All three are handled in `tests/test_remesh.py` by the tie mask (rows whose closest
+  face differs are exempt from value comparison and counted; for the committed `coeff_full`
+  golden the tie rows are additionally verified to reconstruct the same 3-D point to 1e-5).
+
+No code change was needed.

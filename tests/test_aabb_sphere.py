@@ -23,6 +23,11 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from _compare import (
+    assert_candidate_sets_close,
+    assert_close_float32,
+    assert_same_choice_modulo_ties,
+)
 from conftest import REPO
 from pybiscuit.io import write_vtk
 from pybiscuit.mesh import Mesh
@@ -126,6 +131,12 @@ def read_expected(path: Path, kind: str):
 
 
 def assert_matches(mode, got, expected, label=""):
+    """EXACT comparison (face / candidate list equality).
+
+    Only for (a) the opt-in ``bitexact`` golden check on the oracle platform and (b) the live
+    oracle tests, where harness and port run on the SAME machine and therefore share one libm.
+    The committed goldens (made on macOS arm64) go through :func:`compare_golden` instead.
+    """
     if parse_mode(mode)[0] == "search":
         bad = [
             i
@@ -143,16 +154,183 @@ def assert_matches(mode, got, expected, label=""):
     return err
 
 
+# ----------------------------------------------------------------- cross-platform policy
+# float32 unit roundoff scale; the unit-sphere queries and meshes have |x| <~ 1.
+F32_EPS = float(np.finfo(np.float32).eps)  # 1.19e-7 = 1 ulp(1)
+# Distance ties: query points are surface points stored as float32 (edge midpoints, vertices,
+# centroids), so they sit up to ~1 ulp(1) off the mesh and competing faces' point-triangle
+# distances differ by float32 rounding noise.  The observed gaps are <= 1e-8; 4 ulp(1) is the
+# bound we accept as "same choice".
+DIST_EPS = 4 * F32_EPS
+# Box tests: (phi, theta) come from libm atan2f, whose result differs by 1 ulp between
+# platforms (ulp(2*pi) = 4.8e-7).  A box membership decision is platform dependent only when
+# the query is within a few ulps of a bound: 4 ulp(2*pi) ~ 1.9e-6.
+ANGLE_EPS = 4 * 2.0**-21  # ulp(2*pi) = 2^-21
+RAD0 = 0.0174533
+
+
+class BoxAmbiguity:
+    """Which (query, face) pairs have a platform dependent box decision?
+
+    Recomputes every box in float64 from the tree's float32 vertices (no libm ``atan2f``
+    involved).  Faces whose wrap decision ``maxphi - minphi > pi`` is within ``ANGLE_EPS`` of
+    the threshold (e.g. a pole face with a vertex on the +-pi cut: Apple's ``atan2f(0, -x)``
+    returns pi - 1 ulp, glibc/UCRT the correctly rounded pi, so the face box is ``[0, pi]`` on
+    one and the wrap box ``[pi, 2 pi]`` on the other) get both variants; node boxes are built
+    with none (``N``) and all (``A``) of these faces wrapped.  A node is *ambiguous* for a query
+    if the query is within ``ANGLE_EPS`` of one of its (eps-enlarged) bounds, or if the
+    visit/skip decision differs between ``N`` and ``A``.  Also ambiguous: the global
+    thresholds ``phi <= maxPhi - 2 pi`` and ``theta >= maxTheta`` / ``<= minTheta``.
+
+    ``near(i, face)`` is true if any node on the root-to-leaf path of ``face`` is ambiguous for
+    query ``i``: a leaf is visited, and then ALL its faces are candidates, only if every
+    ancestor box passes.
+    """
+
+    def __init__(self, tree: SphereAABB, queries: np.ndarray):
+        self.t = tree
+        v, fc = tree._verts, tree._faces
+        phi_v, th_v = self._angles(v)
+        pf, tf = phi_v[fc], th_v[fc]
+        lo_p, hi_p = pf.min(1), pf.max(1)
+        self.face_wrap_sens = np.abs((hi_p - lo_p) - np.pi) <= ANGLE_EPS
+        wrapped = (hi_p - lo_p) > np.pi
+        plain = np.stack([lo_p, hi_p, tf.min(1), tf.max(1)], 1)
+        wrap = np.stack([hi_p, lo_p + 2 * np.pi, tf.min(1), tf.max(1)], 1)
+        sens = self.face_wrap_sens
+        box_n = np.where((wrapped & ~sens)[:, None], wrap, plain)
+        box_a = np.where((wrapped | sens)[:, None], wrap, plain)
+        nn = tree.n_nodes
+        self.parent = np.full(nn, -1, np.int64)
+        for n in range(nn):
+            if tree._left[n] >= 0:
+                self.parent[tree._left[n]] = n
+                self.parent[tree._right[n]] = n
+        self.leaf_of = np.full(tree.n_faces, -1, np.int64)
+        self.nbox = []
+        for fb in (box_n, box_a):
+            nb = np.zeros((nn, 4))
+            for n in range(nn - 1, -1, -1):  # children have larger indices than parents
+                if tree._left[n] < 0:
+                    fs = tree._perm[tree._lo[n] : tree._lo[n] + tree._cnt[n]]
+                    self.leaf_of[fs] = n
+                    k = fb[fs]
+                    nb[n] = [k[:, 0].min(), k[:, 1].max(), k[:, 2].min(), k[:, 3].max()]
+                else:
+                    lc, rc = nb[tree._left[n]], nb[tree._right[n]]
+                    nb[n] = [
+                        min(lc[0], rc[0]),
+                        max(lc[1], rc[1]),
+                        min(lc[2], rc[2]),
+                        max(lc[3], rc[3]),
+                    ]
+            self.nbox.append(nb)
+        self.phi, self.theta = self._angles(np.asarray(queries, np.float32))
+        self.global_amb = (
+            (np.abs(self.phi - (float(tree._max_phi) - 2 * np.pi)) <= ANGLE_EPS)
+            | (np.abs(self.theta - float(tree._max_theta)) <= ANGLE_EPS)
+            | (np.abs(self.theta - float(tree._min_theta)) <= ANGLE_EPS)
+        )
+
+    @staticmethod
+    def _angles(p):
+        """float64 (phi, theta) of float32 points, with the kernel's zero special cases."""
+        x, y, z = (p[:, k].astype(np.float64) for k in range(3))
+        d32 = (p[:, 0] * p[:, 0] + p[:, 1] * p[:, 1]).astype(np.float32)
+        phi = np.where(d32 == 0, 0.0, np.arctan2(y, x))
+        theta = np.where(z == 0, 0.0, np.arctan2(z, np.sqrt(d32).astype(np.float64)))
+        return phi, theta
+
+    def node_ambiguous(self, i, n, e1, e2):
+        th = self.theta[i]
+        visits = []
+        for nb in self.nbox:
+            b = nb[n]
+            ok = False
+            for ph in (self.phi[i], self.phi[i] + 2 * np.pi):
+                if abs(ph - (b[0] - e1)) <= ANGLE_EPS or abs(ph - (b[1] + e1)) <= ANGLE_EPS:
+                    return True
+                ok |= b[0] - e1 <= ph <= b[1] + e1
+            if abs(th - (b[2] - e2)) <= ANGLE_EPS or abs(th - (b[3] + e2)) <= ANGLE_EPS:
+                return True
+            visits.append(ok and b[2] - e2 <= th <= b[3] + e2)
+        return visits[0] != visits[1]
+
+    def near_fn(self, epss):
+        """``near(query, face)`` for the given list of (eps1, eps2) box enlargements."""
+
+        def near(i, f):
+            if self.global_amb[i]:
+                return True
+            n = self.leaf_of[f]
+            while n >= 0:
+                if any(self.node_ambiguous(i, n, e1, e2) for e1, e2 in epss):
+                    return True
+                n = self.parent[n]
+            return False
+
+        return near
+
+
+def _enlargements(mode):
+    kind, e1, e2 = parse_mode(mode)
+    if kind == "closest":  # trial 0 (no enlargement) then rad * 2^k on both angles
+        return [(0.0, 0.0)] + [(RAD0 * 2.0**k,) * 2 for k in range(9)]
+    return [(e1, e2)]
+
+
+def compare_golden(mode, tree, queries, got, expected, label):
+    """Cross-platform golden comparison.  Returns a stats dict.
+
+    * barycentrics where the face agrees: abs <= 1e-6 (brief 02 acceptance, not loosened);
+    * faces: :func:`assert_same_choice_modulo_ties` with the margin recomputed in float64
+      (|dist(chosen) - dist(golden)| <= DIST_EPS), or, when the two faces are not tied in
+      distance, a mismatch explained by a platform dependent box decision (``BoxAmbiguity``);
+    * candidate lists: sets, differences only for faces whose leaf path is box-ambiguous.
+    """
+    amb = BoxAmbiguity(tree, queries)
+    near = amb.near_fn(_enlargements(mode))
+    if parse_mode(mode)[0] == "search":
+        n_diff = assert_candidate_sets_close(got, expected, near, label=label)
+        return {"differing_lists": n_diff, "n": len(queries)}
+    f, b = got
+    ef, eb = expected
+    verts = tree._verts.astype(np.float64)
+    q64 = np.asarray(queries, np.float64)
+    cats = {"dist_tie": 0, "box_ambiguous": 0}
+
+    def dist(i, fi):
+        return np.inf if fi < 0 else _point_triangle_dist(q64[i], *verts[tree._faces[fi]])
+
+    def margin(idx, chosen, golden):
+        out = np.empty(len(idx))
+        for k, (i, c, g) in enumerate(zip(idx, chosen, golden, strict=True)):
+            gap = abs(dist(i, c) - dist(i, g))
+            if gap <= DIST_EPS:
+                cats["dist_tie"] += 1
+            elif any(f >= 0 and near(i, f) for f in (c, g)):
+                cats["box_ambiguous"] += 1
+                gap = 0.0
+            out[k] = gap
+        return out
+
+    ties = assert_same_choice_modulo_ties(f, ef, margin, DIST_EPS, label=label)
+    same = f == ef
+    if same.any():
+        assert_close_float32(b[same], eb[same], rel=0.0, abs_=BARY_TOL, label=f"{label} bary")
+    return {"mismatches": ties, **cats, "n": len(queries)}
+
+
 # --------------------------------------------------------------------------- goldens
 GOLDEN_CASES = sorted(p.name for p in GOLDEN.glob("aabb_*") if p.is_dir())
+GOLDEN_STATS: dict[str, dict] = {}
 
 
 def test_goldens_present():
     assert len(GOLDEN_CASES) >= 6
 
 
-@pytest.mark.parametrize("case", GOLDEN_CASES)
-def test_golden(case):
+def _load_golden(case):
     from pybiscuit.io import read_vtk
 
     d = GOLDEN / case
@@ -164,9 +342,146 @@ def test_golden(case):
     deformed = read_vtk(d / extra[0]) if extra else None
     refresh = "refresh" in extra
     q = np.loadtxt(d / argv[3], dtype=np.float32, ndmin=2)
-    got = python_result(mode, mesh, q, deformed, refresh)
     exp = read_expected(d / argv[4], parse_mode(mode)[0])
-    assert_matches(mode, got, exp, case)
+    return mode, mesh, q, deformed, refresh, exp
+
+
+def _run(mode, tree, q):
+    """Query an existing tree in the harness' output convention."""
+    kind, e1, e2 = parse_mode(mode)
+    if kind == "search":
+        off, fs = tree.candidates(q, e1, e2)
+        return [fs[off[i] : off[i + 1]] for i in range(len(q))]
+    if kind == "closest":
+        f, b = tree.closest_face(q)
+    else:
+        f, b = tree.closest_face(q, e1, e2, poles=(kind == "bool"))
+    return f, np.where(f[:, None] == -1, np.float32(0), b)
+
+
+def _golden_tree(mesh, deformed, refresh, tree_cls=SphereAABB):
+    tree = tree_cls(mesh)
+    if deformed is not None:
+        tree.update(deformed.vertices, refresh_face_normals=refresh)
+    return tree
+
+
+@pytest.mark.parametrize("case", GOLDEN_CASES)
+def test_golden(case):
+    """Goldens come from macOS arm64 (Apple libm ``atan2f``); compare modulo explained ties."""
+    mode, mesh, q, deformed, refresh, exp = _load_golden(case)
+    tree = _golden_tree(mesh, deformed, refresh)
+    stats = compare_golden(mode, tree, q, _run(mode, tree, q), exp, case)
+    GOLDEN_STATS[case] = stats
+    print(f"{case}: {stats}")
+
+
+@pytest.mark.bitexact
+@pytest.mark.parametrize("case", GOLDEN_CASES)
+def test_golden_bitexact(case):
+    """Diagnostic only (``pytest -m bitexact``): exact equality on the oracle platform (arm64)."""
+    mode, mesh, q, deformed, refresh, exp = _load_golden(case)
+    assert_matches(mode, python_result(mode, mesh, q, deformed, refresh), exp, case)
+
+
+# --------------------------------------------------------------- emulated other platform
+@pytest.fixture(scope="session")
+def other_libm_module():
+    """The port recompiled with a correctly rounded ``atan2f`` (float64 ``atan2``, then round).
+
+    glibc and the Windows UCRT return this in practically every case, while Apple's libm
+    differs by 1 ulp for ~6 % of the arguments and returns pi - 1 ulp for ``atan2f(0, -x)``.
+    The recompiled module therefore reproduces the x86-64 CI discrepancies on any machine.
+    """
+    import sys
+    import types
+
+    from pybiscuit.sphere import aabb
+
+    src = Path(aabb.__file__).read_text()
+    needle = "    return F(math.atan2(y, x))\n"
+    assert src.count(needle) == 1, "aabb._atan2f changed: update the emulation"
+    src = src.replace(needle, "    return F(math.atan2(np.float64(y), np.float64(x)))\n")
+    src = src.replace("cache=True", "cache=False")
+    mod = types.ModuleType("_aabb_correctly_rounded_atan2")
+    mod.__file__ = aabb.__file__
+    sys.modules[mod.__name__] = mod
+    exec(compile(src, aabb.__file__, "exec"), mod.__dict__)
+    return mod
+
+
+@pytest.mark.parametrize("case", GOLDEN_CASES)
+def test_golden_with_other_libm(case, other_libm_module):
+    """Same goldens with a different ``atan2f``: must pass modulo explained ties."""
+    mode, mesh, q, deformed, refresh, exp = _load_golden(case)
+    tree = _golden_tree(mesh, deformed, refresh, other_libm_module.SphereAABB)
+    stats = compare_golden(mode, tree, q, _run(mode, tree, q), exp, case + "[other libm]")
+    GOLDEN_STATS[case + "[other libm]"] = stats
+    print(f"{case}[other libm]: {stats}")
+
+
+# ----------------------------------------------------- the comparison must not be vacuous
+def test_untied_face_mismatch_fails():
+    mesh = f32mesh(icosphere(3))
+    tree = SphereAABB(mesh)
+    q = random_unit(200, 1)
+    f, b = tree.closest_face(q)
+    exp_f = f.copy()
+    exp_f[7] = (f[7] + mesh.n_faces // 2) % mesh.n_faces  # a face on the far side
+    with pytest.raises(AssertionError, match="untied"):
+        compare_golden("closest", tree, q, (f, b), (exp_f, b), "synthetic")
+    exp_f[7] = f[7]
+    exp_f[9] = -1  # found vs not found, with no box ambiguity
+    with pytest.raises(AssertionError, match="untied"):
+        compare_golden("closest", tree, q, (f, b), (exp_f, b), "synthetic")
+    # barycentric tolerance stays 1e-6 absolute
+    compare_golden("closest", tree, q, (f, b), (f, b + np.float32(5e-7)), "synthetic")
+    with pytest.raises(AssertionError, match="outside"):
+        compare_golden("closest", tree, q, (f, b), (f, b + np.float32(2e-6)), "synthetic")
+
+
+def test_untied_candidate_mismatch_fails():
+    mesh = f32mesh(icosphere(3))
+    tree = SphereAABB(mesh)
+    q = random_unit(50, 2)
+    mode = "search:0.02:0.01"
+    got = _run(mode, tree, q)
+    assert (
+        compare_golden(mode, tree, q, got, [g.copy() for g in got], "synthetic")["differing_lists"]
+        == 0
+    )
+    bad = [g.copy() for g in got]
+    far = np.setdiff1d(np.arange(mesh.n_faces), got[3])[0]
+    bad[3] = np.append(bad[3], far).astype(np.int32)  # extra candidate in an unrelated leaf
+    with pytest.raises(AssertionError, match="not near"):
+        compare_golden(mode, tree, q, got, bad, "synthetic")
+
+
+def test_near_flags_box_edge_queries_only():
+    """A query on a node's bound is flagged; a generic query is not."""
+    tree = SphereAABB(f32mesh(icosphere(3)))
+    leaf = int(np.flatnonzero(tree._left < 0)[0])
+    f = int(tree._perm[tree._lo[leaf]])
+    b = tree._nbox[leaf].astype(np.float64)
+    on_bound = [np.cos(b[2]) * np.cos(b[0]), np.cos(b[2]) * np.sin(b[0]), np.sin(b[2])]
+    generic = np.array([0.31, -0.52, 0.79])
+    q = np.array([on_bound, generic / np.linalg.norm(generic)], np.float32)
+    near = BoxAmbiguity(tree, q).near_fn([(0.0, 0.0)])
+    assert near(0, f)
+    assert not near(1, f)
+
+
+def test_cart2sph_uses_tree_kernel_and_no_fastmath():
+    import re
+
+    from pybiscuit.sphere import aabb
+
+    q = random_unit(500, 3)
+    phi, theta = cart2sph(q)
+    p32, t32 = aabb._cart2sph_all(q)
+    assert np.array_equal(phi, p32) and np.array_equal(theta, t32)
+    code = re.sub(r'""".*?"""|#.*', "", Path(aabb.__file__).read_text(), flags=re.S)
+    assert "fastmath" not in code and "fma" not in code.lower()
 
 
 # --------------------------------------------------------------------------- brute force

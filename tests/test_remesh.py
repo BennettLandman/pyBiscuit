@@ -330,8 +330,13 @@ def _run_golden(name: str, tmp_path: Path):
         ra = np.loadtxt(GOLDEN / name / bary, usecols=0, dtype=np.int64)
         rb = np.loadtxt(tmp_path / bary, usecols=0, dtype=np.int64)
         ties = ra != rb
+        if ties.any() and bary == "bary.txt" and (GOLDEN / name / "deformed.vtk").exists():
+            # a differing closest face is only a legitimate tie if both faces reconstruct the same
+            # 3-D point (checked against the committed deformed sphere, not just assumed)
+            _check_tie_geometry(GOLDEN / name, tmp_path)
     for rel in meta["outputs"]:
         stats[rel] = compare_file(rel, GOLDEN / name / rel, tmp_path / rel, argv, ties)
+    stats["_tie_rows"] = int(ties.sum()) if ties is not None else None
     return stats
 
 

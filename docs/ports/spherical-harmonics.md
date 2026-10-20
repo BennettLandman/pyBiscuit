@@ -167,3 +167,28 @@ Goldens (committed, no binaries needed): `tests/data/golden/meshlib/sh_deg20_f32
 
 Speed: 163,842 points, degree 20 (441 columns): 0.58 s (basis, one thread, incl.
 Numba cache load) and 0.06 s for `synthesize`; 289 MB float32 output.
+
+### Determinism
+
+Brief 03 audit of `sphere/spharm.py`. Everything is an explicit Numba scalar loop; no NumPy
+reduction (`np.sum`, `@`, `np.dot`) touches the data.
+
+* `synthesize` (`_synth32`/`_synth64`): the sum over `i < (degree+1)**2` is a sequential
+  accumulation into three scalars, in the order of `SphericalRemeshing::reconsCoord` /
+  `HSD::updateCoordinate`. Numba emits no `reassoc`/`contract` flags, so LLVM neither vectorises
+  nor fuses it; the result is bit-identical on every IEEE platform given the same `Y`. (The tests
+  compare it with `Y @ c.T` only at 2e-5, because BLAS may reorder that reference.)
+* `_basis_point`: `atan2`, `sqrt`, `cos(theta)`, `sin(m*phi)`, `cos(m*phi)` are double libm calls
+  and may differ by <= 1 ulp between platforms. Near the poles MeshLib's `sqrt(1 - x*x)` for
+  `sin(theta)` amplifies that: the committed float64 golden is therefore compared at 1e-9 relative
+  (looser than the 1e-10 float64 policy, a pre-existing bound; see the b03 report) and the float32
+  goldens at 1e-5 / 1e-7 abs.
+* Discrete branches in `_legendre2_schmidt` (`abs(sn) <= TOL` vs `>= TOL`, `factor == 0`,
+  `x != 1`) are decided on double values; both branches are mathematically continuous at the
+  threshold, so a one-ulp flip changes results only at rounding level. They are kept verbatim.
+* `phi = 0` / `elev = 0` tests (`d == 0`, `pz == 0`) are on the input coordinates themselves
+  (exact), not on computed values.
+* float32 `basis` is the float64 value rounded to float32, so it inherits the double-libm
+  difference only when it straddles a float32 rounding boundary (probability ~2^-29 per value).
+
+No code change was needed.

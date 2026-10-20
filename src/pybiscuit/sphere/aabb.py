@@ -11,7 +11,8 @@ Public API (stable)
     Builds the tree.  Vertices are converted to **float32** (MeshLib stores
     ``float``); every computation in the query path is float32, exactly as in
     the C++ source, so results (face index, barycentric coefficients) match the
-    upstream binary bit-for-bit up to libm ulp differences in ``atan2``.
+    upstream binary bit-for-bit up to libm ulp differences in ``atan2`` (the only
+    platform-dependent operation; see "Determinism" in ``docs/ports/aabb-sphere.md``).
 
 ``SphereAABB.closest_face(points, eps1=None, eps2=None, *, poles=True)``
     ``-> (face int32 (n,), bary float32 (n, 3))``.  Two overloads:
@@ -82,16 +83,43 @@ _N_TRIALS = 9  # trial = 0..8
 # float32 scalar kernels (ports of Geom.cpp)
 # --------------------------------------------------------------------------- #
 @njit(cache=True, inline="always")
+def _atan2f(y, x):
+    """float32 ``atan2f`` of the platform libm (the ONLY non-IEEE-exact operation in this module).
+
+    Everything else here is ``+ - * / sqrt`` on float32, which is correctly rounded and, with
+    no fast-math / FMA contraction (nothing in this module sets ``fastmath``; LLVM only fuses
+    with ``contract`` flags or ``fmuladd``, which Numba does not emit), identical on every
+    platform.  ``atan2f`` is not: results differ by 1 ulp between Apple libm, glibc and the
+    Windows UCRT (and Apple returns pi - 1 ulp for ``atan2f(+-0, -x)``).  The (phi, theta) values
+    feed the box tests and the ``maxphi - minphi > pi`` wrap decision, so the discrete outcome can
+    differ between platforms for queries within an ulp of a box bound.  Kept as the platform libm
+    on purpose (oracle semantics); tests treat such cases as ties
+    (docs/ports/aabb-sphere.md, "Determinism").
+    """
+    return F(math.atan2(y, x))
+
+
+@njit(cache=True, inline="always")
 def _cart2sph(x, y, z):
     d = x * x + y * y
     if d == F(0):
         phi = F(0)
     else:
-        phi = F(math.atan2(y, x))
+        phi = _atan2f(y, x)
     if z == F(0):
         theta = F(0)
     else:
-        theta = F(math.atan2(z, F(math.sqrt(d))))
+        theta = _atan2f(z, F(math.sqrt(d)))
+    return phi, theta
+
+
+@njit(cache=True)
+def _cart2sph_all(p):
+    n = p.shape[0]
+    phi = np.empty(n, np.float32)
+    theta = np.empty(n, np.float32)
+    for i in range(n):
+        phi[i], theta[i] = _cart2sph(p[i, 0], p[i, 1], p[i, 2])
     return phi, theta
 
 
@@ -939,11 +967,9 @@ def _as_points(points) -> np.ndarray:
 
 def cart2sph(points) -> tuple[np.ndarray, np.ndarray]:
     """``Coordinate::cart2sph`` (float32): azimuth ``phi`` and *elevation* ``theta``."""
-    p = _as_points(points)
-    d = p[:, 0] * p[:, 0] + p[:, 1] * p[:, 1]
-    phi = np.where(d == 0, F(0), np.arctan2(p[:, 1], p[:, 0])).astype(np.float32)
-    theta = np.where(p[:, 2] == 0, F(0), np.arctan2(p[:, 2], np.sqrt(d))).astype(np.float32)
-    return phi, theta
+    # Same kernel (and libm ``atan2f``) as the tree/query path; NumPy's float32 arctan2 is a
+    # different implementation and would disagree with the decisions taken inside the tree.
+    return _cart2sph_all(_as_points(points))
 
 
 def barycentric(a, b, c, p, dtype=np.float32) -> np.ndarray:

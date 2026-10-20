@@ -14,6 +14,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from _compare import assert_close_float32
 from conftest import REG_DIR
 from fixtures.meshes import ellipsoid, icosphere
 from pybiscuit.io.vtk import read_vtk
@@ -29,6 +30,18 @@ HARNESSES = [
 ITERS = (1, 2, 5, 20, 100, 10000)
 
 
+def _near_zero_faces(vertices, faces, eps=1e-6):
+    """Faces whose inversion test value ``(V1-V0)x(V2-V0).(V0+V1+V2)`` is within ``eps`` of 0.
+
+    Recomputed in float64 from the golden.  Whether such a face counts as inverted is decided by
+    float32 rounding (the discrete decision behind ``n_inverted`` and the stopping rule), so the
+    count may legitimately differ across platforms by at most this many faces.
+    """
+    v = np.asarray(vertices, np.float64)[faces]
+    val = np.einsum("ij,ij->i", np.cross(v[:, 1] - v[:, 0], v[:, 2] - v[:, 0]), v.sum(axis=1))
+    return int((np.abs(val) < eps).sum())
+
+
 def _check(mesh, g, iters, types=(0, 1)):
     n = mesh.n_vertices
     out = {}
@@ -37,10 +50,12 @@ def _check(mesh, g, iters, types=(0, 1)):
             ref = g[f"sph_t{typ}_i{k}"].reshape(n, 3)
             r = sphere_map(mesh, type=typ, max_iter=k)
             got = r.mesh.vertices.astype(np.float32)
-            # float32 arithmetic is replicated operation by operation: expect identical bits;
-            # the acceptance bound is 1e-5 relative per coordinate.
-            np.testing.assert_allclose(got, ref, rtol=1e-5, atol=1e-7)
-            assert r.n_inverted == count_inverted_faces(ref, mesh.faces)
+            # float32 arithmetic is replicated operation by operation (no libm calls: only + - *
+            # / and sqrt, all correctly rounded), so bits normally agree on every IEEE platform;
+            # the acceptance bound is 1e-5 relative per coordinate (-m bitexact checks the bits).
+            assert_close_float32(got, ref, abs_=1e-7, label=f"sph_t{typ}_i{k}")
+            slack = _near_zero_faces(ref, mesh.faces)
+            assert abs(r.n_inverted - count_inverted_faces(ref, mesh.faces)) <= slack
             out[typ, k] = (r.iterations, r.n_inverted, float(np.abs(got - ref).max()))
     return out
 
@@ -55,6 +70,20 @@ def test_matches_committed_oracle_dumps(case):
         for k in (1, 2, 5, 20, 100):
             its, ninv, _ = stats[typ, k]
             assert its <= k and (its == k or ninv == 0)
+
+
+@pytest.mark.bitexact
+@pytest.mark.parametrize("case", CASES)
+def test_bitexact_with_arm64_oracle(case):
+    """Diagnostic only (``-m bitexact``): float32 vertices identical to the oracle's bits."""
+    mesh = read_vtk(GOLD / case / "input.vtk")
+    with np.load(GOLD / case / "golden.npz") as g:
+        for typ in (0, 1):
+            for k in ITERS:
+                ref = g[f"sph_t{typ}_i{k}"].reshape(mesh.n_vertices, 3)
+                r = sphere_map(mesh, type=typ, max_iter=k)
+                assert np.array_equal(r.mesh.vertices.astype(np.float32), ref), (typ, k)
+                assert r.n_inverted == count_inverted_faces(ref, mesh.faces)
 
 
 @pytest.mark.parametrize("case", CASES)

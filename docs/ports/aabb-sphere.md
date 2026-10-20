@@ -65,10 +65,65 @@ Tests: `tests/test_aabb_sphere.py`. Oracle harness: `scripts/oracles/harness_aab
 
 `barycentric(..., dtype=np.float32)` and the whole query path reproduce the C++ operation order
 (left-to-right dot products, `N.unit()` in place, `1 - c0 - c1`). Built with
-`-ffp-contract=off` (no FMA), results are **bit identical** to the harness on every case below;
-arm64 libm `atan2f` vs numba's `atan2` showed no difference. Triple-product barycentrics in float32 amplify 1-ulp
+`-ffp-contract=off` (no FMA), results are **bit identical** to the harness on every case below
+*on the same machine* (same libm; see Determinism for other platforms). Triple-product barycentrics in float32 amplify 1-ulp
 input differences to ~1e-6 (observed when vertices were rounded float64 -> text -> float differently),
 therefore all tests round vertices to float32 before writing the oracle VTK.
+
+### Determinism
+
+Goal: the discrete decisions (box tests, wrap decision, validity, nearest face, tie-break) must
+not depend on the platform. Audit of every site where float32 rounding drives a decision:
+
+| Site (`aabb.py`) | Operations | Platform-independent? |
+|---|---|---|
+| `_atan2f` / `_cart2sph` (`phi`, `theta` of vertices and queries) | libm `atan2f`, `sqrt`, `x*x+y*y` | **No: `atan2f` only.** Apple libm, glibc and UCRT differ by 1 ulp for ~6 % of arguments, and Apple returns pi - 1 ulp for `atan2f(+-0, -x)` where glibc/UCRT return the correctly rounded pi. Kept as the platform libm (the upstream semantic is float32 `atan2f`; a correctly rounded or hand-written replacement would change the arm64 results). `sqrt` and `+ - * /` are IEEE correctly rounded. |
+| `_face_boxes` wrap decision `maxphi - minphi > pi` (double pi) | compare of two `atan2f` results | Inherits the above. A face with a vertex on the +-pi cut (every pole face) flips between box `[0, pi]` (arm64) and wrap box `[pi, 2 pi]` (x86): this is the cause of the `bool`/`xcand` golden failures on CI. |
+| `_node_boxes` | float32 `min`/`max` | Yes (selection only, no arithmetic). |
+| tree build `_build_tree` (median, `score` int32 wrap vs float compare) | integer / float32 compares of box values | Same inputs as above; identical given identical boxes. |
+| `_search_one` / `_candidates_all` box test `ph >= box - eps1 ...` | float32 subtract/add and compare | Yes given identical `phi/theta/box`; ties at a bound are exactly the `atan2f` ulp cases. |
+| `_find_poles`, `_face_normals` | float32 cross/sqrt/divide, compares | Yes (IEEE ops, fixed left-to-right order). |
+| `_eval_face` validity (`r1 >= r0 + eps`, bary `>= eps`) and `_bary32` | float32 `* + - / sqrt`, fixed order | Yes. |
+| `_dpoint2tri` distance and the lowest-index tie-break (`dist == best`) | float32 IEEE ops | Yes: exact ties come from identical inputs. |
+| `_closest_all` (`prange`) | one independent query per iteration, no reductions | Yes (no cross-thread accumulation). |
+
+No `np.sum`/`np.dot` on vectors, no `fastmath`, no `parallel` reductions anywhere in the query path
+(all dot/cross products are explicit left-to-right scalar expressions). FMA contraction: Numba
+sets no `contract`/`fast` flags and emits no `fmuladd`, so LLVM does not fuse `a*b+c` (checked on
+arm64, where FMA is baseline: 0 `fmadd/fmla` in the compiled `_closest_one`, `_find_poles`,
+`_face_normals`, `_face_boxes`; x86-64 codegen follows the same IR rules). A test asserts that the
+module never mentions `fastmath`.
+
+Public `cart2sph()` now calls the same jitted kernel as the tree (it used NumPy's float32
+`arctan2`, a different implementation that disagreed with the tree in ~6 % of the values).
+
+Root cause of the CI failures (reproduced locally by recompiling the module with a correctly
+rounded `atan2f`, test `test_golden_with_other_libm`; it gives exactly the CI signature: 4 face
+differences `[3408 3489 3839 3926]` in `closest`, 4 in `bool`/`xcand`, 22 candidate lists in
+`search`):
+
+* `closest` (4 queries: edge midpoints and the (-1, -1e-9, 0) cut query): the query lies on the
+  surface to within float32 rounding (distance 1e-10..1.5e-8), two faces are tied to that noise
+  and the box/trial path differs by an ulp; the point-triangle distances differ by <= 1e-8.
+* `bool`/`xcand` `eps=0.02:0.01` (4 queries near the south pole, golden finds the pole face
+  1198, x86 finds none): the pole face has a vertex at phi = pi; Apple's `atan2f` gives
+  3.1415925 (box `[0, 3.1415925]`), glibc 3.1415927 > pi so the face is stored as the wrap box.
+* `search` (22 lists): same wrap-box difference changes the union box of the leaves (and
+  ancestors) containing pole faces; whole leaves enter/leave the candidate list.
+
+Test policy (`tests/test_aabb_sphere.py`; goldens were made on macOS arm64):
+
+* faces: `assert_same_choice_modulo_ties` with the margin recomputed in float64
+  (`|dist(chosen) - dist(golden)| <= 4 ulp(1) = 4.8e-7`; observed gaps <= 1e-8), or, for pairs
+  not tied in distance, mismatches explained by a box decision within `4 ulp(2 pi) = 1.9e-6` of
+  a node bound or of the wrap threshold (`BoxAmbiguity`, recomputed in float64, both wrap
+  variants of the sensitive faces);
+* candidate lists: sets, differing members must lie under a box-ambiguous node
+  (`assert_candidate_sets_close`);
+* barycentrics where the face agrees: `<= 1e-6` abs (not loosened);
+* synthetic untied mismatches must fail (`test_untied_*`);
+* exact equality is kept as `test_golden_bitexact` (`pytest -m bitexact`, arm64 only);
+  the live-oracle tests (harness built and run on the same machine, same libm) stay exact.
 
 ## Validation
 

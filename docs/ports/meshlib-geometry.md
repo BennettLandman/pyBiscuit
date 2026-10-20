@@ -222,3 +222,30 @@ faces, identical to the oracle; converged with 0 flipped faces after **2,329** (
 (type 1) passes. Timings (M-series, warm): 2.5 s / 1.5 s for the full runs.
 Against the default FMA arm64 `oracles/meshlib` build, vertices differ by <= 4.2e-7 absolute (a few
 float32 ulps; 25-60 % of coordinates differ in the last bit).
+
+### Determinism
+
+Brief 03 audit of `mesh/geometry.py`, `mesh/curvature.py`, `mesh/sphere_map.py` for platform
+(arm64 vs x86-64 Linux/Windows) dependence. Bit-identity across platforms is *not* an acceptance
+criterion; the tests compare within 1e-5 (float32) / 1e-10 (float64) and explain ties. Method:
+every reduction in these modules is an explicit scalar Numba loop in the C++ evaluation order
+(neighbour-list order, face order, ascending vertex order); there is no `np.sum`/`np.dot`/`@`/
+`np.linalg` on data vectors, so NumPy SIMD/BLAS reordering cannot reach them. Numba emits plain
+`fmul`/`fadd` (no `contract`/`fast` flags, checked in the LLVM IR), so LLVM does not fuse
+multiply-adds on x86-64 or arm64; sqrt, +, -, *, / are correctly rounded everywhere. **No code
+change was needed**; the sites that remain platform-sensitive are:
+
+| Site | Why it can differ | Treatment |
+|---|---|---|
+| `geometry._vertex_normals`: `math.acos` on float32 -> libm `acosf` | glibc / macOS / MSVC `acosf` differ by up to 1 ulp; Numba calls the system `acosf` (verified in IR), as does MeshLib on the same platform, so on Linux it is the *same* function the x86 oracle image uses | kept; tests compare normals at 1e-5; bit-exact only under `-m bitexact` |
+| `geometry._normal_pdf`: `math.exp` on float32 -> `expf` | same | sigma smoothing tested at 1e-5 |
+| `geometry._vertex_areas`: `math.acos`, `math.sin` (double) | double libm, <= 1 ulp | float32-class path, 1e-5 |
+| `geometry._face_normals`, `_face_areas`, `_smooth_*`, `_connectivity` | only + - * / sqrt, integers | bit-exact on every IEEE platform |
+| `curvature._tensor`: `acos(beta)` (double) and the sign test `cpt > 0` | double acos <= 1 ulp; the sign flips only where `cpt ~ 0`, i.e. `beta ~ 0`, so the contribution is continuous | tensor/cmin/cmax at 1e-10 |
+| `curvature._tensor`: `np.argsort(kind="mergesort")` on edge keys | keys `lo*n+hi` are unique on manifold meshes, so the order is fully defined (no tie to break) | none needed |
+| `curvature._eig3`: `p1 == 0` and strict-`<` ordering of the diagonal | exactly diagonal tensors occur at symmetric vertices (6 in the committed ico3/folded goldens). They stay exactly diagonal on every platform because the symmetric edge contributions are bitwise equal inputs to the same libm call; equal diagonal entries leave `lambda` unset (zeros), as MeshLib | none needed |
+| `curvature._principal`: selection of `cmin`/`cmax` by `abs(lam)` with strict `>`/`<` | when two eigenvalue magnitudes tie to within the platform noise the *eigenvector* assigned to `umin`/`umax` can swap while the values agree | direction tests use a per-vertex bound `10*delta/gap` and count vertices with `gap < 1e3*delta` as ties (`tests/test_curvature.py::_check_dirs`) |
+| `curvature._quad`: frame from float32 vertex normal `n`, `theta = acos(-n_x)` (double) | an ulp of `n_x` (libm `acosf` upstream) moves `theta` by `ulp / sin(theta)` (capped ~4e-4 near the x axis). For `n = +x` *exactly* the axis `n x (-x)` is zero and `Coordinate::rotation` returns the identity, which flips the sign of the curvature (visible in the committed goldens: -1.02 vs +1.02 on the unit-sphere vertex on +x); one ulp of noise in `n_y, n_z` gives a rotation by pi instead. `acos` of an argument rounded just past 1 is NaN | faithfully ported (changing it would diverge from the oracle); tests use 1e-5 for the quad outputs, widen direction bounds by the `theta` slack, and skip frame-degenerate vertices (`|n_x| >= 1 - 3e-7`) as counted ties |
+| `curvature._quad`: `np.unique` of the 2-ring | integer sort, deterministic | none |
+| `curvature._quad`: normal-equation sums `ATA`, `A^T b` and `_gauss_elim` pivot (`max_elem < ab`) | fixed summation order (k ascending) | pivot ties would need equal |entries| to the bit, same on all platforms given the same inputs |
+| `sphere_map._sphere`: weights, Jacobi update, `_count_inverted` stopping test | only + - * / sqrt in float32 and a double `x/sqrt(1-x*x)` (no transcendental call); sequential sums in list order; so results are bit-identical wherever float32 arithmetic is IEEE without contraction. The discrete decisions (`a < 0.1` clamp, `s > 0`, "any face inverted") are therefore reproducible, but a face with `(V1-V0)x(V2-V0).(V0+V1+V2)` within ~1 ulp of 0 could flip on a contracting build | tests compare coordinates at 1e-5 and allow the inverted-face count to differ by at most the number of golden faces with |value| < 1e-6; bit equality is a `-m bitexact` test |
