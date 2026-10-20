@@ -5,8 +5,10 @@
 **2026-10-20 — planning complete, no code.** Reference artifacts inventoried
 (two SIF images, encrypted MATLAB orchestrator manifest, upstream C++/Python
 sources, example QA PDFs). Owner questions open: see
-[docs/open-questions.md](docs/open-questions.md). Next: B0 (scaffold) and B1
-(reference harvesting, needs Q1).
+[docs/open-questions.md](docs/open-questions.md). The owner asked Ilwoo Lyu
+for the unencrypted MATLAB source on 2026-10-20; work that depends on the
+orchestrator waits for it. Next: B0, B2.1–B2.3, B4.1, B4.3 per
+[agent brief 01](docs/agent-briefs/01-foundations.md); B1 needs Q1.
 
 ## Objective
 
