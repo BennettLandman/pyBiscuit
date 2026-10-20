@@ -2,7 +2,7 @@
 
 ## Status
 
-**2026-10-20 — briefs 01 and 02 executed** (see [01](docs/reports/foundations-2026-10-20.md), [02](docs/reports/geometry-remesh-2026-10-20.md)). Oracles built (provisional, macOS arm64); B2.4, B2.5, B4.2 done vs oracle; B6.2 SH basis ported. Owner questions open: [open-questions](docs/open-questions.md); MATLAB source requested from Ilwoo Lyu. Next: B2.6 geodesics + B8 TRACE, or B6 HSD; B1 needs Q1.
+**2026-10-20 — briefs 01–02 executed; next steps planned.** Done vs upstream oracles: B0, B2.1–B2.5, B4.2, B4.3, SH basis (B6.2); B4.1 partial (shipped spheres are 4-decimal quantised). PR #1 is green; PR #2 is red on x86-64 CI because tests demand bit-exact float32 equality with arm64 oracles. Image tool versions equal upstream master (HSD 1.3.9, TRACE 1.1.2, LGI 1.2.2, SphericalRemesh 1.2.1). Next: [brief 03](docs/agent-briefs/03-portable-numerics.md) (sequential), then briefs 04–07 in parallel; see [Next steps](#next-steps-2026-10-20) and the [brief index](docs/agent-briefs/README.md).
 
 ## Objective
 
@@ -84,6 +84,26 @@ B0 scaffold ─┬─ B1 reference harvest (Linux) ─────────�
 
 Parallelizable after B2: B3, B4, B5, B6, B8, B9 are independent workstreams
 (separate files, separate goldens). B7 needs B4 (+ B6 for registered spheres).
+
+## Next steps (2026-10-20)
+
+```
+brief 03 portable numerics ──► merge PR #1, PR #2 ──┬─ brief 04 geodesics + TRACE   (B2.6, B8)
+                                                    ├─ brief 05 HSD                 (B6)
+                                                    ├─ brief 06 parcellation net    (B7.2–B7.3)
+                                                    └─ brief 07 OuterHull + LGI     (B9.2, B9.4)
+owner track (in parallel): Q1 image runs → B1 goldens → re-validate all E-rows against the image
+waiting on the MATLAB source: B5, B7.1, B7.4–B7.5, B9.5, B10 → then brief 08 (orchestrator spec + MaCRUISE surface prep)
+later: B12 visualization (GIfTI exports + renderer can start once B10 output layout is fixed); B9.3 klaplace and B9.6 SCI after licences (Q7)
+```
+
+Owner actions that unblock the most:
+1. **Merge PR #1 now**; merge PR #2 after brief 03 turns CI green.
+2. **Q1:** pick ACCRE or a GitHub Actions x86-64 job (see open-questions). Image goldens turn every "provisional (oracle)" row into an accepted one, and they unblock B3 (MeshProperty).
+3. **Ask Lyu (Q7):** licences for klaplace and ShapeComplexityIndex (NIRAL), sources of MeshProperty/MeshContour/MeshDeform, and permission to redistribute the models and templates.
+4. **Decide** B4.1 tolerance (accept one quantisation step), the cross-platform policy (brief 03), and Q12 tolerances.
+
+When the MATLAB source arrives, the next brief is the orchestrator spec (B1.3 from source, not traces), then B5 surface prep, B7.1/B7.4/B7.5, B9.5, B10.
 
 ## Step-by-step acceptance table
 

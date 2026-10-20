@@ -43,6 +43,8 @@ for r in CurveExtraction HSD klaplace LocalGyrificationIndex MeshLib SphericalRe
 git clone https://github.com/NIRALUser/ShapeComplexityIndex.git
 ```
 
+**Image binaries match upstream `master`** (checked 2026-10-20 from version strings in the extracted ELF files): HSD v1.3.9 (`f169595`), CurveExtraction/TRACE v1.1.2 (`ded932d`), Gyrification v1.2.2 (`b9fa760`), SphericalRemesh v1.2.1 (`b677c39`). klaplace has no version string.
+
 Commits at planning time: CurveExtraction `ded932d`, HSD `f169595`,
 LocalGyrificationIndex `b9fa760`, MeshLib `dcef807`, ShapeComplexityIndex
 `aea9afd`, SphericalLabeling `37fa7a0`, SphericalRemesh `b677c39`,
