@@ -1,0 +1,10 @@
+UGSCNN MeshConv (https://github.com/maxjiang93/ugscnn), adapted in
+SphericalLabeling/meshcnn (Ilwoo Lyu).
+
+NOTICE: the upstream LICENSE text is NOT present in the local reference
+copies (reference/repos/SphericalLabeling has no UGSCNN LICENSE and the
+meshcnn/*.py files carry no copyright header). docs/licensing.md records the
+upstream as MIT (Jiang et al.). The verbatim upstream MIT text with its exact
+copyright line must be copied here from the UGSCNN repository before any
+meshcnn-derived code is shipped (plan: parcellation network step). Until then
+no UGSCNN-derived code is included in pyBiscuit.

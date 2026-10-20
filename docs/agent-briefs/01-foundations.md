@@ -71,10 +71,13 @@ HSD, TRACE, and anything else. Note follow-ups in your report; don't start them.
     (read the frame from its header line `PyMaCRUISE coordinate_frame=RAS units=mm`).
 - The `.asc` reader must load
   `~/dev/mipav/sample-macruise/output/Surfaces_FreeView/target_image_GMimg_innerSurf.asc`
-  (243,822 vertices / 487,640 faces) and `Surfaces_MNI/target_image_GMimg_innerSurf.asc`
-  (250,874 / 501,744). The two meshes are independent extractions (different
-  counts), not one mesh in two frames. Don't try to work out how BISCUIT
-  relates them; that waits for the MATLAB source (Q4).
+  and `Surfaces_MNI/target_image_GMimg_innerSurf.asc`. Don't try to work out
+  how BISCUIT relates them; that waits for the MATLAB source (Q4).
+  *Correction (2026-10-20, after execution):* this brief originally gave the
+  inner surface as 243,822 / 487,640 and called the two meshes independent.
+  That count is the **central** surface. Both inner files are 250,874 / 501,744
+  and are the same mesh related by a rigid transform; see
+  [foundations report](../reports/foundations-2026-10-20.md).
 - Per-vertex `.txt`: `reg/*/?h.*.{mean,var}.txt` must give 163,842 values.
 - Round-trip tests (write → read → equal) for every format on the fixtures.
   Real-data checks are tests marked `@pytest.mark.reference` that skip when

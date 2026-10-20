@@ -2,13 +2,7 @@
 
 ## Status
 
-**2026-10-20 — planning complete, no code.** Reference artifacts inventoried
-(two SIF images, encrypted MATLAB orchestrator manifest, upstream C++/Python
-sources, example QA PDFs). Owner questions open: see
-[docs/open-questions.md](docs/open-questions.md). The owner asked Ilwoo Lyu
-for the unencrypted MATLAB source on 2026-10-20; work that depends on the
-orchestrator waits for it. Next: B0, B2.1–B2.3, B4.1, B4.3 per
-[agent brief 01](docs/agent-briefs/01-foundations.md); B1 needs Q1.
+**2026-10-20 — brief 01 executed** (B0, B2.1–B2.3, B4.1, B4.3; see [report](docs/reports/foundations-2026-10-20.md)). Reference IO, topology, icospheres and MeshConv operators in place; 161 tests pass. Owner questions open: [open-questions](docs/open-questions.md); MATLAB source requested from Ilwoo Lyu 2026-10-20. Next: [agent brief 02](docs/agent-briefs/02-geometry-remesh.md) (upstream oracles, B2.4, B2.5, B4.2, SH basis); then geodesics + TRACE or HSD. B1 needs Q1.
 
 ## Objective
 
@@ -100,10 +94,10 @@ per [validation-tolerances](docs/validation-tolerances.md).
 
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
-| B0.1 | `pyproject.toml` (setuptools, src layout, py3.10–3.13), extras `[parc]`, `[viz]`, `[dev]`, `[macruise]`; MIT LICENSE + `LICENSES/` upstream notices | `pip install -e .[dev]` and `pybiscuit --version` on macOS arm64 + Linux | Todo |
-| B0.2 | CI (GitHub Actions): lint (ruff), pytest matrix (3.10, 3.13 × ubuntu, macos, windows) | green on empty test suite | Todo |
-| B0.3 | `scripts/extract_reference.py` maintained; `assets.py` registry with SHA-256 of every template/model file | registry matches extracted `reference/` hashes | Todo |
-| B0.4 | Synthetic mesh fixture generators (sphere, ellipsoid, analytic "folded" sphere r(θ,φ)=1+a·Y_lm, icospheres 0–7) with seeds | fixtures deterministic across platforms (hash test) | Todo |
+| B0.1 | `pyproject.toml` (setuptools, src layout, py3.10–3.13), extras `[parc]`, `[viz]`, `[dev]`, `[macruise]`; MIT LICENSE + `LICENSES/` upstream notices | `pip install -e .[dev]` and `pybiscuit --version` on macOS arm64 + Linux | Done (pyproject, `pybiscuit --version`/`info`; tests/test_cli.py; macOS arm64 only — Linux unchecked) |
+| B0.2 | CI (GitHub Actions): lint (ruff), pytest matrix (3.10, 3.13 × ubuntu, macos, windows) | green on empty test suite | Done (CI green on PR #1: 6/6 jobs, run 39456903772) |
+| B0.3 | `scripts/extract_reference.py` maintained; `assets.py` registry with SHA-256 of every template/model file | registry matches extracted `reference/` hashes | Done (76 files/1.26 GB in `data/asset_registry.json`; tests/test_assets.py incl. reference match) |
+| B0.4 | Synthetic mesh fixture generators (sphere, ellipsoid, analytic "folded" sphere r(θ,φ)=1+a·Y_lm, icospheres 0–7) with seeds | fixtures deterministic across platforms (hash test) | Done (tests/fixtures/meshes.py; tests/test_fixtures.py hash tests; arm64 only) |
 
 ### B1 — Reference harvesting (Linux x86-64; needs Q1)
 
@@ -120,9 +114,9 @@ per [validation-tolerances](docs/validation-tolerances.md).
 
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
-| B2.1 | Readers/writers: VTK legacy ASCII+binary (POINTS/POLYGONS/POINT_DATA, float/double), FreeSurfer ASCII `.asc`, FS binary surf/curv (NiBabel), GIfTI, per-vertex `.txt`, PyMaCRUISE VTK header frame tag | round-trip tests; reads every VTK in `reference/` and template dirs | Todo |
-| B2.2 | Coordinate frames: tkRAS↔scanner RAS from T1 header for `.asc`; manifest records | legacy `.asc` overlays T1 correctly (unit test with synthetic header) | Todo |
-| B2.3 | Topology: edges, one-ring, face adjacency, boundary loops, connected components, Euler/genus, orientation consistency | tests on fixtures | Todo |
+| B2.1 | Readers/writers: VTK legacy ASCII+binary (POINTS/POLYGONS/POINT_DATA, float/double), FreeSurfer ASCII `.asc`, FS binary surf/curv (NiBabel), GIfTI, per-vertex `.txt`, PyMaCRUISE VTK header frame tag | round-trip tests; reads every VTK in `reference/` and template dirs | Done (tests/test_io_*.py; reference files load with correct counts; see report) |
+| B2.2 | Coordinate frames: tkRAS↔scanner RAS from T1 header for `.asc`; manifest records | legacy `.asc` overlays T1 correctly (unit test with synthetic header) | Done (tests/test_frames.py synthetic; diagnostic: legacy .asc is already scanner RAS, converted fraction in mask 0.60 vs raw 1.00) |
+| B2.3 | Topology: edges, one-ring, face adjacency, boundary loops, connected components, Euler/genus, orientation consistency | tests on fixtures | Done (tests/test_topology.py 27 pass; all spheres + template white surfaces chi=2 genus 0) |
 | B2.4 | Geometry: face/vertex normals (MeshLib weighting), areas, Voronoi areas, Laplacian smoothing variants as in MeshLib `Util/SurfaceUtil.cpp` | match MeshLib (compile-free: compare against values derived from goldens) | Todo |
 | B2.5 | Spherical AABB / point location + barycentric interpolation (MeshLib `AABB_Sphere`) | E-class vs SphericalRemesh goldens (via B4) | Todo |
 | B2.6 | Geodesics: Dijkstra on edge graph (SciPy) + exact geodesic port of MeshLib `GeodesicA`/Peyré (Numba) | distances on analytic sphere within 0.1 %; E-class vs TRACE `.bary` later | Todo |
@@ -139,9 +133,9 @@ per [validation-tolerances](docs/validation-tolerances.md).
 
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
-| B4.1 | Icosphere generator reproducing `sphere_{5120..327680}.vtk`, template ico7 (163,842 v), `icosphere_{0..6}` vertex order | byte-identical vertex order or documented permutation | Todo |
+| B4.1 | Icosphere generator reproducing `sphere_{5120..327680}.vtk`, template ico7 (163,842 v), `icosphere_{0..6}` vertex order | byte-identical vertex order or documented permutation | Partial (faces + vertex order identical for ico4–7; vertices match only to one 4-decimal quantisation step, 1e-6 unreachable for float32 radius-100 files; UGSCNN icosphere_5/6 ≤5e-7; tests/test_icosphere.py 33 pass) |
 | B4.2 | Port SphericalRemesh (`-p -r -s --outputProperty`, deformation option) | E-class vs goldens | Todo |
-| B4.3 | Regenerate MeshConv operator `.pkl` files from icospheres; confirm equality with shipped pkl | max abs diff ≤ 1e-6 | Todo |
+| B4.3 | Regenerate MeshConv operator `.pkl` files from icospheres; confirm equality with shipped pkl | max abs diff ≤ 1e-6 | Done (tests/test_operators.py 27 pass; all 13 fields, levels 0–5, max diff 2.5e-14; safe unpickler) |
 
 ### B5 — Surface preparation (MaCRUISE route; R-class; Q3, Q4)
 

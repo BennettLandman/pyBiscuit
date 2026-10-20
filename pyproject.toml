@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pybiscuit"
+version = "0.0.1"
+description = "Python port of BISCUIT (MaCRUISE route): cortical surface registration, parcellation, sulcal curves and shape measures"
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.23,<3",
+    "scipy>=1.10,<2",
+    "nibabel>=5.2,<6",
+    "numba>=0.61,<1",
+]
+
+[project.optional-dependencies]
+parc = ["torch>=2"]
+viz = ["pyvista", "matplotlib"]
+macruise = []
+dev = ["pytest>=8,<9", "ruff", "build>=1.2,<2"]
+
+[project.scripts]
+pybiscuit = "pybiscuit.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"pybiscuit.data" = ["*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["reference: needs reference/ artifacts or ~/dev/mipav data; skipped when absent"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*" = ["E501"]
