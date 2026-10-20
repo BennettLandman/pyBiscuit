@@ -2,7 +2,7 @@
 
 ## Status
 
-**2026-10-20 — brief 01 executed** (B0, B2.1–B2.3, B4.1, B4.3; see [report](docs/reports/foundations-2026-10-20.md)). Reference IO, topology, icospheres and MeshConv operators in place; 161 tests pass. Owner questions open: [open-questions](docs/open-questions.md); MATLAB source requested from Ilwoo Lyu 2026-10-20. Next: [agent brief 02](docs/agent-briefs/02-geometry-remesh.md) (upstream oracles, B2.4, B2.5, B4.2, SH basis); then geodesics + TRACE or HSD. B1 needs Q1.
+**2026-10-20 — briefs 01 and 02 executed** (see [01](docs/reports/foundations-2026-10-20.md), [02](docs/reports/geometry-remesh-2026-10-20.md)). Oracles built (provisional, macOS arm64); B2.4, B2.5, B4.2 done vs oracle; B6.2 SH basis ported. Owner questions open: [open-questions](docs/open-questions.md); MATLAB source requested from Ilwoo Lyu. Next: B2.6 geodesics + B8 TRACE, or B6 HSD; B1 needs Q1.
 
 ## Objective
 
@@ -106,7 +106,7 @@ per [validation-tolerances](docs/validation-tolerances.md).
 | B1.1 | `scripts/reference/run_full.sh`: run the image on legacy sample (`sample-macruise/output`) with intermediates kept (see [reference-artifacts](docs/reference-artifacts.md)); `--reg oasis45` and default `mb101` | complete output tree + `.tmp` archived with hashes | Todo |
 | B1.2 | Command trace: `execve` log (strace or PATH shims) of every sub-tool call with argv, cwd, inputs/outputs, timing | `docs/reports/orchestrator-trace-*.md` listing the full call graph | Todo |
 | B1.3 | Write `docs/reference/biscuit-output-tree.md` (every output file: name, format, meaning) and `docs/reference/orchestrator-spec.md` (stage order, parameters, file flow — the de-facto spec for biscuit.m) | owner review | Todo |
-| B1.4 | Per-tool goldens on synthetic fixtures + tier-1 intermediates for HSD, CurveExtraction, Gyrification, klaplace, OuterHull, MeshProperty (all flag combos used in B1.2), ShapeComplexityIndex, SphericalRemesh, MeshDeform, parc `test.sh` | `tests/data/golden/<tool>/` with `command.json` | Todo |
+| B1.4 | Per-tool goldens on synthetic fixtures + tier-1 intermediates for HSD, CurveExtraction, Gyrification, klaplace, OuterHull, MeshProperty (all flag combos used in B1.2), ShapeComplexityIndex, SphericalRemesh, MeshDeform, parc `test.sh` | `tests/data/golden/<tool>/` with `command.json` | In progress (O1 oracles built, provisional: MeshLib, SphericalRemesh, HSD, CurveExtraction, Gyrification, upstream-macos-arm64; goldens in tests/data/golden/{meshlib,spherical-remesh}; image goldens still needed — docs/ports/oracles.md) |
 | B1.5 | FS-input route run on one FreeSurfer 6 subject (if Q5 yes) | output tree archived | Todo |
 | B1.6 | Cohort reference set (Q2): ≥10 subjects with MaCRUISE v3 inputs + BISCUIT outputs; ≥2 scan–rescan pairs if available | manifest of paths + hashes (data stays on ACCRE) | Todo |
 
@@ -117,8 +117,8 @@ per [validation-tolerances](docs/validation-tolerances.md).
 | B2.1 | Readers/writers: VTK legacy ASCII+binary (POINTS/POLYGONS/POINT_DATA, float/double), FreeSurfer ASCII `.asc`, FS binary surf/curv (NiBabel), GIfTI, per-vertex `.txt`, PyMaCRUISE VTK header frame tag | round-trip tests; reads every VTK in `reference/` and template dirs | Done (tests/test_io_*.py; reference files load with correct counts; see report) |
 | B2.2 | Coordinate frames: tkRAS↔scanner RAS from T1 header for `.asc`; manifest records | legacy `.asc` overlays T1 correctly (unit test with synthetic header) | Done (tests/test_frames.py synthetic; diagnostic: legacy .asc is already scanner RAS, converted fraction in mask 0.60 vs raw 1.00) |
 | B2.3 | Topology: edges, one-ring, face adjacency, boundary loops, connected components, Euler/genus, orientation consistency | tests on fixtures | Done (tests/test_topology.py 27 pass; all spheres + template white surfaces chi=2 genus 0) |
-| B2.4 | Geometry: face/vertex normals (MeshLib weighting), areas, Voronoi areas, Laplacian smoothing variants as in MeshLib `Util/SurfaceUtil.cpp` | match MeshLib (compile-free: compare against values derived from goldens) | Todo |
-| B2.5 | Spherical AABB / point location + barycentric interpolation (MeshLib `AABB_Sphere`) | E-class vs SphericalRemesh goldens (via B4) | Todo |
+| B2.4 | Geometry: face/vertex normals (MeshLib weighting), areas, Voronoi areas, Laplacian smoothing variants as in MeshLib `Util/SurfaceUtil.cpp` | match MeshLib (compile-free: compare against values derived from goldens) | Done, oracle-provisional (geometry.py, curvature.py, sphere_map.py; tests/test_geometry.py, test_curvature.py, test_sphere_map.py; bit-identical vs non-FMA MeshLib incl. reg/mb101/lh.white; [report](docs/reports/geometry-remesh-2026-10-20.md)) |
+| B2.5 | Spherical AABB / point location + barycentric interpolation (MeshLib `AABB_Sphere`) | E-class vs SphericalRemesh goldens (via B4) | Done, oracle-provisional (sphere/aabb.py; tests/test_aabb_sphere.py 29 pass; 0 face mismatches, bary diff 0 on 1e5 queries x 5 cases; ico7 163,842 queries 0.02 s warm) |
 | B2.6 | Geodesics: Dijkstra on edge graph (SciPy) + exact geodesic port of MeshLib `GeodesicA`/Peyré (Numba) | distances on analytic sphere within 0.1 %; E-class vs TRACE `.bary` later | Todo |
 
 ### B3 — MeshProperty (closed binary, black-box)
@@ -134,7 +134,7 @@ per [validation-tolerances](docs/validation-tolerances.md).
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
 | B4.1 | Icosphere generator reproducing `sphere_{5120..327680}.vtk`, template ico7 (163,842 v), `icosphere_{0..6}` vertex order | byte-identical vertex order or documented permutation | Partial (faces + vertex order identical for ico4–7; vertices match only to one 4-decimal quantisation step, 1e-6 unreachable for float32 radius-100 files; UGSCNN icosphere_5/6 ≤5e-7; tests/test_icosphere.py 33 pass) |
-| B4.2 | Port SphericalRemesh (`-p -r -s --outputProperty`, deformation option) | E-class vs goldens | Todo |
+| B4.2 | Port SphericalRemesh (`-p -r -s --outputProperty`, deformation option) | E-class vs goldens | Done, oracle-provisional (sphere/remesh.py, `pybiscuit spherical-remesh`; tests/test_remesh.py 97 pass; byte-identical vs non-FMA oracle except 24/84 SH-deformed files 1-ulp last digit) |
 | B4.3 | Regenerate MeshConv operator `.pkl` files from icospheres; confirm equality with shipped pkl | max abs diff ≤ 1e-6 | Done (tests/test_operators.py 27 pass; all 13 fields, levels 0–5, max diff 2.5e-14; safe unpickler) |
 
 ### B5 — Surface preparation (MaCRUISE route; R-class; Q3, Q4)
@@ -154,7 +154,7 @@ per [validation-tolerances](docs/validation-tolerances.md).
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
 | B6.1 | Port note: map `HSD.cpp` functions, image binary version vs upstream `master` (`f169595`) | `docs/ports/hsd.md` | Todo |
-| B6.2 | Real spherical harmonics basis as implemented (CBT v1.3 "fixed SH bases") | E vs analytic + golden coefficients | Todo |
+| B6.2 | Real spherical harmonics basis as implemented (CBT v1.3 "fixed SH bases") | E vs analytic + golden coefficients | In progress (SH basis ported: sphere/spharm.py, tests/test_spharm.py 14 pass, ≤1.3e-13 f64 vs oracle; HSD uses the same MeshLib basis, so remaining work is B6.2 integration only) |
 | B6.3 | Feature resampling on icosahedron (`--icosahedron`, `--icomesh`, `--resample`), AABB cache | E | Todo |
 | B6.4 | Energy (feature similarity vs template mean/var + rigidity/distortion regularization), Jacobian/Hessian 2nd-order approx | per-iteration energy matches golden to 1e-6 relative on fixtures | Todo |
 | B6.5 | Optimizer: Levenberg–Marquardt step + BOBYQA (port of `bobyqa.h`), initial guess ("improved initial guess" in v1.3), multi-resolution schedule used by BISCUIT (from B1.2) | E on fixtures; final energy within 0.1 % on legacy sample | Todo |

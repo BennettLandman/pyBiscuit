@@ -1,3 +1,12 @@
+# Derived from SphericalLabeling/meshcnn (Ilwoo Lyu, MIT), itself derived from
+# UGSCNN MeshConv (https://github.com/maxjiang93/ugscnn, commit
+# 64e27969c65b4807e41c1e275972dab8bb72c512).
+#
+# UGSCNN: Spherical CNNs on Unstructured Grids
+# The MIT License (MIT)
+# Copyright (c) 2018 Chiyu "Max" Jiang, University of California, Berkeley
+# Full license text: LICENSES/UGSCNN-MeshConv.txt
+# SphericalLabeling license (Copyright (c) 2019 Ilwoo Lyu): LICENSES/SphericalLabeling.txt
 """MeshConv (UGSCNN / SphericalLabeling) spherical operators.
 
 The parcellation network (``ctf_plain/SurfPostproc/common/parc``) loads

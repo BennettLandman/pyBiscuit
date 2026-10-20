@@ -4,9 +4,11 @@ ASCII layout: a comment line (``#!ascii version of ...``), a line
 ``nverts nfaces``, ``nverts`` lines ``x y z 0`` and ``nfaces`` lines
 ``a b c 0`` (0-based vertex indices). The trailing column is a flag, always 0.
 
-Frame: FreeSurfer-native surfaces are in tkRAS. ``read_asc``/``read_fs_surf``
-therefore tag ``mesh.frame = "tkRAS"`` by default; pass ``frame=`` to override
-(e.g. ``frame=None`` when unknown). Convert with ``pybiscuit.io.frames``.
+Frame: FreeSurfer-native binary surfaces are in tkRAS, so ``read_fs_surf`` tags
+``mesh.frame = "tkRAS"`` by default (override with ``frame=``). ``.asc`` files
+have no fixed frame (MaCRUISE ``.asc`` surfaces are scanner RAS), so
+``read_asc`` requires an explicit keyword ``frame="RAS"`` or ``"tkRAS"``.
+Convert with ``pybiscuit.io.frames``.
 """
 
 from __future__ import annotations
@@ -19,10 +21,17 @@ import numpy as np
 from pybiscuit.mesh.model import Mesh
 
 _DEFAULT_FRAME = "tkRAS"
+_ASC_FRAMES = ("RAS", "tkRAS")
 
 
-def read_asc(path, frame: str | None = _DEFAULT_FRAME) -> Mesh:
-    """Read a FreeSurfer ASCII surface. ``frame`` defaults to ``"tkRAS"``."""
+def read_asc(path, *, frame: str) -> Mesh:
+    """Read a FreeSurfer ASCII surface.
+
+    ``frame`` is a required keyword, ``"RAS"`` (scanner RAS; what MaCRUISE
+    writes) or ``"tkRAS"``; there is deliberately no default.
+    """
+    if frame not in _ASC_FRAMES:
+        raise ValueError(f"frame must be one of {_ASC_FRAMES}, got {frame!r}")
     path = Path(path)
     with open(path) as fh:
         comment = fh.readline().rstrip("\n")

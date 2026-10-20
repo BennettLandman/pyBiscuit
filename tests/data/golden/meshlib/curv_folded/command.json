@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "harness_curvature",
+    "input.vtk",
+    "<outdir>",
+    "0,3",
+    ""
+  ],
+  "commit": "dcef807b488eb10d81d9608cf9fa7d06b8ed23e8",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2) -O2 -std=c++11 -ffp-contract=off",
+  "oracle": "upstream-macos-arm64",
+  "tool": "harness_curvature (scripts/oracles/harness_curvature.cpp)",
+  "fixture": "curv_folded"
+}

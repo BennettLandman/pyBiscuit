@@ -14,7 +14,7 @@ upstream clones). See `docs/licensing.md` for the full inventory.
 | SphericalRemesh.txt | SphericalRemesh | (c) 2016 Ilwoo Lyu | `repos/SphericalRemesh/LICENSE` |
 | SphericalLabeling.txt | SphericalLabeling | (c) 2019 Ilwoo Lyu | `repos/SphericalLabeling/LICENSE` |
 | MeshLib.txt | MeshLib | (c) 2009 Ilwoo Lyu | `repos/MeshLib/LICENSE` |
-| UGSCNN-MeshConv.txt | UGSCNN MeshConv | placeholder, text pending | not available locally |
+| UGSCNN-MeshConv.txt | UGSCNN MeshConv | (c) 2018 Chiyu "Max" Jiang, UC Berkeley (MIT) | `github.com/maxjiang93/ugscnn` LICENSE at commit `64e27969c65b4807e41c1e275972dab8bb72c512` (default-branch HEAD, fetched 2026-10-20) |
 
 ## Not included (license unclear or incompatible)
 

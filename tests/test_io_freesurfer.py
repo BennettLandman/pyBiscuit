@@ -23,18 +23,29 @@ def _tet():
 def test_asc_roundtrip(tmp_path):
     m = _tet()
     write_asc(tmp_path / "a.asc", m)
-    r = read_asc(tmp_path / "a.asc")
+    r = read_asc(tmp_path / "a.asc", frame="tkRAS")
     assert r.frame == "tkRAS"
     np.testing.assert_allclose(r.vertices, m.vertices)
     np.testing.assert_array_equal(r.faces, m.faces)
-    assert read_asc(tmp_path / "a.asc", frame=None).frame is None
+    assert read_asc(tmp_path / "a.asc", frame="RAS").frame == "RAS"
+
+
+def test_asc_frame_required_and_validated(tmp_path):
+    write_asc(tmp_path / "a.asc", _tet())
+    with pytest.raises(TypeError):
+        read_asc(tmp_path / "a.asc")
+    with pytest.raises(TypeError):
+        read_asc(tmp_path / "a.asc", "RAS")  # keyword-only
+    for bad in (None, "scanner", "ras"):
+        with pytest.raises(ValueError):
+            read_asc(tmp_path / "a.asc", frame=bad)
 
 
 def test_asc_bad_count(tmp_path):
     p = tmp_path / "b.asc"
     p.write_text("#!ascii\n3 1\n0 0 0 0\n1 0 0 0\n")
     with pytest.raises(ValueError):
-        read_asc(p)
+        read_asc(p, frame="RAS")
 
 
 def test_surf_roundtrip(tmp_path):
@@ -68,6 +79,6 @@ SAMPLE = MIPAV / "sample-macruise" / "output"
 def test_read_legacy_asc(sub, kind, nv, nf):
     # NB: the brief expected inner = 243,822 (FreeView) / 250,874 (MNI); in the sample
     # inner is 250,874 in both dirs and 243,822 is the *central* surface.
-    m = read_asc(SAMPLE / sub / f"target_image_GMimg_{kind}Surf.asc")
+    m = read_asc(SAMPLE / sub / f"target_image_GMimg_{kind}Surf.asc", frame="RAS")
     assert (m.n_vertices, m.n_faces) == (nv, nf)
     assert m.faces.min() >= 0 and m.faces.max() == nv - 1

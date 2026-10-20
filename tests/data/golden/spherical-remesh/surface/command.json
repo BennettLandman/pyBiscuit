@@ -1,0 +1,71 @@
+{
+  "tool": "spherical-remesh",
+  "case": "surface",
+  "argv": [
+    "$ORACLES/spherical-remesh-nofma/bin/SphericalRemesh",
+    "-s",
+    "sphere.vtk",
+    "-i",
+    "subject.vtk",
+    "-r",
+    "ref.vtk",
+    "-p",
+    "lh.curv.txt",
+    "lh.sulc.txt",
+    "-o",
+    "out.vtk",
+    "--outputProperty",
+    "out",
+    "--quiet"
+  ],
+  "commit": "b677c39",
+  "meshlib_commit": "dcef807",
+  "fp_contract": "off",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "oracle": "upstream-macos-arm64",
+  "inputs": {
+    "generator": "scripts/oracles/make_golden_remesh.py:generate",
+    "seed": 20261020,
+    "spec": {
+      "sphere": [
+        "ico",
+        4
+      ],
+      "ref": [
+        "ico",
+        3
+      ],
+      "subject": true,
+      "coeff": null,
+      "props": [
+        [
+          "lh.curv.txt",
+          "cont"
+        ],
+        [
+          "lh.sulc.txt",
+          "cont"
+        ]
+      ],
+      "color": null,
+      "outputs": [
+        "out.vtk",
+        "out.curv.txt",
+        "out.sulc.txt"
+      ],
+      "golden": true
+    },
+    "files": [
+      "sphere.vtk",
+      "ref.vtk",
+      "subject.vtk",
+      "lh.curv.txt",
+      "lh.sulc.txt"
+    ]
+  },
+  "outputs": [
+    "out.vtk",
+    "out.curv.txt",
+    "out.sulc.txt"
+  ]
+}

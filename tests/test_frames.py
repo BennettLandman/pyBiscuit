@@ -94,8 +94,8 @@ def test_legacy_sample_mask_diagnostic(capsys):
         f"T1 extent min {(t1.affine @ [0, 0, 0, 1])[:3]} (voxel 0) / max "
         f"{(t1.affine @ [*[s - 1 for s in t1.shape], 1])[:3]}"
     )
-    fv = read_asc(SAMPLE / "Surfaces_FreeView" / "target_image_GMimg_innerSurf.asc")
-    mni = read_asc(SAMPLE / "Surfaces_MNI" / "target_image_GMimg_innerSurf.asc")
+    fv = read_asc(SAMPLE / "Surfaces_FreeView" / "target_image_GMimg_innerSurf.asc", frame="RAS")
+    mni = read_asc(SAMPLE / "Surfaces_MNI" / "target_image_GMimg_innerSurf.asc", frame="RAS")
     conv = tkras_to_scanner_ras(fv.vertices, t1)
     res = {}
     for name, pts in [
