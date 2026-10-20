@@ -14,7 +14,7 @@ dist/
 *.pth
 *.nii
 *.nii.gz
-reference/
+/reference/
 assets-cache/
 
 # Local agent settings
