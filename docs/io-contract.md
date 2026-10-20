@@ -40,8 +40,13 @@ Exactly what `biscuit_FC_v2.2.sif --surf_recon macruise` consumes:
 
 `~/dev/mipav/sample-macruise/output/` (and `100249/outputs/`) contain these
 files and are the first full-pipeline reference cases. FreeView `.asc` is
-FreeSurfer ASCII surface (`#!ascii`, `nV nF`, `x y z 0`, `i j k 0`) in tkRAS;
-the loader must convert to scanner RAS using the T1 header and record it.
+FreeSurfer ASCII surface (`#!ascii`, `nV nF`, `x y z 0`, `i j k 0`). Despite
+the FreeView name, the MaCRUISE files are **already in scanner RAS**, not tkRAS:
+99.99 % of vertices fall in the SEG_refine mask as read, versus 60 % after a
+tkRAS→scanner conversion ([foundations report](reports/foundations-2026-10-20.md)).
+The `Surfaces_MNI` copies are the same meshes (identical faces) moved by the
+rigid transform in `Surfaces_MNI/aff.txt`. Callers must state the frame
+explicitly; never assume tkRAS for MaCRUISE `.asc` files.
 
 ### Later routes
 

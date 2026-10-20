@@ -2,7 +2,7 @@
 
 ## Status
 
-**2026-10-20 — brief 01 executed** (B0, B2.1–B2.3, B4.1, B4.3; see [report](docs/reports/foundations-2026-10-20.md)). Reference IO, topology, icospheres and MeshConv operators in place; 161 tests pass. Owner questions open: [open-questions](docs/open-questions.md); MATLAB source requested from Ilwoo Lyu 2026-10-20. Next: B2.4–B2.6, B4.2, B6.1–B6.2, B8.1; B1 needs Q1.
+**2026-10-20 — brief 01 executed** (B0, B2.1–B2.3, B4.1, B4.3; see [report](docs/reports/foundations-2026-10-20.md)). Reference IO, topology, icospheres and MeshConv operators in place; 161 tests pass. Owner questions open: [open-questions](docs/open-questions.md); MATLAB source requested from Ilwoo Lyu 2026-10-20. Next: [agent brief 02](docs/agent-briefs/02-geometry-remesh.md) (upstream oracles, B2.4, B2.5, B4.2, SH basis); then geodesics + TRACE or HSD. B1 needs Q1.
 
 ## Objective
 
@@ -95,7 +95,7 @@ per [validation-tolerances](docs/validation-tolerances.md).
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
 | B0.1 | `pyproject.toml` (setuptools, src layout, py3.10–3.13), extras `[parc]`, `[viz]`, `[dev]`, `[macruise]`; MIT LICENSE + `LICENSES/` upstream notices | `pip install -e .[dev]` and `pybiscuit --version` on macOS arm64 + Linux | Done (pyproject, `pybiscuit --version`/`info`; tests/test_cli.py; macOS arm64 only — Linux unchecked) |
-| B0.2 | CI (GitHub Actions): lint (ruff), pytest matrix (3.10, 3.13 × ubuntu, macos, windows) | green on empty test suite | In progress (ci.yml written, YAML parses; not yet run — confirm green on PR) |
+| B0.2 | CI (GitHub Actions): lint (ruff), pytest matrix (3.10, 3.13 × ubuntu, macos, windows) | green on empty test suite | Done (CI green on PR #1: 6/6 jobs, run 39456903772) |
 | B0.3 | `scripts/extract_reference.py` maintained; `assets.py` registry with SHA-256 of every template/model file | registry matches extracted `reference/` hashes | Done (76 files/1.26 GB in `data/asset_registry.json`; tests/test_assets.py incl. reference match) |
 | B0.4 | Synthetic mesh fixture generators (sphere, ellipsoid, analytic "folded" sphere r(θ,φ)=1+a·Y_lm, icospheres 0–7) with seeds | fixtures deterministic across platforms (hash test) | Done (tests/fixtures/meshes.py; tests/test_fixtures.py hash tests; arm64 only) |
 
