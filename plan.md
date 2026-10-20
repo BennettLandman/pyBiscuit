@@ -2,7 +2,7 @@
 
 ## Status
 
-**2026-10-20 — briefs 01–02 executed; next steps planned.** Done vs upstream oracles: B0, B2.1–B2.5, B4.2, B4.3, SH basis (B6.2); B4.1 partial (shipped spheres are 4-decimal quantised). PR #1 is green; PR #2 is red on x86-64 CI because tests demand bit-exact float32 equality with arm64 oracles. Image tool versions equal upstream master (HSD 1.3.9, TRACE 1.1.2, LGI 1.2.2, SphericalRemesh 1.2.1). Next: [brief 03](docs/agent-briefs/03-portable-numerics.md) (sequential), then briefs 04–07 in parallel; see [Next steps](#next-steps-2026-10-20) and the [brief index](docs/agent-briefs/README.md).
+**2026-10-20 — briefs 01–03 merged to `main` (`e6c223a`).** Done vs upstream oracles: B0, B2.1–B2.5, B4.2, B4.3, SH basis (B6.2); B4.1 partial (shipped spheres are 4-decimal quantised). Cross-platform policy PROPOSED in validation-tolerances.md; brief 03 lists 6 owner decisions in [its report](docs/reports/portable-numerics-2026-10-20.md). CI runs one Linux job per PR; the full OS matrix is a manual dispatch. Image tool versions equal upstream master. Next: briefs 04–07 in parallel ([index](docs/agent-briefs/README.md)); B1 needs Q1; B5/B7.1/B7.4–5/B9.5/B10 wait for the MATLAB source.
 
 ## Objective
 

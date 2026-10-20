@@ -5,9 +5,9 @@ evidence, and stop conditions; AGENTS.md rules always apply.
 
 | Brief | Scope | Depends on | Status |
 |---|---|---|---|
-| [01](01-foundations.md) | Scaffold, I/O, topology, icospheres, MeshConv operators | — | Done (PR #1) |
-| [02](02-geometry-remesh.md) | Oracles, MeshLib geometry, AABB, SH basis, SphericalRemesh | 01 | Done (PR #2, CI red) |
-| [03](03-portable-numerics.md) | Cross-platform comparison policy; get CI green | 02 | Next (sequential) |
+| [01](01-foundations.md) | Scaffold, I/O, topology, icospheres, MeshConv operators | — | Done (PR #1, merged) |
+| [02](02-geometry-remesh.md) | Oracles, MeshLib geometry, AABB, SH basis, SphericalRemesh | 01 | Done (PR #2, merged) |
+| [03](03-portable-numerics.md) | Cross-platform comparison policy; get CI green | 02 | Done (in PR #2, merged) |
 | [04](04-geodesics-trace.md) | Geodesics + TRACE | 03 | Ready |
 | [05](05-hsd.md) | HSD registration | 03 | Ready |
 | [06](06-parcellation-net.md) | Parcellation network inference | 03 | Ready |
@@ -20,7 +20,7 @@ pipeline). Blocked on Linux image runs (Q1): B1, B3 (MeshProperty).
 ## Parallel sessions
 
 Briefs 04–07 may run at the same time, each in its own git worktree and
-branch, all from `main` after PRs #1–#2 (with brief 03) are merged.
+branch, all from `main` (PRs #1–#2 merged 2026-10-20, `e6c223a`).
 
 - **Own files only.** Each brief creates its own modules, tests, golden
   folders, port notes, and report. Shared files need care:
