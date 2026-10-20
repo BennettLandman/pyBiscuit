@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+
+# Large or third-party artifacts never belong in git
+*.sif
+*.simg
+*.pth
+*.nii
+*.nii.gz
+reference/
+assets-cache/
+
+# Local agent settings
+.claude/settings.local.json
