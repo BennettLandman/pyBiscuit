@@ -69,6 +69,17 @@ jarr() { # JSON array of the lines on stdin
     printf ']'
 }
 
+jarr_args() { # JSON array of the arguments (newlines and empty strings preserved)
+    local first=1 a
+    printf '['
+    for a in "$@"; do
+        [ $first -eq 1 ] || printf ','
+        first=0
+        printf '"%s"' "$(jesc "$a")"
+    done
+    printf ']'
+}
+
 absolute() { case $1 in /*) printf '%s' "$1" ;; *) printf '%s/%s' "$PWD" "$1" ;; esac }
 
 snapshot() { # "path<TAB>size<TAB>mtime" for cwd entries, argument paths and prefix globs
@@ -116,9 +127,9 @@ fi
 t1=$(now)
 
 snapshot "$@" >"$tmp/post"
-created=$(awk -F'\t' 'NR==FNR { pre[$1] = $2 "\t" $3; next } !($1 in pre) { print $1 }' "$tmp/pre" "$tmp/post")
-modified=$(awk -F'\t' 'NR==FNR { pre[$1] = $2 "\t" $3; next } ($1 in pre) && pre[$1] != $2 "\t" $3 { print $1 }' "$tmp/pre" "$tmp/post")
-deleted=$(awk -F'\t' 'NR==FNR { post[$1] = 1; next } !($1 in post) { print $1 }' "$tmp/post" "$tmp/pre")
+created=$(awk -F'\t' 'FILENAME == ARGV[1] { pre[$1] = $2 "\t" $3; next } !($1 in pre) { print $1 }' "$tmp/pre" "$tmp/post")
+modified=$(awk -F'\t' 'FILENAME == ARGV[1] { pre[$1] = $2 "\t" $3; next } ($1 in pre) && pre[$1] != $2 "\t" $3 { print $1 }' "$tmp/pre" "$tmp/post")
+deleted=$(awk -F'\t' 'FILENAME == ARGV[1] { post[$1] = 1; next } !($1 in post) { print $1 }' "$tmp/post" "$tmp/pre")
 
 envjson=""
 for v in $env_list; do
@@ -131,7 +142,7 @@ done
 {
     printf '{"tool":"%s","real":"%s","pid":%s,"ppid":%s,"cwd":"%s",' \
         "$(jesc "$name")" "$(jesc "$real")" "$$" "$PPID" "$(jesc "$PWD")"
-    printf '"argv":%s,' "$(printf '%s\n' "$@" | jarr)"
+    printf '"argv":%s,' "$(jarr_args "$@")"
     printf '"start":%s,"end":%s,"exit":%s,' "$t0" "$t1" "$rc"
     printf '"env":{%s},' "$envjson"
     printf '"inputs":%s,"created":%s,"modified":%s,"deleted":%s' \
