@@ -215,8 +215,8 @@ per [validation-tolerances](docs/validation-tolerances.md).
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
 | B10.1 | ROI-wise, curve-wise (`.bary`-based), whole-cortex stats (`surf_quant_stat_pipeline.m`) incl. CBT v1.2c/d fixes | tables E vs reference | Todo |
-| B10.2 | Stage graph, checkpoints, `--resume` with signature verification, `run.json` | resume tests | Todo |
-| B10.3 | Input adapters: PyMaCRUISE run dir (primary), legacy MaCRUISE v3 dir, original `biscuit.conf` | integration tests on synthetic run | Todo |
+| B10.2 | Stage graph, checkpoints, `--resume` with signature verification, `run.json` | resume tests | Done, machinery only (pipeline/{model,signature,runner,stages}.py; tests/test_pipeline.py 14 pass: signature sensitivity, resume skip/refuse, corrupt outputs, attempt numbering; 8 of 9 stages raise `StageBlocked` citing their rows; [port note](docs/ports/pipeline.md), [report](docs/reports/pipeline-infra-2026-10-21.md)) |
+| B10.3 | Input adapters: PyMaCRUISE run dir (primary), legacy MaCRUISE v3 dir, original `biscuit.conf` | integration tests on synthetic run | Done (config.py round-trips the shipped FC `biscuit.conf`; adapters for PyMaCRUISE, MaCRUISE v3, FreeSurfer 6; tests/test_pipeline_adapters.py, test_pipeline_cli.py, test_config.py; reference: all products found in the BASE run and `sample-macruise/output` + `100249`; `aff.txt` residual 5e-6 mm; `pybiscuit run --dry-run` exit 0 on both) |
 | B10.4 | `legacy/` output view mirroring B1.3 names | file-tree diff vs reference = ∅ (names) | Todo |
 
 ### B11 — End-to-end parity

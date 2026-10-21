@@ -51,6 +51,13 @@ def main(argv: list[str] | None = None) -> int:
         from .sphere.remesh_cli import main as remesh_main
 
         return remesh_main(argv[1:])
+    # --- run (B10.2/B10.3): pipeline driver; options are parsed by pipeline/cli.py ---
+    sub.add_parser("run", help="run the pipeline on an input directory", add_help=False)
+    if argv and argv[0] == "run":
+        from .pipeline.cli import main as run_main
+
+        return run_main(argv[1:])
+    # --- end run ---
     args = p.parse_args(argv)
     if args.cmd == "info":
         return _info()

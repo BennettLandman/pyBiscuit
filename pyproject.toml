@@ -14,6 +14,7 @@ dependencies = [
     "scipy>=1.10,<2",
     "nibabel>=5.2,<6",
     "numba>=0.61,<1",
+    "tomli>=2.0; python_version < '3.11'",  # TOML config on 3.10 only; stdlib tomllib from 3.11 (MIT)
 ]
 
 [project.optional-dependencies]
