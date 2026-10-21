@@ -19,6 +19,7 @@ upstream copyright notices in file headers and in `LICENSES/`.
 | MeshProperty, MeshDeform, MeshContour | closed binaries (Lyu) | n/a | black-box re-implementation; ask for source |
 | FreeSurfer 6 binaries | FreeSurfer license (not OSI) | **no** | clean-room replacements; never read FS source |
 | UGSCNN MeshConv (`meshcnn/`) | from Jiang et al. (MIT) via SphericalLabeling | yes | attribute |
+| NiiVue 0.69.0 (`pybiscuit/viz/data/niivue.umd.js`, © 2021 Niivue) | BSD-2-Clause; UMD inlines MIT deps (fflate, gl-matrix, nifti-reader-js, zarrita, …) | yes | bundled in `[viz]` only; text in `LICENSES/NiiVue.txt`; version + SHA-256 in `viz/data/NIIVUE.json` |
 
 ## Models and templates
 

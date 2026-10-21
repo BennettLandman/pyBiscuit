@@ -58,6 +58,14 @@ def main(argv: list[str] | None = None) -> int:
 
         return run_main(argv[1:])
     # --- end run ---
+    # --- viz (brief 09): view/render; implementation lives in pybiscuit.viz.cli ---
+    sub.add_parser("view", help="desktop surface viewer (needs pybiscuit[viz])", add_help=False)
+    sub.add_parser("render", help="render PNG panels (needs pybiscuit[viz])", add_help=False)
+    if argv and argv[0] in ("view", "render"):
+        from .viz.cli import main as viz_main
+
+        return viz_main(argv)
+    # --- end viz ---
     args = p.parse_args(argv)
     if args.cmd == "info":
         return _info()

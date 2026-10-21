@@ -1,0 +1,12 @@
+{
+  "package": "@niivue/niivue",
+  "version": "0.69.0",
+  "license": "BSD-2-Clause",
+  "license_file": "LICENSES/NiiVue.txt",
+  "source": "https://registry.npmjs.org/@niivue/niivue/-/niivue-0.69.0.tgz",
+  "tarball_sha256": "6e9a6a471b428eb3b258a0086beca9187d95e43a781a39e8a519c6da246af485",
+  "bundled_file": "niivue.umd.js",
+  "bundled_from": "package/dist/niivue.umd.js",
+  "bundled_sha256": "47b896b77ec4a5be3ef1949c33ad393b6f45629921f326c279000bcf51bdb4af",
+  "bundled_dependencies_note": "UMD build inlines fflate, gl-matrix, nifti-reader-js, zarrita, @lukeed/uuid, @ungap/structured-clone, array-equal (all MIT)"
+}
