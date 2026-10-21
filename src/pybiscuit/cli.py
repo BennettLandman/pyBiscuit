@@ -18,7 +18,11 @@ def main(argv: list[str] | None = None) -> int:
         help="port of SphericalRemesh (same flags as the original binary; see its --help)",
         add_help=False,
     )
-    sub.add_parser("hsd", help="port of HSD spherical registration (flags as the original binary)", add_help=False)
+    sub.add_parser(
+        "hsd",
+        help="port of HSD spherical registration (flags as the original binary)",
+        add_help=False,
+    )
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] == "hsd":  # remaining args are passed through verbatim
         from .hsd.cli import main as hsd_main
