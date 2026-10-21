@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """HSD spherical registration: port of ``HSD`` (ilwoolyu/HSD @ f169595, ``src/HSD.cpp``).
 
 Property-only registration as reachable from the shipped CLI (no landmarks / location terms;
@@ -10,22 +11,24 @@ from __future__ import annotations
 
 import math
 import sys
-from pathlib import Path
 
 import numpy as np
-from numba import get_num_threads
 
-from pybiscuit.mesh.geometry import face_normals, vertex_neighbor_lists
-from pybiscuit.mesh.geometry import smooth_data
+from pybiscuit.mesh.geometry import face_normals, smooth_data, vertex_neighbor_lists
 from pybiscuit.sphere.aabb import SphereAABB
 from pybiscuit.sphere.remesh import _load_mesh, _read_floats, _write_vtk_meshlib
-from pybiscuit.sphere.spharm import ShDeformation, basis, read_sh_coefficients, write_sh_coefficients
+from pybiscuit.sphere.spharm import (
+    ShDeformation,
+    basis,
+    read_sh_coefficients,
+    write_sh_coefficients,
+)
 
 from . import gradient as G
 from . import kernels as K
 from .geom import F, unit_rows_inplace
 from .guess import guess_init_coeff
-from .icosahedron import icosahedron, icosahedron_counts
+from .icosahedron import icosahedron
 
 FLT_MAX = 3.4028234663852886e38
 _SAMPLES = {642: 3, 2562: 4, 10242: 5, 40962: 6, 163842: 7}
@@ -139,7 +142,7 @@ class HSD:
 
     # ------------------------------------------------------------------- init
     def _init(self, spheres, properties, coefficient, ico_mesh, tmp_variance):
-        K_, nsubj = self.K, self.nsubj
+        nsubj = self.nsubj
         # icosahedron used for evaluation (uniform sampling points)
         if ico_mesh is None:
             self.ico_v, self.ico_f = icosahedron(self.icosahedron)

@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Numba kernels for HSD: deformation, areas, flips, energies, feature sampling, statistics.
 
 Each kernel names the C++ function it ports (``HSD.cpp`` @ f169595) and keeps its float32 /

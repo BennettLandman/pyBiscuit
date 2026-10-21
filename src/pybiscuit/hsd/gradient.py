@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Gradient and Gauss-Newton Hessian of the HSD energy (``updateGradientProperties`` /
 ``updateGradientDisplacement`` / ``updateHessian`` / ``updateNewGradient``, HSD.cpp 2022-2615).
 
@@ -16,7 +17,7 @@ import numpy as np
 from numba import get_num_threads, njit, prange
 from scipy.linalg import lapack
 
-from .geom import D, F, _rot_point, _sph2cart, _unit3, bary32_snap, dot3, norm3, rotation_into
+from .geom import D, F, _rot_point, _unit3, bary32_snap, dot3, norm3, rotation_into
 from .geom import _cross3 as cross3
 
 PAR = {"cache": True, "error_model": "numpy", "parallel": True}

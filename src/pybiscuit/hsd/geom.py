@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """float32/float64 scalar helpers shared by the HSD kernels (MeshLib ``Geom.cpp`` semantics).
 
 Everything mirrors the C++ operation order and types: MeshLib ``Vector`` is ``float[3]``,

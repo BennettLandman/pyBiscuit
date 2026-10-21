@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """``pybiscuit hsd``: same flags as the upstream ``HSD`` binary (wrapper/PARSE_ARGS.h @ f169595).
 
 The image binary exposes exactly these flags (checked with ``strings``): the landmark/location

@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """``HSD::icosahedron``: the uniform sampling icosahedra of HSD (HSD.cpp 2890-3050).
 
 Not the BISCUIT ``sphere_*.vtk`` ordering (``pybiscuit.sphere.icosphere``): HSD builds its own
@@ -13,7 +14,7 @@ import numpy as np
 from numba import njit, types
 from numba.typed import Dict
 
-from .geom import NJIT, F, _unit3, _cross3, dot3
+from .geom import F, _cross3, _unit3, dot3
 
 __all__ = ["icosahedron", "icosahedron_counts"]
 

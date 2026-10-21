@@ -1,0 +1,43 @@
+{
+ "tool": "hsd",
+ "case": "gd_ico4_guess",
+ "kind": "run",
+ "argv": [
+  "-s",
+  "s0.sphere.vtk",
+  "s1.sphere.vtk",
+  "s2.sphere.vtk",
+  "-p",
+  "s0.curv.txt",
+  "s1.curv.txt",
+  "s2.curv.txt",
+  "-o",
+  "o0.reg.vtk",
+  "o1.reg.vtk",
+  "o2.reg.vtk",
+  "--outputcoeff",
+  "o0.coeff",
+  "o1.coeff",
+  "o2.coeff",
+  "-d",
+  "6",
+  "--icosahedron",
+  "4"
+ ],
+ "params": {
+  "nsub": 3,
+  "flags": [
+   "-d",
+   "6",
+   "--icosahedron",
+   "4"
+  ]
+ },
+ "commit": "f169595",
+ "version": "v1.3.9",
+ "meshlib": "dcef807",
+ "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+ "oracle": "upstream-macos-arm64, -ffp-contract=off, Accelerate LAPACK/BLAS",
+ "inputs": "tests/fixtures/hsd_cases.py:write_case",
+ "env": {}
+}

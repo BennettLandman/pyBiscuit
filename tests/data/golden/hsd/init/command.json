@@ -1,0 +1,19 @@
+{
+ "tool": "hsd",
+ "case": "init",
+ "kind": "init",
+ "argv": [
+  "-d",
+  "6",
+  "--icosahedron",
+  "3|4|5"
+ ],
+ "params": {},
+ "commit": "f169595",
+ "version": "v1.3.9",
+ "meshlib": "dcef807",
+ "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+ "oracle": "upstream-macos-arm64, -ffp-contract=off, Accelerate LAPACK/BLAS",
+ "inputs": "tests/fixtures/hsd_cases.py:write_case",
+ "env": {}
+}

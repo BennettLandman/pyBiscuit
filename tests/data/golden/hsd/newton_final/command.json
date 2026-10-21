@@ -1,0 +1,43 @@
+{
+ "tool": "hsd",
+ "case": "newton_final",
+ "kind": "eval",
+ "argv": [
+  "-s",
+  "s0.sphere.vtk",
+  "s1.sphere.vtk",
+  "s2.sphere.vtk",
+  "-p",
+  "s0.curv.txt",
+  "s1.curv.txt",
+  "s2.curv.txt",
+  "-d",
+  "6",
+  "--icosahedron",
+  "6",
+  "--noguess"
+ ],
+ "params": {
+  "deg": 6,
+  "ico": 6,
+  "deginc": 6,
+  "beg": 0,
+  "end": 6,
+  "trans": 2
+ },
+ "commit": "f169595",
+ "version": "v1.3.9",
+ "meshlib": "dcef807",
+ "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+ "oracle": "upstream-macos-arm64, -ffp-contract=off, Accelerate LAPACK/BLAS",
+ "inputs": "tests/fixtures/hsd_cases.py:write_case",
+ "env": {
+  "HSD_H_MODE": "eval",
+  "HSD_H_OUT": "/var/folders/w_/brcmpg7552jcfqmbc3htt_900000gp/T/tmp1mmwqgdp/out",
+  "HSD_H_DEGINC": "6",
+  "HSD_H_BEG": "0",
+  "HSD_H_END": "6",
+  "HSD_H_TRANS": "2",
+  "HSD_H_NSUCC": "2"
+ }
+}

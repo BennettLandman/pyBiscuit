@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """``HSD::guessInitCoeff``: brute-force rigid initial guess (HSD.cpp 2617-2845, "improved initial guess").
 
 For every deformable subject whose coefficients are all zero, a coarse-to-fine grid over
@@ -64,7 +65,7 @@ def guess_init_coeff(h) -> None:
         for _ in range(4):
             idmaps.append(cand[idmaps[-1]])
 
-    for s, sub in enumerate(h.subj):
+    for sub in h.subj:
         if sub.fixed:
             continue
         if np.any(sub.coeff != 0):
