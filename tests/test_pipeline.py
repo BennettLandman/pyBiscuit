@@ -39,7 +39,8 @@ def _body(text):
     def body(ctx):
         CALLS.append(ctx.stage.name)
         for o in ctx.stage.outputs:
-            (ctx.attempt_dir / o).write_text(f"{ctx.stage.name}:{o}:{text}:{sorted(ctx.params.items())}")
+            params = sorted(ctx.params.items())
+            (ctx.attempt_dir / o).write_text(f"{ctx.stage.name}:{o}:{text}:{params}")
 
     return body
 
