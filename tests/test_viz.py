@@ -169,3 +169,11 @@ def test_render_panel_png(tmp_path):
     im = Image.open(out)
     assert im.size[0] >= 3 * 64 and im.size[1] >= 2 * 64
     assert canvas.shape[2] == 3
+
+
+def test_gl_context_when_required():
+    """The CI viz job sets PYBISCUIT_REQUIRE_GL=1 so a missing context fails instead of skipping."""
+    import os
+
+    if os.environ.get("PYBISCUIT_REQUIRE_GL"):
+        assert R.gl_available(), "no off-screen OpenGL context in the viz CI job"
