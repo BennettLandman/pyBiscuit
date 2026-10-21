@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-parc = ["torch>=2"]
+parc = ["torch>=2", "safetensors>=0.4"]
 viz = ["pyvista", "matplotlib"]
 macruise = []
 dev = ["pytest>=8,<9", "ruff", "build>=1.2,<2"]
