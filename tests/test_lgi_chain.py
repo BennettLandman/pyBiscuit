@@ -14,12 +14,10 @@ from _compare import assert_close_float32
 from fixtures.lgi import fold_case
 from pybiscuit.cli import main as cli_main
 from pybiscuit.io import read_vtk, write_vtk
-from pybiscuit.quant.hull import outer_hull
 from pybiscuit.quant.lgi_pipeline import (
     gyrification_argv,
     hull_correspondence,
     lgi_pipeline,
-    mesh_area,
 )
 from pybiscuit.trace.pipeline import curve_argv, curve_calls, curve_extract_pipeline, num2str
 
@@ -100,13 +98,24 @@ def test_curve_extraction_is_skipped_when_outputs_exist(chain, monkeypatch):
     curve_extract_pipeline(w, w / "curve", hemis=("lh",))
 
 
-def test_hull_correspondence_standin_properties():
-    surf, _ = fold_case(a=0.25, level=4)
-    hull = outer_hull(surf, grid=64)
-    corr = hull_correspondence(surf, hull)
-    assert corr.n_vertices == surf.n_vertices and np.array_equal(corr.faces, surf.faces)
-    assert {tuple(v) for v in corr.vertices} <= {tuple(v) for v in hull.vertices}
-    assert mesh_area(hull) > 0
+def test_hull_correspondence_projects_onto_the_hull_surface():
+    from fixtures.meshes import icosphere
+    from pybiscuit.mesh import Mesh
+
+    hull = icosphere(3)
+    hull = Mesh(hull.vertices * 40.0, hull.faces)
+    inner = icosphere(4)
+    inner = Mesh(inner.vertices * 30.0, inner.faces)
+    corr = hull_correspondence(inner, hull)
+    assert corr.n_vertices == inner.n_vertices and np.array_equal(corr.faces, inner.faces)
+    r = np.linalg.norm(corr.vertices, axis=1)
+    # on the faceted sphere: between the inscribed (face centre) and circumscribed radius
+    assert r.max() <= 40.0 + 1e-9 and r.min() > 37.0
+    # never farther from the query than the nearest hull vertex, and not snapped to vertices
+    d = np.linalg.norm(corr.vertices - inner.vertices, axis=1)
+    dv = np.linalg.norm(inner.vertices[:, None] - hull.vertices[None], axis=2).min(axis=1)
+    assert (d <= dv + 1e-9).all()
+    assert np.unique(corr.vertices.round(6), axis=0).shape[0] > 0.9 * len(r)
 
 
 def test_end_to_end_cli_with_outer_hull(tmp_path):

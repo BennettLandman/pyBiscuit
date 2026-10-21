@@ -27,7 +27,7 @@ GW_VertexIterator}`, `src/Mesh.cpp`). The image's Gyrification is v1.2.2, the sa
 
 `-r/--radius` is parsed and ignored upstream; it is accepted and ignored here. The `lgi` shell script (OuterHull -> klaplace -> CurveExtraction -> Gyrification) is reproduced by the brief 20 driver
 (`quant/lgi_pipeline.py`, `pybiscuit lgi-pipeline`; see `docs/reports/lgi-trace-chain-2026-10-21.md`) with the ported TRACE in place of
-CurveExtraction. klaplace is out of scope (licence, Q7): `hull_correspondence` is a nearest-hull-vertex stand-in for
+CurveExtraction. klaplace is out of scope (licence, Q7): `hull_correspondence` is a closest-point-on-hull stand-in for
 `-surfaceCorrespondence`. Gyrification takes `--outer`, the vertex-wise hull; `OuterHull` is B9.2 (`outer-hull.md`).
 BISCUIT's exact call (spec §9.3): `-m 316.000000 --speed 0.200000 --refHullArea 77100.000000 --nThreads N` (`%f` numbers; the map file is
 named from the adjusted kernel area, `lgi.map.316.txt` when the hull area equals the reference); test

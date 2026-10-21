@@ -6,9 +6,11 @@ Chain per hemisphere: ``OuterHull`` (pial) -> hull correspondence -> TRACE curve
 
 The hull correspondence is the one step that is **not** the image's: ``klaplace
 -surfaceCorrespondence`` stays out of scope (licence, Q7).  :func:`hull_correspondence` is a
-stand-in that moves every pial vertex to the nearest vertex of the hull mesh (error at most half
-the hull's vertex spacing, ~0.4 mm for the 256-voxel hull).  It keeps the pial topology, which is
-all ``Gyrification --outer`` needs, but it is not klaplace's smooth Laplace-streamline map, so LGI
+stand-in that moves every pial vertex to the closest point of the hull surface (faces around the
+nearest hull vertex).  Snapping to hull *vertices* was tried first: 72 % of the template's outer
+vertices then coincide exactly, which makes the fast marching tie-dominated.  It keeps the pial
+topology, which is all ``Gyrification --outer`` needs, but it is not klaplace's smooth
+Laplace-streamline map, so LGI
 values are comparable to the image only after the image goldens (Q1) are in.  Comparisons against
 the oracle chain share this correspondence, so they isolate the TRACE and Gyrification ports.
 """
@@ -19,6 +21,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
+import numba
 import numpy as np
 from scipy.spatial import cKDTree
 
@@ -42,14 +45,67 @@ def mesh_area(mesh: Mesh) -> float:
     return float(vertex_areas(mesh.vertices.astype(np.float32), mesh.faces).sum())
 
 
+@numba.njit(cache=True)
+def _closest_on_triangle(p, a, b, c):
+    """Closest point of triangle abc to p (Ericson, Real-Time Collision Detection, 5.1.5)."""
+    ab, ac, ap = b - a, c - a, p - a
+    d1, d2 = ab @ ap, ac @ ap
+    if d1 <= 0 and d2 <= 0:
+        return a
+    bp = p - b
+    d3, d4 = ab @ bp, ac @ bp
+    if d3 >= 0 and d4 <= d3:
+        return b
+    vc = d1 * d4 - d3 * d2
+    if vc <= 0 and d1 >= 0 and d3 <= 0:
+        return a + ab * (d1 / (d1 - d3))
+    cp = p - c
+    d5, d6 = ab @ cp, ac @ cp
+    if d6 >= 0 and d5 <= d6:
+        return c
+    vb = d5 * d2 - d1 * d6
+    if vb <= 0 and d2 >= 0 and d6 <= 0:
+        return a + ac * (d2 / (d2 - d6))
+    va = d3 * d6 - d5 * d4
+    if va <= 0 and (d4 - d3) >= 0 and (d5 - d6) >= 0:
+        w = (d4 - d3) / ((d4 - d3) + (d5 - d6))
+        return b + (c - b) * w
+    den = 1.0 / (va + vb + vc)
+    return a + ab * (vb * den) + ac * (vc * den)
+
+
+@numba.njit(cache=True)
+def _project(points, hv, hf, nearest, indptr, tris):
+    out = np.empty_like(points)
+    for i in range(points.shape[0]):
+        best = np.inf
+        n = nearest[i]
+        for k in range(indptr[n], indptr[n + 1]):
+            f = hf[tris[k]]
+            q = _closest_on_triangle(points[i], hv[f[0]], hv[f[1]], hv[f[2]])
+            d = ((q - points[i]) ** 2).sum()
+            if d < best:
+                best = d
+                out[i] = q
+    return out
+
+
 def hull_correspondence(surface: Mesh, hull: Mesh) -> Mesh:
     """Stand-in for ``klaplace -surfaceCorrespondence`` + ``-conv``: the pial mesh with every vertex
-    moved to its nearest hull vertex (same faces, so ``Gyrification --outer`` accepts it)."""
-    _, idx = cKDTree(hull.vertices).query(surface.vertices)
-    return Mesh(
-        np.ascontiguousarray(hull.vertices[idx], dtype=np.float64), surface.faces,
-        frame=surface.frame, units=surface.units,
-    )  # fmt: skip
+    moved to the closest point of the hull surface (same faces, so ``Gyrification --outer`` accepts
+    it).  The search is over the faces around the nearest hull vertex, which is exact for a hull
+    whose spacing is small against its distance to the surface."""
+    hv = np.ascontiguousarray(hull.vertices, dtype=np.float64)
+    hf = np.ascontiguousarray(hull.faces, dtype=np.int64)
+    _, nearest = cKDTree(hv).query(surface.vertices)
+    flat = hf.ravel()
+    order = np.argsort(flat, kind="stable")
+    indptr = np.zeros(hv.shape[0] + 1, dtype=np.int64)
+    np.cumsum(np.bincount(flat, minlength=hv.shape[0]), out=indptr[1:])
+    tris = (order // 3).astype(np.int64)
+    pts = np.ascontiguousarray(surface.vertices, dtype=np.float64)
+    out = _project(pts, hv, hf, nearest.astype(np.int64), indptr, tris)
+    return Mesh(out, surface.faces, frame=surface.frame, units=surface.units)
 
 
 def gyrification_argv(
