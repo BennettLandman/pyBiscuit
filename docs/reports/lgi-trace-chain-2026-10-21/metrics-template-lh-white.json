@@ -1,0 +1,31 @@
+{
+ "surface": "lh.white.vtk",
+ "threads": 4,
+ "vertices": 163842,
+ "hull_seconds": 4.236597061157227,
+ "hull_area": 51785.85701769557,
+ "corr_area": 56302.251548564775,
+ "surface_area": 52826.66998402617,
+ "oracle_trace_seconds": 423.99017786979675,
+ "port_trace_seconds": 53.21374821662903,
+ "curve_files_identical": {
+  "lh.gray.scurve": true,
+  "lh.gray.scurve.bary": true,
+  "lh.white.gcurve": true,
+  "lh.white.gcurve.bary": true
+ },
+ "curve_vertices_port": 1955,
+ "curve_vertices_oracle": 1955,
+ "curve_vertex_jaccard": 1.0,
+ "oracle_gyrification_seconds": 793.7188107967377,
+ "port_gyrification_seconds": 97.89089798927307,
+ "lgi_median": 1.6583174999999999,
+ "lgi_min": 1.015039,
+ "lgi_max": 8.135046,
+ "lgi_max_abs_diff_over_max": 0.0064890512761908055,
+ "lgi_max_rel": 0.011047853200784507,
+ "lgi_p99_rel": 0.0006630547329940344,
+ "lgi_n_rel_gt_1e4": 2832,
+ "lgi_pearson_r": 0.9999997861456376,
+ "lgi_pass_E": false
+}
