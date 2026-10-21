@@ -34,3 +34,6 @@ Stage science; wiring HSD/TRACE/parc/SphericalRemesh into stage bodies; `legacy/
 
 ## Shared-file edits
 `cli.py`: one block (`run` dispatch, marked with comments). `pyproject.toml`: the `tomli` marker line. `plan.md`: B10.2 and B10.3 Status cells only.
+
+## Config cross-check against the MATLAB source (2026-10-21)
+`BISCUIT-master/BISCUIT/GenericRecon/biscuit/biscuit.conf` has the same keys, order and values as the FC image's file except the four `mc_*` entries, which are tree-relative there (`Surfaces_FreeView/target_image_GMimg_innerSurf.asc`, `Surfaces_MNI/target_image_GMimg_innerSurf.asc`, `Raw/T1.nii.gz`, `SegRefine/SEG_refine.nii.gz`) instead of flat file names. That is the layout the `macruise-v3` adapter already reads. Defaults stay those of the FC image (the acceptance reference); the 2022 source's `mc_*` values are an owner decision.
