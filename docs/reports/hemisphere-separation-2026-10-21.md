@@ -21,7 +21,7 @@ Date 2026-10-21. Branch `brief-12-hemisphere`. Status of row B5.2: **Done, oracl
 | `aff.txt` / MNI copy | -1.214 (candidate 0 of 101) | 223, 227, 28 | 49 | 129,122 / 129,481 | 5,202 / 2,601 | 250,800 |
 | SEG_refine labels | -0.501 (candidate 0) | 225, 224, 6 | 8 | 129,186 / 129,458 | 5,202 / 2,601 | 250,841 |
 
-Both hemispheres are closed, genus 0, consistently oriented; `lh` has mean x -26.4 mm, `rh` +26.2 mm. Patch size: three patches in total (the two bridge loops plus one small hole); each carries 2,601 interior vertices because the patch grid has a fixed 51x51 size (as in MATLAB), so `mask == 0` totals 7,803 vertices. The label-fitted midline normal is 0.84 degrees from the MNI x axis; the label frame and the MNI frame agree on the hemisphere of 99.985 % of the vertices both keep (38 mismatches of 250,8xx). Run time about 5 s.
+Both hemispheres are closed, genus 0, consistently oriented; `lh` has mean x -26.4 mm, `rh` +26.2 mm. Patch size: three patches in total (the two bridge loops plus one small hole); each carries 2,601 interior vertices because the patch grid has a fixed 51x51 size (as in MATLAB), so `mask == 0` totals 7,803 vertices. The label-fitted midline normal is 0.84 degrees from the MNI x axis; the label frame and the MNI frame agree on the hemisphere of 99.985 % of the vertices both keep (38 mismatches among the vertices both keep). Run time about 5 s.
 
 ## Findings
 
