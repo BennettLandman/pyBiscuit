@@ -19,3 +19,6 @@ assets-cache/
 
 # Local agent settings
 .claude/settings.local.json
+
+# Session worktrees and local agent state
+.claude/
