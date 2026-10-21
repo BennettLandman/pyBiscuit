@@ -130,3 +130,23 @@ def test_open_mesh_rejected():
     m = cut_sphere(3)
     with pytest.raises(ValueError, match="closed"):
         gyrification(m, m, curve_ids=np.array([0, 5]))
+
+
+def test_cli_matches_golden(tmp_path):
+    from pybiscuit.cli import main
+
+    out = tmp_path / "lgi"
+    rc = main(
+        ["lgi", "-i", str(INP / "surface.vtk"), "--outer", str(INP / "hull.vtk"),
+         "-s", str(INP / "surface.scurve.bary"), "-g", str(INP / "surface.gcurve.bary"),
+         "-o", str(out), "-m", "316", "--refHullArea", "20082.166", "--geodesicMap",
+         str(tmp_path / "g.txt"), "--kArea1"]
+    )  # fmt: skip
+    assert rc == 0
+    assert_close_float32(
+        np.loadtxt(f"{out}.lgi.map.316.txt"), np.loadtxt(G / "ratio1" / "lgi.lgi.map.316.txt")
+    )
+    assert_close_float32(
+        np.loadtxt(f"{out}.k1.map.316.txt"), np.loadtxt(G / "ratio1" / "lgi.k1.map.316.txt")
+    )
+    assert (tmp_path / "g.txt").read_text().splitlines()[0].count(" ") == 1

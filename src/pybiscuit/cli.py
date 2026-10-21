@@ -18,7 +18,16 @@ def main(argv: list[str] | None = None) -> int:
         help="port of SphericalRemesh (same flags as the original binary; see its --help)",
         add_help=False,
     )
+    sub.add_parser(
+        "lgi",
+        help="local gyrification index (port of Gyrification; same flags as the original binary)",
+        add_help=False,
+    )
     argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "lgi":  # remaining args are passed through verbatim
+        from .quant.lgi_cli import main as lgi_main
+
+        return lgi_main(argv[1:])
     if argv and argv[0] == "spherical-remesh":  # remaining args are passed through verbatim
         from .sphere.remesh_cli import main as remesh_main
 
