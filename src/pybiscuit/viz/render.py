@@ -193,7 +193,7 @@ def compose_panel(
 
     nr, nc = len(tiles), len(tiles[0])
     h, w = tiles[0][0].shape[:2]
-    top = 0.35 if (title or col_labels) else 0.0
+    top = 0.6 if (title and col_labels) else (0.35 if (title or col_labels) else 0.0)
     bottom = 0.6 if style is not None else 0.0
     left = 1.1 if row_labels else 0.0
     fig = Figure(figsize=(left + nc * w / dpi, top + bottom + nr * h / dpi), dpi=dpi)
