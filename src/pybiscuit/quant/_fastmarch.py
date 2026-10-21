@@ -609,7 +609,8 @@ def _vertex_distance(
         return d1 + b * F1
     if u1 and u2:
         dot = _dot(Edge1, Edge2)
-        vv = (V1[cur, 0], V1[cur, 1], V1[cur, 2])
+        # V1 is a 1-row dummy in isotropic runs: only read it for anisotropic updates
+        vv = (V1[cur, 0], V1[cur, 1], V1[cur, 2]) if aniso else (0.0, 0.0, 0.0)
         if dot < 0:
             pv, c, dot1, dot2 = _unfold(pos, faces, fnbr, f, cur, a1, a2)
             if pv >= 0 and state[pv] != FAR:

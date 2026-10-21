@@ -180,3 +180,35 @@ def test_libm_switch(meshes):
     assert np.median(np.abs(b.lgi - a.lgi) / a.lgi) < 1e-6  # almost all vertices are unaffected
     with pytest.raises(ValueError, match="libm"):
         gyrification(*meshes, libm="musl", **kw)
+
+
+def test_no_out_of_bounds_access_without_jit():
+    """Regression: the isotropic march read ``V1[cur]`` of a 1-row dummy array (access violation on
+    Windows, silent elsewhere).  Numba does not bounds-check, so run the marching kernels as plain
+    Python (indexing is checked) on a small mesh in a subprocess."""
+    import os
+    import subprocess
+    import sys
+
+    code = (
+        "import numpy as np\n"
+        "from fixtures.meshes import icosphere\n"
+        "from pybiscuit.quant import _fastmarch as fm\n"
+        "m = icosphere(2, 50.0)\n"
+        "gw = fm.build_gw_mesh(m.vertices, m.faces)\n"
+        "d, s, f = fm.propagate_iso(gw, [0, 7, 30])\n"
+        "assert (s == 2).all()\n"
+        "n = m.n_vertices\n"
+        "u = np.tile([0.0, 0.0, 1.0], (n, 1))\n"
+        "T, V1, l1, l2 = fm.set_tensor(gw, u, np.full(n, 0.5), np.full(n, 2.0))\n"
+        "a = np.full(n, 3.0)\n"
+        "k1 = np.zeros((n, 1)); k2 = np.zeros((n, 1))\n"
+        "fm.kernel_range(0, gw.pos, gw.faces, gw.fnbr, gw.vf_ptr, gw.vf_idx, gw.ring_ptr,"
+        " gw.ring_idx,"
+        " gw.normal, T, V1, l1, l2, a, a, a, np.zeros(1, dtype=np.int64), False, 100.0,"
+        " np.array([100.0]), 0, n, k1, k2)\n"
+        "assert np.isfinite(k1).all() and (k1 > 0).all()\n"
+    )
+    env = dict(os.environ, NUMBA_DISABLE_JIT="1", PYTHONPATH=os.pathsep.join(sys.path))
+    r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env=env)
+    assert r.returncode == 0, r.stderr[-1500:]
