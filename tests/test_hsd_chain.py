@@ -226,10 +226,10 @@ def test_property_files_longer_than_the_mesh_are_truncated(tmp_path):
     lines = (jd / "lh.res.iH.txt").read_text().splitlines()
     assert len(lines) == 40962
     cut.write_text("\n".join(lines[:2562]) + "\n")  # sphere_20480 stand-in has 2,562 vertices
-    a_cut[a_cut.index(str(jd / "lh.res.iH.txt"))] = str(cut)
+    a_cut[a_cut.index((jd / "lh.res.iH.txt").as_posix())] = cut.as_posix()
     c1, c2 = jd / "c1.txt", jd / "c2.txt"
     for out, argv in ((c1, a), (c2, a_cut)):
-        argv = [str(out) if x == str(p.coeff) else x for x in argv]
+        argv = [out.as_posix() if x == p.coeff.as_posix() else x for x in argv]
         assert hsd_main(argv) == 0
     assert c1.read_text() == c2.read_text()
 
