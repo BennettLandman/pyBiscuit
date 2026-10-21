@@ -43,6 +43,8 @@ for r in CurveExtraction HSD klaplace LocalGyrificationIndex MeshLib SphericalRe
 git clone https://github.com/NIRALUser/ShapeComplexityIndex.git
 ```
 
+**Upstream bug to check in the image (2026-10-21):** `HSD.cpp:316` (`--icomesh` branch of `init`) keeps a pointer into a destroyed temporary (`V.unit().fv()`). The macOS oracle build reads garbage there, so `--icomesh` calls fail; oracle goldens use `HSD_PATCH_ICOMESH=1`. Image job 1 shows whether the image's gcc build is affected.
+
 **Image binaries match upstream `master`** (checked 2026-10-20 from version strings in the extracted ELF files): HSD v1.3.9 (`f169595`), CurveExtraction/TRACE v1.1.2 (`ded932d`), Gyrification v1.2.2 (`b9fa760`), SphericalRemesh v1.2.1 (`b677c39`). klaplace has no version string.
 
 Commits at planning time: CurveExtraction `ded932d`, HSD `f169595`,
