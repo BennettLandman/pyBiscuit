@@ -64,13 +64,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--weight", nargs="+", type=_nonneg_float, default=[], help="weight of each property")
     p.add_argument("--idprior", type=_nonneg_float, default=625.0, help="inverse of the distortion prior [625]")
     p.add_argument("--maxIter", type=_nonneg_int, default=20, help="max iterations at the final phase [20]")
-    p.add_argument("--icomesh", type=_file, default="", help="pre-defined icosahedral mesh (overrides --icosahedron)")
+    p.add_argument("--icomesh", type=_file, default=None, help="pre-defined icosahedral mesh (overrides --icosahedron)")
     p.add_argument("--gres", type=_pos_int, default=3, help="search resolution for the initial guess [3]")
     p.add_argument("--noguess", action="store_true", help="skip the rigid initial guess")
     p.add_argument("--resample", action="store_true", help="resample properties on the current icosahedral level")
     p.add_argument("--writecoeff", action="store_true", help="write coefficients whenever the energy decreases")
     p.add_argument("--fixedSubjects", nargs="+", type=_nonneg_int, default=[], help="indices of subjects not deformed")
-    p.add_argument("--tmpVar", type=_file, default="", help="prior of feature variance (pair-wise only)")
+    p.add_argument("--tmpVar", type=_file, default=None, help="prior of feature variance (pair-wise only)")
     p.add_argument("--nThreads", type=_nonneg_int, default=0, help="threads (0: OMP_NUM_THREADS or all cores)")
     return p
 
@@ -113,8 +113,8 @@ def main(argv=None) -> int:
         a.sphere, props, output=a.output or None, output_coeff=a.outputcoeff or None, weight=weight,
         degree=a.degree, idprior=a.idprior, coefficient=a.coefficient or None, max_iter=a.maxIter,
         fixed_subjects=a.fixedSubjects or None, icosahedron_level=a.icosahedron,
-        realtime_coeff=a.writecoeff, tmp_variance=a.tmpVar or None, guess=not a.noguess,
-        guess_res=a.gres, ico_mesh=a.icomesh or None, resampling=a.resample,
+        realtime_coeff=a.writecoeff, tmp_variance=a.tmpVar, guess=not a.noguess,
+        guess_res=a.gres, ico_mesh=a.icomesh, resampling=a.resample,
     )  # fmt: skip
     hsd.run()
     return 0
