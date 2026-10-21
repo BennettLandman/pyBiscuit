@@ -3,8 +3,8 @@ import json
 import nibabel as nib
 import numpy as np
 import pytest
-from conftest import OPT
 
+from conftest import OPT
 from pybiscuit.io import (
     read_gifti,
     read_label_gii,
