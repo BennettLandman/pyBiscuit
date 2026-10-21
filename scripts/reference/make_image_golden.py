@@ -151,7 +151,11 @@ def bumpy_fixture(work: Path, level: int = 5, name: str = "bumpy.vtk") -> dict:
     r = 50 * (1 + 0.10 * np.sin(5 * x + 1) * np.cos(4 * y) + 0.07 * np.sin(6 * z + x * 3))
     write_vtk(Mesh(u * r[:, None], m.faces), work / name, dtype="float")
     write_vtk(Mesh(u * 55, m.faces), work / "hull.vtk", dtype="float")
-    return {"generator": "make_image_golden.bumpy_fixture", "level": level, "files": [name, "hull.vtk"]}
+    return {
+        "generator": "make_image_golden.bumpy_fixture",
+        "level": level,
+        "files": [name, "hull.vtk"],
+    }
 
 
 def sh(tool: str, *args: str) -> list[str]:
@@ -208,7 +212,13 @@ def lgi_chain_case(case: str, work: Path, run) -> dict:
     ]  # fmt: skip
     for c in cmds:
         run(c, work)
-    return {"argv": cmds[-1], "commands": cmds, "commit": "image", "outputs": "auto", "inputs": inputs}
+    return {
+        "argv": cmds[-1],
+        "commands": cmds,
+        "commit": "image",
+        "outputs": "auto",
+        "inputs": inputs,
+    }
 
 
 @image_case("meshproperty", ["all_maps", "smoothed", "quad"])
@@ -257,7 +267,13 @@ def klaplace_case(case: str, work: Path, run) -> dict:
     ]  # fmt: skip
     for c in cmds:
         run(c, work)
-    return {"argv": cmds[0], "commands": cmds, "commit": "93b0d02", "outputs": "auto", "inputs": inputs}
+    return {
+        "argv": cmds[0],
+        "commands": cmds,
+        "commit": "93b0d02",
+        "outputs": "auto",
+        "inputs": inputs,
+    }
 
 
 @image_case("outer-hull", ["bumpy_ico5"])
@@ -331,7 +347,9 @@ def make_image_golden(tool: str, case: str, image: Image, out_root: Path = OUT_R
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--sif", type=Path, help="biscuit_FC_v2.2.sif")
     ap.add_argument("--apptainer", default=None, help="apptainer|singularity (default: autodetect)")
     ap.add_argument("--out", type=Path, default=OUT_ROOT)
@@ -342,7 +360,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--keep-going", action="store_true")
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--no-verify", action="store_true", help="skip the image SHA-256 check (mock tests)")
+    ap.add_argument("--sif-sha256", default=EXPECTED_SHA256, help="expected image SHA-256")
+    ap.add_argument(
+        "--no-verify", action="store_true", help="skip the image SHA-256 check (mock tests)"
+    )
     a = ap.parse_args(argv)
 
     cases = all_cases(a.include_large)
@@ -360,15 +381,21 @@ def main(argv: list[str] | None = None) -> int:
             ap.error(f"unknown case {a.tool}/{a.case}; try --list")
     else:
         ap.error("give --all or --tool and --case")
-    app = a.apptainer or shutil.which("apptainer") and "apptainer" or shutil.which("singularity") and "singularity"
+    app = (
+        a.apptainer
+        or shutil.which("apptainer")
+        and "apptainer"
+        or shutil.which("singularity")
+        and "singularity"
+    )
     if not app and not a.dry_run:
         raise SystemExit("error: neither apptainer nor singularity found (Linux host required)")
     app = app or "apptainer"
     if not a.dry_run:
         if not a.sif.is_file():
             raise SystemExit(f"error: image not found: {a.sif}")
-        if not a.no_verify and sha256_file(a.sif) != EXPECTED_SHA256:
-            raise SystemExit(f"error: {a.sif} sha256 != {EXPECTED_SHA256}")
+        if not a.no_verify and sha256_file(a.sif) != a.sif_sha256:
+            raise SystemExit(f"error: {a.sif} sha256 != {a.sif_sha256}")
     image = Image(a.sif, app, dry=a.dry_run)
     failed = []
     for tool, case, _src in sel:

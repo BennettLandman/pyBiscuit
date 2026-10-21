@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Mock end-to-end test of the image reference harness (brief 10, B1.1/B1.2/B1.4).
 
 A fake "image" (a directory ``opt/{biscuit,cmorph}`` of stub executables) and an ``apptainer``
@@ -14,7 +15,6 @@ import os
 import stat
 import subprocess
 import sys
-import textwrap
 from pathlib import Path
 
 import pytest
@@ -122,7 +122,11 @@ def write_exe(path: Path, text: str) -> None:
 def mock(tmp_path):
     img = tmp_path / "image"
     for name, body in TOOLS.items():
-        d = "cmorph" if name in ("CurveExtraction", "Gyrification", "HSD", "SphericalRemesh") else "biscuit"
+        d = (
+            "cmorph"
+            if name in ("CurveExtraction", "Gyrification", "HSD", "SphericalRemesh")
+            else "biscuit"
+        )
         write_exe(img / "opt" / d / "bin" / name, f"#!/bin/bash\n{body}\n")
     write_exe(img / "opt" / "cmorph" / "bin" / "lgi", LGI)
     write_exe(img / "opt" / "biscuit" / "run_biscuit", RUN_BISCUIT)
@@ -143,17 +147,46 @@ def sh(args, env, **kw):
 
 
 def test_scripts_dry_run_print_commands(tmp_path):
-    r = sh([SCRIPTS / "run_full.sh", "--sif", "/x/FC.sif", "--input", "/in", "--out", tmp_path / "o",
-            "--license", "/lic/license.txt", "--reg", "oasis45", "--dry-run"], os.environ)
+    r = sh(
+        [
+            SCRIPTS / "run_full.sh",
+            "--sif",
+            "/x/FC.sif",
+            "--input",
+            "/in",
+            "--out",
+            tmp_path / "o",
+            "--license",
+            "/lic/license.txt",
+            "--reg",
+            "oasis45",
+            "--dry-run",
+        ],
+        os.environ,
+    )
     assert r.returncode == 0, r.stderr
     assert "apptainer exec --cleanenv" in r.stdout
     assert "/lic/license.txt:/opt/biscuit/license.txt:ro" in r.stdout
     assert "REG=oasis45" in r.stdout and "SURF_RECON=macruise" in r.stdout
     assert not (tmp_path / "o.harness").exists(), "dry run must not touch the filesystem"
     r = sh([SCRIPTS / "install_shims.sh", "--dry-run", tmp_path / "s"], os.environ)
-    assert r.returncode == 0 and "ln -sf trace_shim.sh" in r.stdout and not (tmp_path / "s").exists()
-    r = sh([PY, SCRIPTS / "make_image_golden.py", "--sif", "/x.sif", "--tool", "meshproperty",
-            "--case", "all_maps", "--dry-run"], os.environ)
+    assert (
+        r.returncode == 0 and "ln -sf trace_shim.sh" in r.stdout and not (tmp_path / "s").exists()
+    )
+    r = sh(
+        [
+            PY,
+            SCRIPTS / "make_image_golden.py",
+            "--sif",
+            "/x.sif",
+            "--tool",
+            "meshproperty",
+            "--case",
+            "all_maps",
+            "--dry-run",
+        ],
+        os.environ,
+    )
     assert r.returncode == 0, r.stderr
     assert "MeshProperty -i bumpy.vtk -o bumpy -c -s -k -m -v --writevtk" in r.stdout
 
@@ -163,7 +196,14 @@ def test_shim_logs_exit_code_and_files(mock, tmp_path):
     assert sh([SCRIPTS / "install_shims.sh", shims, "FailTool", "HSD"], mock["env"]).returncode == 0
     work = tmp_path / "w"
     work.mkdir()
-    env = dict(mock["env"], BISCUIT_TRACE_DIR=str(trace), BISCUIT_SHIM_REAL_PATH=str(mock["img"] / "opt/cmorph/bin") + ":" + str(mock["img"] / "opt/biscuit/bin"), OMP_NUM_THREADS="1")
+    env = dict(
+        mock["env"],
+        BISCUIT_TRACE_DIR=str(trace),
+        BISCUIT_SHIM_REAL_PATH=str(mock["img"] / "opt/cmorph/bin")
+        + ":"
+        + str(mock["img"] / "opt/biscuit/bin"),
+        OMP_NUM_THREADS="1",
+    )
     r = sh([shims / "FailTool", "a b", 'q"x'], env, cwd=work)
     assert r.returncode == 3 and "bad" in r.stderr
     r = sh([shims / "HSD", "-o", "reg.vtk", "--note", "multi\nline"], env, cwd=work)
@@ -182,15 +222,30 @@ def test_shim_logs_exit_code_and_files(mock, tmp_path):
 
 def test_run_full_trace_spec_and_manifest(mock, tmp_path):
     out = tmp_path / "out" / "subj"
-    r = sh([SCRIPTS / "run_full.sh", "--sif", mock["sif"], "--input", mock["in"], "--out", out,
-            "--reg", "oasis45", "--no-verify"], mock["env"])
+    r = sh(
+        [
+            SCRIPTS / "run_full.sh",
+            "--sif",
+            mock["sif"],
+            "--input",
+            mock["in"],
+            "--out",
+            out,
+            "--reg",
+            "oasis45",
+            "--no-verify",
+        ],
+        mock["env"],
+    )
     assert r.returncode == 0, r.stdout + r.stderr
     work = Path(str(out) + ".harness")
     assert (out / ".tmp" / "biscuit.conf").exists(), "cleanup lines must be removed"
     assert (out / "pdf").is_dir()
     recs = [json.loads(x) for x in (work / "trace.jsonl").read_text().splitlines()]
     tools = [x["tool"] for x in recs]
-    assert tools == ["MeshProperty", "CurveExtraction", "Gyrification", "HSD"], "lgi tools must be traced"
+    assert tools == ["MeshProperty", "CurveExtraction", "Gyrification", "HSD"], (
+        "lgi tools must be traced"
+    )
     assert all(x["exit"] == 0 for x in recs)
     run = json.loads((work / "run.json").read_text())
     assert run["reg"] == "oasis45" and run["exit"] == 0 and run["trace"] == 1
@@ -214,29 +269,60 @@ def test_run_full_trace_spec_and_manifest(mock, tmp_path):
 def test_run_full_failure_still_archives(mock, tmp_path):
     write_exe(mock["img"] / "opt" / "biscuit" / "bin" / "MeshProperty", "#!/bin/bash\nexit 7\n")
     out = tmp_path / "out2"
-    r = sh([SCRIPTS / "run_full.sh", "--sif", mock["sif"], "--input", mock["in"], "--out", out,
-            "--no-verify"], mock["env"])
+    r = sh(
+        [
+            SCRIPTS / "run_full.sh",
+            "--sif",
+            mock["sif"],
+            "--input",
+            mock["in"],
+            "--out",
+            out,
+            "--no-verify",
+        ],
+        mock["env"],
+    )
     assert r.returncode != 0
     work = Path(str(out) + ".harness")
-    assert (work / "out2.tar.gz").exists() and json.loads((work / "run.json").read_text())["exit"] != 0
+    assert (work / "out2.tar.gz").exists() and json.loads((work / "run.json").read_text())[
+        "exit"
+    ] != 0
 
 
 def test_make_image_golden_end_to_end(mock, tmp_path):
     gold = tmp_path / "golden-image"
-    base = [PY, SCRIPTS / "make_image_golden.py", "--sif", mock["sif"], "--out", gold,
-            "--apptainer", mock["bin"] / "apptainer", "--no-verify"]
+    base = [
+        PY,
+        SCRIPTS / "make_image_golden.py",
+        "--sif",
+        mock["sif"],
+        "--out",
+        gold,
+        "--apptainer",
+        mock["bin"] / "apptainer",
+        "--no-verify",
+    ]
     r = sh([*base, "--tool", "spherical-remesh", "--case", "up3to4"], mock["env"])
     assert r.returncode == 0, r.stdout + r.stderr
     d = gold / "spherical-remesh" / "up3to4"
     meta = json.loads((d / "command.json").read_text())
     assert meta["oracle"] == "image-biscuit_FC_v2.2"
-    assert meta["image_sha256"] == __import__("hashlib").sha256(mock["sif"].read_bytes()).hexdigest()
+    assert (
+        meta["image_sha256"] == __import__("hashlib").sha256(mock["sif"].read_bytes()).hexdigest()
+    )
     assert meta["argv"][0] == "SphericalRemesh" and "$ORACLES" not in json.dumps(meta)
-    assert sorted(p.name for p in d.iterdir()) == ["bary.txt", "command.json", "out.vtk", "outprop.prop.txt"]
+    assert sorted(p.name for p in d.iterdir()) == [
+        "bary.txt",
+        "command.json",
+        "out.vtk",
+        "outprop.prop.txt",
+    ]
     r = sh([*base, "--tool", "hsd", "--case", "rot8_ico4"], mock["env"])
     assert r.returncode == 0, r.stdout + r.stderr
     assert (gold / "hsd" / "rot8_ico4" / "s1.reg.vtk").exists()
-    r = sh([*base, "--tool", "meshdeform", "--case", "translate"], mock["env"])  # tool absent in mock
+    r = sh(
+        [*base, "--tool", "meshdeform", "--case", "translate"], mock["env"]
+    )  # tool absent in mock
     assert r.returncode == 1 and "FAILED" in r.stderr
 
     sys.path.insert(0, str(REPO / "tests"))
@@ -246,16 +332,24 @@ def test_make_image_golden_end_to_end(mock, tmp_path):
     (root / "golden" / "t" / "c").mkdir(parents=True)
     assert golden_dir("t", "c", root=root) == root / "golden" / "t" / "c"
     (root / "golden-image" / "t" / "c").mkdir(parents=True)
-    (root / "golden-image" / "t" / "c" / "command.json").write_text('{"oracle": "image-biscuit_FC_v2.2"}')
+    (root / "golden-image" / "t" / "c" / "command.json").write_text(
+        '{"oracle": "image-biscuit_FC_v2.2"}'
+    )
     assert golden_dir("t", "c", root=root) == root / "golden-image" / "t" / "c"
-    assert golden_source("t", "c", root=root) == "image" and golden_source("t", "zz", root=root) == "missing"
+    assert (
+        golden_source("t", "c", root=root) == "image"
+        and golden_source("t", "zz", root=root) == "missing"
+    )
 
 
 def test_workflow_is_dispatch_only():
-    yaml = pytest.importorskip("yaml")
-    wf = yaml.safe_load((REPO / ".github" / "workflows" / "reference.yml").read_text())
-    triggers = wf.get("on", wf.get(True))
-    assert list(triggers) == ["workflow_dispatch"]
     text = (REPO / ".github" / "workflows" / "reference.yml").read_text()
+    for trigger in ("push:", "pull_request", "schedule:", "workflow_run", "release:"):
+        assert trigger not in text, trigger
+    assert "workflow_dispatch:" in text and "inputs.confirm == 'RUN'" in text
     assert "git add" not in text and "git push" not in text and "upload-artifact" in text
-    assert textwrap.dedent(text).count("secrets.") >= 1
+    assert "secrets.FS_LICENSE" in text and "sha256sum -c" in text
+    yaml = pytest.importorskip("yaml")
+    wf = yaml.safe_load(text)
+    assert list(wf.get("on", wf.get(True))) == ["workflow_dispatch"]
+    assert wf["permissions"] == {"contents": "read"}

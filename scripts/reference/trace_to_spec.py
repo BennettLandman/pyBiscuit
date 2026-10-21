@@ -127,20 +127,29 @@ def render(recs: list[dict], title: str) -> str:
     L += ["", "## Call sequence", ""]
     for i, r in enumerate(recs):
         dt = float(r["end"]) - float(r["start"])
-        L.append(f"### {i + 1}. {r['tool']}  (t+{float(r['start']) - t0:.1f} s, {dt:.2f} s, exit {r['exit']})")
+        L.append(
+            f"### {i + 1}. {r['tool']}  (t+{float(r['start']) - t0:.1f} s, {dt:.2f} s, exit {r['exit']})"
+        )
         L.append("")
         L.append(f"- cwd: {md_code(shorten(r['cwd'], roots))}")
         L.append(f"- command: {md_code(' '.join([r['tool'], *r.get('argv', [])]))}")
         if r.get("env"):
             L.append("- env: " + ", ".join(f"{k}={v}" for k, v in sorted(r["env"].items())))
-        for key, label in (("inputs", "existing path args"), ("created", "created"), ("modified", "modified"), ("deleted", "deleted")):
+        for key, label in (
+            ("inputs", "existing path args"),
+            ("created", "created"),
+            ("modified", "modified"),
+            ("deleted", "deleted"),
+        ):
             if r.get(key):
                 L.append(f"- {label}: " + ", ".join(md_code(shorten(p, roots)) for p in r[key]))
         L.append("")
     L += ["## File flow", "", "| producer | file | consumer |", "|---|---|---|"]
     edges = flow_edges(recs)
     for i, j, p in edges:
-        L.append(f"| {i + 1}. {recs[i]['tool']} | {md_code(shorten(p, roots))} | {j + 1}. {recs[j]['tool']} |")
+        L.append(
+            f"| {i + 1}. {recs[i]['tool']} | {md_code(shorten(p, roots))} | {j + 1}. {recs[j]['tool']} |"
+        )
     if not edges:
         L.append("| – | – | – |")
     L += ["", "## Flags by tool", ""]
@@ -155,7 +164,9 @@ def render(recs: list[dict], title: str) -> str:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("trace", type=Path)
     ap.add_argument("-o", "--out", type=Path)
     ap.add_argument("--title", default="Orchestrator call graph (draft)")
