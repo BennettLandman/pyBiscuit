@@ -123,7 +123,7 @@ def test_end_to_end_cli_with_outer_hull(tmp_path):
 
 
 def test_curves_unchanged_by_six_decimal_vtk_rounding(tmp_path):
-    """T-7: BISCUIT's ``write_vtk`` writes ``%f`` (6 decimals); rounding the input must not matter."""
+    """T-7: BISCUIT writes VTK with %f (6 decimals); rounding the input must not matter."""
     surf = read_vtk(G / "lh.gray.vtk")
     for f in ("lh.gray.vtk", "lh.white.vtk"):
         text = (G / f).read_text().splitlines()
