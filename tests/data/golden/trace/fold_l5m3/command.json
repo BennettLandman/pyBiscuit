@@ -1,0 +1,30 @@
+{
+  "tool": "trace",
+  "case": "fold_l5m3",
+  "argv": [
+    "CurveExtraction",
+    "-i",
+    "in.vtk",
+    "-o",
+    "out",
+    "--sulcus",
+    "--gyrus",
+    "--bary",
+    "--interm",
+    "--sulcalSeed",
+    "-0.01",
+    "--gyralSeed",
+    "0.01"
+  ],
+  "fixture": {
+    "generator": "tests/fixtures/trace_cases.py",
+    "a": 0.3,
+    "l": 5,
+    "m": 3,
+    "level": 5,
+    "radius": 50.0
+  },
+  "oracle": "upstream-macos-arm64 (-ffp-contract=off)",
+  "meshlib": "dcef807",
+  "curve_extraction": "ded932d"
+}

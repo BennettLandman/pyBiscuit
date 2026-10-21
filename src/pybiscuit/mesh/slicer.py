@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Plane / mesh contours: MeshLib ``AABB`` tree + ``Slicer`` port (needed by TRACE point detection).
 
 Port of ``MeshLib/src/Util/Slicer.cpp`` (``slicing``, ``contour``, ``tracePList``, ``getSlice``,
@@ -359,7 +360,6 @@ def _slice_segments(v, faces, fnorm, cand, a, b, c, d, nv_total):
     p1 = np.empty(3, dtype=np.float32)
     P = np.empty(3, dtype=np.float32)
     pp = np.empty(3, dtype=np.float32)
-    one = np.float32(1.0)
     for ci in range(k):
         f = cand[ci]
         fv = faces[f]
@@ -489,7 +489,7 @@ def _contour(sid0, sid1, nxt, prv, nv_total):
                 inside = False
                 part = nxt[prv[b_begin]]
                 it = b_begin
-                for j in range(b_size):
+                for _j in range(b_size):
                     if it == part:
                         inside = True
                         break

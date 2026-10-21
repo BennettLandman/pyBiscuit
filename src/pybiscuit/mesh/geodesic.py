@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Geodesic distances and paths: MeshLib ``Geodesic`` / ``GeodesicPath`` port (plan row B2.6).
 
 Two tools live here:

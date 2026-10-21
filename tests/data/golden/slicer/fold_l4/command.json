@@ -1,0 +1,14 @@
+{
+  "tool": "slicer",
+  "fixture": {
+    "a": 0.15,
+    "l": 6,
+    "m": 3,
+    "level": 4,
+    "radius": 50.0,
+    "plane_seed": 20261021
+  },
+  "oracle": "upstream-macos-arm64 (-ffp-contract=off)",
+  "meshlib": "dcef807",
+  "curve_extraction": "ded932d"
+}

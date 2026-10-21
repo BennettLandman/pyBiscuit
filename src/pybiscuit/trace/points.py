@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """TRACE sulcal / gyral point detection (``SulcalPoint.cpp`` / ``GyralPoint.cpp``, ded932d).
 
 ``SulcalPoint`` and ``GyralPoint`` are the same algorithm with opposite polarity; they differ only in
