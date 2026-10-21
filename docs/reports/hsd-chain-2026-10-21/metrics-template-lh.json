@@ -235,5 +235,19 @@
  },
  "port_crash_probe": {
   "description": "port call 4 from the port's own C3 (end-to-end state) with 1-ulp variants of res.H: 3 of 5 runs end with 'Property - no closest triangle found' (iterations of the 2 survivors 72 and 55; E 3.496, 3.488); the same call from the ORACLE's C3: 5 of 5 complete (25-29 iterations, E 3.6968-3.7002); the ORACLE from the port's C3: 5 of 5 complete (42-60 iterations, E 3.491-3.517). Unmodified MeshLib AABB_Sphere::closestFace (harness_aabb) returns -1 for the one failing sample on the dumped port mesh (float32 cart2bary of the two faces adjacent to an edge 2e-7 away are both below -1e-5; float64 barycentric of one face is +2.6e-5)."
+ },
+ "state_level_check": {
+  "description": "call 4 state (port's call-3 file, template-scale inputs): energy and damped gradient direction of port vs oracle harness 'eval' at the same coefficients",
+  "energy_rel_degree0": [
+   2.5e-11,
+   7.3e-11
+  ],
+  "energy_rel_degree10": [
+   5.4e-10,
+   5.1e-11
+  ],
+  "gradient_dir_rel_degree0": 1e-07,
+  "gradient_dir_rel_degree10": 6.5e-08,
+  "note": "throwaway script, not kept"
  }
 }
