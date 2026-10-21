@@ -449,7 +449,10 @@ def _smooth_data64(d, indptr, indices, iterations):
 
 
 def smooth_vertices(
-    vertices, faces=None, iterations: int = 1, sigma: float | None = None,
+    vertices,
+    faces=None,
+    iterations: int = 1,
+    sigma: float | None = None,
     neighbors: NeighborLists | None = None,
 ) -> np.ndarray:
     """``SurfaceUtil::smoothing(mesh, iter)`` (sigma None) or ``(mesh, sigma, iter)``.

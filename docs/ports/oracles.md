@@ -78,3 +78,13 @@ behaviour for E-class ports. Scripts and patches: `scripts/oracles/`; usage:
 ## Note: FP contraction (added at hand-back)
 
 Apple clang on arm64 fuses multiply-adds by default. Ports B2.4a/b, B2.5 and B4.2 are bit-identical to MeshLib built with `-ffp-contract=off` (which matches the x86-64 image binary's arithmetic); against a default-flag build, curvature differs by ~1e-5 median and closest-face ties appear. `build_meshlib.sh` now defaults to `-ffp-contract=off`; the existing `oracles/meshlib/lib` predates this change and should be rebuilt before new work uses it. The committed goldens were generated with non-FMA builds (per-case `command.json`).
+
+## Gyrification, non-FMA build (brief 07)
+
+`scripts/oracles/build_gyrification_nofma.sh` compiles the unmodified MeshLib `dcef807` sources and
+LocalGyrificationIndex `b9fa760` (`Gyrification.cpp` + `wrapper/main.cpp`, CLI11 v1.9.0) with
+`-ffp-contract=off` into `oracles/gyrification-nofma/bin/Gyrification` (build-only: `-include cstddef`,
+the serial `omp.h` stub, `-D_USE_OPENMP`). Companion of the FMA build above. The golden generator
+`scripts/oracles/make_golden_gyrification.py` also needs `oracles/curve_extraction-nofma/`. Pitfalls found:
+MeshLib `VtkIO` reads only **ASCII** VTK (a binary file hangs the tool), and CLI11 rejects a repeated
+single-valued option (`-s` twice).

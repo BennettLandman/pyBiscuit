@@ -33,6 +33,20 @@ def main(argv: list[str] | None = None) -> int:
         from .hsd.cli import main as hsd_main
 
         return hsd_main(argv[1:])
+    # --- quant (brief 07): lgi, outer-hull; remaining args are passed through verbatim
+    for name, text in (
+        ("lgi", "local gyrification index (port of Gyrification; flags of the original binary)"),
+        ("outer-hull", "cerebral outer hull of a surface (port of OuterHull; provisional)"),
+    ):
+        sub.add_parser(name, help=text, add_help=False)
+    if argv and argv[0] in ("lgi", "outer-hull"):
+        if argv[0] == "lgi":
+            from .quant.lgi_cli import main as quant_main
+        else:
+            from .quant.hull_cli import main as quant_main
+
+        return quant_main(argv[1:])
+    # --- end quant
     if argv and argv[0] == "spherical-remesh":  # remaining args are passed through verbatim
         from .sphere.remesh_cli import main as remesh_main
 

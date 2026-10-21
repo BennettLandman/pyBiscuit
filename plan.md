@@ -204,9 +204,9 @@ per [validation-tolerances](docs/validation-tolerances.md).
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
 | B9.1 | Mean curvature + shape index as BISCUIT calls MeshProperty (`curv_smoothness`) | E | Todo |
-| B9.2 | OuterHull port (VOXELISE, morphology, ICP_finite, isosurface) | E (hull geometry p99 ≤ 0.1 mm) | Todo |
+| B9.2 | OuterHull port (VOXELISE, morphology, ICP_finite, isosurface) | E (hull geometry p99 ≤ 0.1 mm) | In progress, provisional (no oracle: MATLAB/Octave unavailable; quant/hull.py + _voxelise.py, tests/test_hull.py 8 pass on analytic/geometric checks; `strel('ball')` N=8 decomposition, slice-wise SE, marching-tetrahedra isosurface and `dmperm` block are re-derivations — [port note](docs/ports/outer-hull.md), [report](docs/reports/lgi-hull-2026-10-20.md); closes with an image OuterHull run, Q1) |
 | B9.3 | klaplace port (Laplace field on grid `-dims 128`, RK45 streamlines, surface correspondence) — license per Q7 | E | Todo |
-| B9.4 | Gyrification: anisotropic H-J wavefront kernel (`lgi_kernel_size`, `lgi_anisotropy`, `lgi_ref_area`), hull-area ratio | E | Todo |
+| B9.4 | Gyrification: anisotropic H-J wavefront kernel (`lgi_kernel_size`, `lgi_anisotropy`, `lgi_ref_area`), hull-area ratio | E | Done, oracle-provisional (quant/lgi.py, _fastmarch.py, `pybiscuit lgi`; tests/test_lgi.py 14 pass: 7 oracle cases LGI/kArea/geodesic map rel ≤ 1e-5, source ids identical; scale check 40,962 vertices LGI rel 3.1e-7, kArea 1.6e-9, port 16.6 s/4 threads vs oracle 94.5 s; [port note](docs/ports/lgi.md), [report](docs/reports/lgi-hull-2026-10-20.md); vs non-FMA upstream build, not yet the image) |
 | B9.5 | Sulcal depth (`sulcal_depth.m`: geodesic path through volume to hull; gray surface per CBT v1.1 notes) | E vs reference | Todo |
 | B9.6 | SCI (`sci_kernel_size`, `sci_bins`; transportation-simplex EMD) | E | Todo |
 

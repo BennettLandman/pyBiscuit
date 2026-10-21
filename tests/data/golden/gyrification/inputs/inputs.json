@@ -1,0 +1,5 @@
+{
+ "generator": "tests/fixtures/lgi.py:fold_case()",
+ "hull_area": 20082.16602353347,
+ "curve_oracle": "curve_extraction-nofma (ded932d)"
+}

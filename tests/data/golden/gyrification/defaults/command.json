@@ -1,0 +1,31 @@
+{
+ "tool": "gyrification",
+ "case": "defaults",
+ "argv": [
+  "$ORACLES/gyrification-nofma/bin/Gyrification",
+  "-i",
+  "surface.vtk",
+  "--outer",
+  "hull.vtk",
+  "-s",
+  "surface.scurve.bary",
+  "-g",
+  "surface.gcurve.bary",
+  "-o",
+  "lgi",
+  "--geodesicMap",
+  "gmap.txt",
+  "--kArea1",
+  "--kArea2"
+ ],
+ "commit": "b9fa760",
+ "oracle": "upstream-macos-arm64 (-ffp-contract=off)",
+ "inputs": "tests/data/golden/gyrification/inputs",
+ "hull_area": 20082.16602353347,
+ "outputs": [
+  "lgi.lgi.map.82.txt",
+  "lgi.k1.map.82.txt",
+  "lgi.k2.map.82.txt",
+  "gmap.txt"
+ ]
+}
