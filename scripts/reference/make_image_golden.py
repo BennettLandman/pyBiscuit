@@ -277,7 +277,7 @@ def all_cases(include_large: bool = False) -> list[tuple[str, str, str]]:
             if include_large or (tool, c) not in LARGE:
                 out.append((tool, c, "oracle-replay"))
     for tool, fn in sorted(IMAGE_REGISTRY.items()):
-        out.extend((tool, c, "image-only") for c in fn.cases)
+        out.extend((tool, c, "image-defined") for c in fn.cases)
     return out
 
 
