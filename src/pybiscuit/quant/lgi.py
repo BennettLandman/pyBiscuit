@@ -33,8 +33,9 @@ from numba import njit
 from ..io import read_vtk
 from ..mesh import Mesh
 from ..mesh.curvature import _eig3
-from ..mesh.geometry import vertex_areas, vertex_neighbor_lists, vertex_normals
+from ..mesh.geometry import vertex_areas, vertex_neighbor_lists
 from . import _fastmarch as fm
+from ._libm import acosf
 
 __all__ = [
     "LgiResult",
@@ -42,6 +43,7 @@ __all__ = [
     "gyrification",
     "read_curves",
     "read_geodesic_map",
+    "vertex_normals_glibc",
     "write_geodesic_map",
     "write_lgi_maps",
 ]
@@ -112,6 +114,66 @@ def read_geodesic_map(path, n_vertices: int) -> tuple[np.ndarray, np.ndarray]:
     if a.shape[0] != n_vertices:
         raise ValueError(f"{path}: {a.shape[0]} rows for {n_vertices} vertices")
     return a[:, 0].astype(np.float32).astype(np.float64), a[:, 1].astype(np.int64)
+
+
+@njit(cache=True, error_model="numpy")
+def _vertex_normals_glibc(v, faces):
+    """``Mesh::updateNormal`` (as ``mesh.geometry.vertex_normals``) with the glibc ``acosf``.
+
+    A copy of the brief 02 kernel whose only change is ``acosf`` from :mod:`._libm`: the angle
+    weights must not depend on the host libm (docs/ports/lgi.md, "libm").
+    """
+    n = v.shape[0]
+    acc = np.zeros((n, 3), dtype=np.float32)
+    one = F32(1.0)
+    for i in range(faces.shape[0]):
+        i0, i1, i2 = faces[i, 0], faces[i, 1], faces[i, 2]
+        e1x, e1y, e1z = v[i0, 0] - v[i1, 0], v[i0, 1] - v[i1, 1], v[i0, 2] - v[i1, 2]
+        e2x, e2y, e2z = v[i1, 0] - v[i2, 0], v[i1, 1] - v[i2, 1], v[i1, 2] - v[i2, 2]
+        e3x, e3y, e3z = v[i2, 0] - v[i0, 0], v[i2, 1] - v[i0, 1], v[i2, 2] - v[i0, 2]
+        fx = e1y * e2z - e1z * e2y
+        fy = e1z * e2x - e1x * e2z
+        fz = e1x * e2y - e1y * e2x
+        s = _fnorm(e1x, e1y, e1z)
+        if s > 0:
+            e1x, e1y, e1z = e1x / s, e1y / s, e1z / s
+        s = _fnorm(e2x, e2y, e2z)
+        if s > 0:
+            e2x, e2y, e2z = e2x / s, e2y / s, e2z / s
+        s = _fnorm(e3x, e3y, e3z)
+        if s > 0:
+            e3x, e3y, e3z = e3x / s, e3y / s, e3z / s
+        e13 = e1x * -e3x + e1y * -e3y + e1z * -e3z
+        e13 = min(max(e13, -one), one)
+        e21 = e2x * -e1x + e2y * -e1y + e2z * -e1z
+        e21 = min(max(e21, -one), one)
+        e32 = e3x * -e2x + e3y * -e2y + e3z * -e2z
+        e32 = min(max(e32, -one), one)
+        w1 = acosf(e13)
+        w2 = acosf(e21)
+        w3 = acosf(e32)
+        acc[i0, 0] += fx * w1
+        acc[i0, 1] += fy * w1
+        acc[i0, 2] += fz * w1
+        acc[i1, 0] += fx * w2
+        acc[i1, 1] += fy * w2
+        acc[i1, 2] += fz * w2
+        acc[i2, 0] += fx * w3
+        acc[i2, 1] += fy * w3
+        acc[i2, 2] += fz * w3
+    for i in range(n):
+        s = _fnorm(acc[i, 0], acc[i, 1], acc[i, 2])
+        if s > 0:
+            acc[i, 0] /= s
+            acc[i, 1] /= s
+            acc[i, 2] /= s
+    return acc
+
+
+def vertex_normals_glibc(vertices, faces) -> np.ndarray:
+    """float32 vertex normals as MeshLib computes them, with glibc's ``acosf`` on every platform."""
+    v = np.ascontiguousarray(vertices, dtype=np.float32)
+    return _vertex_normals_glibc(v, np.ascontiguousarray(faces, dtype=np.int32))
 
 
 # --------------------------------------------------------------------------- #
@@ -419,7 +481,7 @@ def gyrification(
     deltas = np.array([min(intv * (t + 1), max_adj) for t in range(nk)])
 
     # ---- metric tensor and kernels
-    nrm = vertex_normals(surf.vertices, surf.faces)
+    nrm = vertex_normals_glibc(surf.vertices, surf.faces)
     u, lam1, lam2 = setup_tensor_equal_area(v32, nb, nrm, adj, source, speed)
     T, V1, lam1, lam2 = fm.set_tensor(gw, u, lam1, lam2)
 

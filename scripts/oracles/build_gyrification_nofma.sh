@@ -3,6 +3,8 @@
 # unmodified MeshLib (dcef807) + Gyrification sources directly: the float32/double behaviour of the x86-64 image.
 # Companion of build_gyrification.sh (arm64 default FMA).  Build-only changes: -include cstddef, the serial omp.h
 # stub (patches/curve-gyr-omp-shim) and -D_USE_OPENMP (see docs/ports/oracles.md).
+# libm: scripts/oracles/patches/acosf-fdlibm/acosf.c replaces the host `acosf` (glibc/fdlibm algorithm, as in the image)
+# because the LGI kernels are sensitive to 1 ulp of MeshLib's float32 normals (see docs/reports/lgi-hull-2026-10-20.md).
 # Output: $ORACLES/gyrification-nofma/bin/Gyrification
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -25,6 +27,7 @@ SRCS=$(grep -o 'src/[A-Za-z0-9_/]*\.cpp' "$ML/CMakeLists.txt" | sed "s#^#$ML/#")
   echo "# $($CXX --version | head -1)"
   set -x
   $CXX -std=c++11 -O2 -DNDEBUG -ffp-contract=off -w -include cstddef -D_USE_OPENMP -I"$SHIM" -I"$CLI" -I"$S/src" $INC \
-    '-DLGI_VERSION="v1.2.2"' "$S/src/Gyrification.cpp" "$S/wrapper/main.cpp" $SRCS -o "$OUT/bin/Gyrification"
+    '-DLGI_VERSION="v1.2.2"' "$S/src/Gyrification.cpp" "$S/wrapper/main.cpp" $SRCS \
+    "$HERE/patches/acosf-fdlibm/acosf.c" -o "$OUT/bin/Gyrification"
 } > "$OUT/build.log" 2>&1 || { cat "$OUT/build.log" >&2; exit 1; }
 echo "OK: $OUT/bin/Gyrification"

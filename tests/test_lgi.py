@@ -150,3 +150,30 @@ def test_cli_matches_golden(tmp_path):
         np.loadtxt(f"{out}.k1.map.316.txt"), np.loadtxt(G / "ratio1" / "lgi.k1.map.316.txt")
     )
     assert (tmp_path / "g.txt").read_text().splitlines()[0].count(" ") == 1
+
+
+# ---------------------------------------------------------------- libm independence
+def test_acosf_matches_fdlibm_table():
+    """Bit-for-bit vs the C fdlibm/glibc algorithm (table made by compiling
+    scripts/oracles/patches/acosf-fdlibm/acosf.c), on every platform."""
+    from numba import njit
+
+    from pybiscuit.quant._libm import acosf
+
+    @njit
+    def vec(x):
+        out = np.empty_like(x)
+        for i in range(x.size):
+            out[i] = acosf(x[i])
+        return out
+
+    t = np.load(G.parent / "libm" / "acosf_fdlibm.npz")
+    assert np.array_equal(vec(t["x"]).view(np.int32), t["y"].view(np.int32))
+
+
+@pytest.mark.skipif(not __import__("sys").platform.startswith("linux"), reason="glibc check")
+def test_acosf_equals_glibc_on_linux():
+    t = np.load(G.parent / "libm" / "acosf_fdlibm.npz")
+    assert np.mean(np.arccos(t["x"]) == t["y"]) > 0.9999, (
+        "host libm acosf is not the fdlibm algorithm"
+    )

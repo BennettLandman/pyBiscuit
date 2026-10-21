@@ -54,6 +54,27 @@ hull from klaplace's `-surfaceCorrespondence`; `OuterHull` is B9.2 (`outer-hull.
   otherwise).
 * Output text uses `%f` (6 decimals) like the original; the Python API returns full precision.
 
+## libm: why `acosf` is reimplemented
+
+`Mesh::updateNormal` weights face normals by `acos` of float32 dot products, so the C++ tools see
+the host's `acosf`. Apple's and glibc's `acosf` differ by 1 ulp on ~8 % of inputs (fdlibm vs
+correctly rounded: max 1 ulp). The anisotropic kernels are chaotic in that input: perturbing the
+float32 normals by +-1 ulp (seeded, three-valued noise) changes the LGI of 70-80 of 2,562 vertices
+by 1e-5..3e-2 (kernel membership at the cumulative-area cutoff flips when near-tied vertices swap
+pop order), independent of how many ulp (1 or 4). The first CI run on Linux x86-64 showed exactly
+this: 18-95 of 2,562 vertices off, max 6e-2, against goldens made with Apple's `acosf`. Perturbing
+areas, distances or tensors by 1e-13 relative changes nothing, so double libm differences are harmless.
+
+Fix (deterministic, not a tolerance change): `quant/_libm.acosf` is the fdlibm single-precision
+algorithm of glibc's `e_acosf.c` (the image's libm; glibc up to 2.40), used by the port's own copy of the
+normals kernel (`lgi.vertex_normals_glibc`; `mesh.geometry.vertex_normals`, owned by brief 02, still
+calls the host libm). The oracle is built with the same algorithm as a link-time shim
+(`scripts/oracles/patches/acosf-fdlibm/acosf.c`) so its goldens are the glibc behaviour as well.
+`tests/test_lgi.py::test_acosf_matches_fdlibm_table` pins the Python function bit-for-bit to the C
+shim (9,006 inputs); on Linux `test_acosf_equals_glibc_on_linux` also checks the host `acosf`.
+Consequence: results do not depend on the host libm, but do depend on the *image* using an
+fdlibm-style `acosf` (to be confirmed with an image run, Q1).
+
 ## Validation
 
 Seven oracle cases on a seeded fold fixture (icosphere(4), r = 50 mm, harmonic l = 8, m = 3, a = 0.15,
