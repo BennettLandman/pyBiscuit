@@ -285,8 +285,17 @@ def harness(tmp_path_factory) -> Path:
         pytest.skip("MeshLib oracle (or a C++ compiler) not available")
     out = tmp_path_factory.mktemp("harness") / "harness_geometry"
     inc = ORACLES / "meshlib" / "include"
-    cmd = [cxx, "-std=c++11", "-O2", f"-I{inc}", f"-I{inc / 'Util'}", str(HARNESS_SRC),
-           str(lib), "-o", str(out)]
+    cmd = [
+        cxx,
+        "-std=c++11",
+        "-O2",
+        f"-I{inc}",
+        f"-I{inc / 'Util'}",
+        str(HARNESS_SRC),
+        str(lib),
+        "-o",
+        str(out),
+    ]
     r = subprocess.run(cmd, capture_output=True, text=True)
     if r.returncode:
         pytest.skip("could not build harness: " + r.stderr[-300:])
@@ -301,8 +310,24 @@ def run_harness(harness: Path, tmp: Path, mesh_v, mesh_f, sigmas, seed=0):
     d32.tofile(tmp / "data.f32")
     d64.tofile(tmp / "data.f64")
     write_ascii_vtk(tmp / "in.vtk", mesh_v, mesh_f)
-    ops = ["-s", "1", "-s", "5", "-g", f"{sigmas[0]:g}", "1", "-g", f"{sigmas[1]:g}", "3",
-           "-df", "3", "data.f32", "-dd", "3", "data.f64"]
+    ops = [
+        "-s",
+        "1",
+        "-s",
+        "5",
+        "-g",
+        f"{sigmas[0]:g}",
+        "1",
+        "-g",
+        f"{sigmas[1]:g}",
+        "3",
+        "-df",
+        "3",
+        "data.f32",
+        "-dd",
+        "3",
+        "data.f64",
+    ]
     subprocess.run([str(harness), "in.vtk", ".", *ops], check=True, cwd=tmp)
     return tmp, ["h", "in.vtk", ".", *ops], {"data.f32": d32, "data.f64": d64}
 

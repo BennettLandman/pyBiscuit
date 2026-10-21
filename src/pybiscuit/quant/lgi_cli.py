@@ -39,6 +39,7 @@ def build_parser() -> argparse.ArgumentParser:
     a("--refHullArea", type=float, default=77100.0, help="expected reference hull area")
     a("--nThreads", type=int, default=0, help="number of threads (default OMP_NUM_THREADS or 1)")
     a("--heap", choices=["libcxx", "libstdcxx"], default="libcxx", help="std::heap tie order")
+    a("--libm", choices=["fdlibm", "host"], default="fdlibm", help="acosf of the normal weights")
     return p
 
 
@@ -63,6 +64,7 @@ def main(argv: list[str] | None = None) -> int:
         corr=corr,
         n_threads=args.nThreads or None,
         heap=args.heap,
+        libm=args.libm,
     )
     print(f"Total {res.n_hull_defects} outer hull regions corrected.")
     print(f"  Adjusted ratio: {res.adj_ratio}\n  Adjusted size: {res.max_area}")

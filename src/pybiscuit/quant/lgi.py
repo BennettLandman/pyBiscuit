@@ -35,7 +35,7 @@ from ..mesh import Mesh
 from ..mesh.curvature import _eig3
 from ..mesh.geometry import vertex_areas, vertex_neighbor_lists
 from . import _fastmarch as fm
-from ._libm import acosf
+from ._libm import DEFAULT_LIBM, LIBMS, acosf_select
 
 __all__ = [
     "LgiResult",
@@ -43,7 +43,7 @@ __all__ = [
     "gyrification",
     "read_curves",
     "read_geodesic_map",
-    "vertex_normals_glibc",
+    "vertex_normals_f32",
     "write_geodesic_map",
     "write_lgi_maps",
 ]
@@ -117,11 +117,12 @@ def read_geodesic_map(path, n_vertices: int) -> tuple[np.ndarray, np.ndarray]:
 
 
 @njit(cache=True, error_model="numpy")
-def _vertex_normals_glibc(v, faces):
-    """``Mesh::updateNormal`` (as ``mesh.geometry.vertex_normals``) with the glibc ``acosf``.
+def _vertex_normals(v, faces, host):
+    """``Mesh::updateNormal`` (as ``mesh.geometry.vertex_normals``) with a selectable ``acosf``.
 
-    A copy of the brief 02 kernel whose only change is ``acosf`` from :mod:`._libm`: the angle
-    weights must not depend on the host libm (docs/ports/lgi.md, "libm").
+    A copy of the brief 02 kernel whose only change is the ``acosf`` of :mod:`._libm` (``host``
+    False: pinned fdlibm), so the angle weights need not depend on the host libm
+    (docs/ports/lgi.md, "libm").
     """
     n = v.shape[0]
     acc = np.zeros((n, 3), dtype=np.float32)
@@ -149,9 +150,9 @@ def _vertex_normals_glibc(v, faces):
         e21 = min(max(e21, -one), one)
         e32 = e3x * -e2x + e3y * -e2y + e3z * -e2z
         e32 = min(max(e32, -one), one)
-        w1 = acosf(e13)
-        w2 = acosf(e21)
-        w3 = acosf(e32)
+        w1 = acosf_select(e13, host)
+        w2 = acosf_select(e21, host)
+        w3 = acosf_select(e32, host)
         acc[i0, 0] += fx * w1
         acc[i0, 1] += fy * w1
         acc[i0, 2] += fz * w1
@@ -170,10 +171,12 @@ def _vertex_normals_glibc(v, faces):
     return acc
 
 
-def vertex_normals_glibc(vertices, faces) -> np.ndarray:
-    """float32 vertex normals as MeshLib computes them, with glibc's ``acosf`` on every platform."""
+def vertex_normals_f32(vertices, faces, libm: str = DEFAULT_LIBM) -> np.ndarray:
+    """float32 vertex normals as MeshLib computes them; ``libm`` picks the ``acosf`` (``_libm``)."""
+    if libm not in LIBMS:
+        raise ValueError(f"libm must be one of {LIBMS}")
     v = np.ascontiguousarray(vertices, dtype=np.float32)
-    return _vertex_normals_glibc(v, np.ascontiguousarray(faces, dtype=np.int32))
+    return _vertex_normals(v, np.ascontiguousarray(faces, dtype=np.int32), libm == "host")
 
 
 # --------------------------------------------------------------------------- #
@@ -408,6 +411,7 @@ def gyrification(
     corr=None,
     n_threads: int | None = None,
     heap: str = "libcxx",
+    libm: str = DEFAULT_LIBM,
 ) -> LgiResult:
     """Run the Gyrification pipeline (defaults = ``Gyrification`` CLI defaults).
 
@@ -417,6 +421,8 @@ def gyrification(
     ``.gcurve`` (or ``.bary``) paths or lists of id arrays; ``curve_ids`` gives the union directly.
     ``corr``: optional lookup surface vertex -> outer vertex (``--corr``).
     ``heap``: ``"libcxx"`` (oracle build) or ``"libstdcxx"`` (Linux image) std::heap tie order.
+    ``libm``: ``"fdlibm"`` (pinned ``acosf`` of the MeshLib normal weights, platform independent,
+    provisional default) or ``"host"`` (the machine's libm; results then vary across platforms).
     """
     if heap not in _HEAP:
         raise ValueError("heap must be 'libcxx' or 'libstdcxx'")
@@ -481,7 +487,7 @@ def gyrification(
     deltas = np.array([min(intv * (t + 1), max_adj) for t in range(nk)])
 
     # ---- metric tensor and kernels
-    nrm = vertex_normals_glibc(surf.vertices, surf.faces)
+    nrm = vertex_normals_f32(surf.vertices, surf.faces, libm)
     u, lam1, lam2 = setup_tensor_equal_area(v32, nb, nrm, adj, source, speed)
     T, V1, lam1, lam2 = fm.set_tensor(gw, u, lam1, lam2)
 

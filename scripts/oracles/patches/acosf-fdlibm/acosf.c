@@ -1,6 +1,6 @@
-/* Build-only shim: fdlibm/FreeBSD single-precision acos (the algorithm of glibc's sysdeps/ieee754/flt-32/e_acosf.c,
- * used by the Linux x86-64 image).  Linked into the oracle so that `acosf` (called by MeshLib's Mesh::updateNormal
- * on float angles) rounds like glibc instead of like Apple's libm: face-angle weights feed the vertex normals and the
+/* Build-only shim: fdlibm single-precision acos (the algorithm glibc's sysdeps/ieee754/flt-32/e_acosf.c derives
+ * from).  Linked into the oracle so that `acosf` (called by MeshLib's Mesh::updateNormal on float angles) is
+ * platform independent instead of Apple's libm (PROVISIONAL pin, see docs/ports/lgi.md "libm"): face-angle weights feed the vertex normals and the
  * anisotropic LGI kernels are sensitive to 1 ulp of them (docs/reports/lgi-hull-2026-10-20.md).
  * Original: Copyright (C) 1993 by Sun Microsystems, Inc. Permission to use, copy, modify, and distribute this
  * software is freely granted, provided that this notice is preserved. */

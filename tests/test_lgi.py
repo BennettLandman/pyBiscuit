@@ -171,9 +171,12 @@ def test_acosf_matches_fdlibm_table():
     assert np.array_equal(vec(t["x"]).view(np.int32), t["y"].view(np.int32))
 
 
-@pytest.mark.skipif(not __import__("sys").platform.startswith("linux"), reason="glibc check")
-def test_acosf_equals_glibc_on_linux():
-    t = np.load(G.parent / "libm" / "acosf_fdlibm.npz")
-    assert np.mean(np.arccos(t["x"]) == t["y"]) > 0.9999, (
-        "host libm acosf is not the fdlibm algorithm"
-    )
+def test_libm_switch(meshes):
+    """fdlibm is the default; ``host`` is available and agrees except at chaotic vertices."""
+    kw = _kwargs(["x", "-m", "316", "--refHullArea", "20082.166"])
+    a = gyrification(*meshes, **kw)
+    b = gyrification(*meshes, libm="host", **kw)
+    assert np.isfinite(b.lgi).all()
+    assert np.median(np.abs(b.lgi - a.lgi) / a.lgi) < 1e-6  # almost all vertices are unaffected
+    with pytest.raises(ValueError, match="libm"):
+        gyrification(*meshes, libm="musl", **kw)

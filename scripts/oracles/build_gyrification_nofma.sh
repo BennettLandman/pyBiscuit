@@ -3,7 +3,7 @@
 # unmodified MeshLib (dcef807) + Gyrification sources directly: the float32/double behaviour of the x86-64 image.
 # Companion of build_gyrification.sh (arm64 default FMA).  Build-only changes: -include cstddef, the serial omp.h
 # stub (patches/curve-gyr-omp-shim) and -D_USE_OPENMP (see docs/ports/oracles.md).
-# libm: scripts/oracles/patches/acosf-fdlibm/acosf.c replaces the host `acosf` (glibc/fdlibm algorithm, as in the image)
+# libm: scripts/oracles/patches/acosf-fdlibm/acosf.c replaces the host `acosf` (fdlibm algorithm; provisional pin)
 # because the LGI kernels are sensitive to 1 ulp of MeshLib's float32 normals (see docs/reports/lgi-hull-2026-10-20.md).
 # Output: $ORACLES/gyrification-nofma/bin/Gyrification
 set -euo pipefail

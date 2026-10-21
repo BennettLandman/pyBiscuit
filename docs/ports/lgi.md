@@ -54,26 +54,35 @@ hull from klaplace's `-surfaceCorrespondence`; `OuterHull` is B9.2 (`outer-hull.
   otherwise).
 * Output text uses `%f` (6 decimals) like the original; the Python API returns full precision.
 
-## libm: why `acosf` is reimplemented
+## libm: why `acosf` is pinned (one switch)
 
-`Mesh::updateNormal` weights face normals by `acos` of float32 dot products, so the C++ tools see
-the host's `acosf`. Apple's and glibc's `acosf` differ by 1 ulp on ~8 % of inputs (fdlibm vs
-correctly rounded: max 1 ulp). The anisotropic kernels are chaotic in that input: perturbing the
-float32 normals by +-1 ulp (seeded, three-valued noise) changes the LGI of 70-80 of 2,562 vertices
-by 1e-5..3e-2 (kernel membership at the cumulative-area cutoff flips when near-tied vertices swap
-pop order), independent of how many ulp (1 or 4). The first CI run on Linux x86-64 showed exactly
-this: 18-95 of 2,562 vertices off, max 6e-2, against goldens made with Apple's `acosf`. Perturbing
-areas, distances or tensors by 1e-13 relative changes nothing, so double libm differences are harmless.
+`Mesh::updateNormal` weights face normals by `acos` of float32 dot products, so the C++ tools see the
+host's `acosf`. Apple's `acosf` and the fdlibm algorithm differ by 1 ulp on ~8 % of inputs. The
+anisotropic kernels are chaotic in that input: perturbing the float32 normals by +-1 ulp (seeded
+three-valued noise) changes the LGI of 70-80 of 2,562 vertices by 1e-5..3e-2 (kernel membership at the
+cumulative-area cutoff flips when near-tied vertices swap pop order), independent of whether the
+perturbation is 1 or 4 ulp. The first CI run on Linux x86-64 showed this signature (18-95 of 2,562
+vertices off, max 6e-2) against goldens made with Apple's `acosf`. Perturbing areas, distances or
+tensors by 1e-13 relative changes nothing, so double-precision libm differences are harmless.
 
-Fix (deterministic, not a tolerance change): `quant/_libm.acosf` is the fdlibm single-precision
-algorithm of glibc's `e_acosf.c` (the image's libm; glibc up to 2.40), used by the port's own copy of the
-normals kernel (`lgi.vertex_normals_glibc`; `mesh.geometry.vertex_normals`, owned by brief 02, still
-calls the host libm). The oracle is built with the same algorithm as a link-time shim
-(`scripts/oracles/patches/acosf-fdlibm/acosf.c`) so its goldens are the glibc behaviour as well.
-`tests/test_lgi.py::test_acosf_matches_fdlibm_table` pins the Python function bit-for-bit to the C
-shim (9,006 inputs); on Linux `test_acosf_equals_glibc_on_linux` also checks the host `acosf`.
-Consequence: results do not depend on the host libm, but do depend on the *image* using an
-fdlibm-style `acosf` (to be confirmed with an image run, Q1).
+Design: `libm=` (CLI `--libm`) selects the `acosf` used for the normal weights, defined in
+`quant/_libm.py` (`DEFAULT_LIBM`, one line to change):
+
+* `"fdlibm"` (default): the Sun fdlibm single-precision algorithm, reproduced in Numba
+  (`_libm.acosf`) and as a C link-time shim for the oracle (`scripts/oracles/patches/acosf-fdlibm/acosf.c`).
+  Bit-identical on every platform, so port and goldens agree everywhere (CI on Linux x86-64 passes all
+  golden comparisons). `tests/test_lgi.py::test_acosf_matches_fdlibm_table` pins the Python function to
+  the C shim (9,006 inputs). No test asserts anything about the host libm.
+* `"host"`: whatever `acosf` the host's libm returns.
+
+**This choice is provisional.** The acceptance target is the Linux x86-64 image (Ubuntu 20.04, glibc
+2.31 as far as known). Whether its `acosf` is the fdlibm algorithm (glibc's flt-32 `e_acosf.c` is
+derived from it) was not verified; the host libm of a current CI runner is not a proof either way
+(numpy's own float32 `arccos` is a different SIMD implementation and disagrees with fdlibm on ~1/3 of
+inputs). Image goldens (brief 10 / B1.4) decide: if they match `"host"` on a glibc machine and not
+`"fdlibm"`, switch `DEFAULT_LIBM` and regenerate the oracle goldens with a matching shim.
+`mesh.geometry.vertex_normals` (brief 02) still calls the host libm; `lgi.vertex_normals_f32` is a copy
+of that kernel with the selectable `acosf`.
 
 ## Validation
 

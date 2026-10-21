@@ -79,9 +79,16 @@ def test_build_operators_shapes(level):
     assert len(o["Seq"]) == 11
     # Laplacian rows sum to zero; mass sums to sphere (polyhedron) area
     assert abs(o["L"].sum(axis=1)).max() < 1e-12
-    assert o["M"].sum() == pytest.approx(0.5 * np.linalg.norm(
-        np.cross(o["V"][o["F"][:, 1]] - o["V"][o["F"][:, 0]],
-                 o["V"][o["F"][:, 2]] - o["V"][o["F"][:, 0]]), axis=1).sum())
+    assert o["M"].sum() == pytest.approx(
+        0.5
+        * np.linalg.norm(
+            np.cross(
+                o["V"][o["F"][:, 1]] - o["V"][o["F"][:, 0]],
+                o["V"][o["F"][:, 2]] - o["V"][o["F"][:, 0]],
+            ),
+            axis=1,
+        ).sum()
+    )
     assert np.allclose(np.asarray(o["F2V"].sum(axis=1)).ravel(), 1.0)
 
 

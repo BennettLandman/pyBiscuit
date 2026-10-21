@@ -1,12 +1,21 @@
-"""Platform-independent ``acosf``: the fdlibm single-precision algorithm of glibc's ``e_acosf.c``.
+"""Selectable single-precision ``acos`` for the MeshLib normal weights (the "libm switch").
 
-MeshLib weights face normals by ``acos`` of float32 dot products (``Mesh::updateNormal``); the C++
-tools therefore see whatever ``acosf`` their libm returns.  Apple's and glibc's differ by 1 ulp on
-~8 % of inputs, and the anisotropic LGI kernels flip kernel membership for ~3 % of vertices under
-a 1-ulp change of the normals (see docs/reports/lgi-hull-2026-10-20.md).  Reproducing the glibc
-algorithm (the reference image's libm; also what current Linux CI runners use) removes the
-dependence on the host libm.  Original: Copyright (C) 1993 Sun Microsystems, Inc.; permission to
-use, copy, modify and distribute is freely granted provided this notice is preserved.
+MeshLib weights face normals by ``acos`` of float32 dot products (``Mesh::updateNormal``), so
+the C++ tools see the host libm's ``acosf``.  The anisotropic LGI kernels are chaotic in that
+input (a 1-ulp change of the normals flips kernel membership for ~3 % of vertices;
+docs/ports/lgi.md, "libm"), so results are only reproducible if the ``acosf`` is pinned.
+Two choices, selected with ``libm=``:
+
+* ``"fdlibm"`` (default): the Sun fdlibm single-precision algorithm (the one in glibc's flt-32
+  ``e_acosf.c`` for the releases that ship it), bit-identical on every platform.  PROVISIONAL: it is
+  the choice that reproduces the oracle goldens (built with the same algorithm); whether the
+  reference image's glibc 2.31 ``acosf`` is this algorithm is unverified until image goldens exist
+  (Q1, B1.4).
+* ``"host"``: whatever ``acosf`` the machine's libm provides (``math.acos`` on a float32).
+
+Changing the default is a one-line edit of ``DEFAULT_LIBM``.  fdlibm original: Copyright (C) 1993
+Sun Microsystems, Inc.; permission to use, copy, modify and distribute is freely granted
+provided this notice is preserved.
 """
 
 from __future__ import annotations
@@ -17,6 +26,9 @@ import numpy as np
 from numba import njit
 
 F = np.float32
+
+DEFAULT_LIBM = "fdlibm"
+LIBMS = ("fdlibm", "host")
 _ONE = F(1.0)
 _PI = F(3.1415925026e00)
 _PIO2_HI = F(1.5707962513e00)
@@ -73,3 +85,14 @@ def acosf(x):
     r = p / q
     w = r * s + c
     return _TWO * (df + w)
+
+
+@njit(cache=True, error_model="numpy")
+def acosf_host(x):
+    """``acosf`` of the host libm (float32 in, float32 out)."""
+    return F(math.acos(x))
+
+
+@njit(cache=True, error_model="numpy")
+def acosf_select(x, host):
+    return acosf_host(x) if host else acosf(x)
