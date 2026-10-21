@@ -14,7 +14,7 @@ surprises. Proposed follow-up briefs: [proposed-12-19](../agent-briefs/proposed-
 | B1.3 (output tree + orchestrator spec) | **Done, source-derived; image confirmation still needed** (spec §13, §15). |
 | Reconciliation with briefs 04–07 | Tables in §3 below: 17 mismatches, gaps or new findings (plus two hypotheses resolved) filed as issues for the owning components; no code touched. |
 | Q3, Q4, Q9 | Facts recorded in [open-questions.md](../open-questions.md); Answer column left empty. |
-| Plan rows | B5.2–B5.7, B7.1, B7.3–B7.5, B9.1, B9.5, B10.1, B10.4, B12.3 acceptance text rewritten with source citations; B6.5/B8.1/B9.4 rows annotated. |
+| Plan rows | Rewritten with source citations: B1.2 (reduced to a confirmation), B1.3 and B5.1 (Done, source-derived), B3.1, B3.3, B5.2–B5.7, B7.1, B7.3–B7.5, B9.1, B9.3, B9.5, B9.6, B10.1, B10.4, B12.3. Annotated: B6.5, B8.1. B9.2/B9.4 left untouched (PR #6 owns them); the top Status section is left to the coordinating session (only Key finding 1 got a dated pointer). |
 | Proposed briefs | 12–19 added to the index as *Proposed*. |
 
 Limits. The source is dated eight months after the image; the encrypted orchestrator could not be diffed against it, so every statement is
