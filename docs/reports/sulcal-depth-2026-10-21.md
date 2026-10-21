@@ -13,7 +13,7 @@ Row B9.5 is **In progress, provisional**: the analytic acceptance passes, the E-
 ## Evidence
 * Building blocks vs analytic answers: chamfer steps (1, √2, √3, quasi-Euclidean detour 3,1,0 = √2+2), wall/gap detour, unreachable → NaN, seed policy, exact trilinear on a linear field, Inf/NaN weight semantics, 18-connected perimeter count.
 * Chain: sphere R = 40: depth 2.4 ± 0.6 mm baseline (hull offset ≈ 2.5 voxels + dilation), radius-independent; grooved sphere: groove bottom − baseline = 2.6 / 6.5 / 10.5 mm for groove depths 4 / 8 / 12 mm, monotone in depth and along the profile.
-* `ruff check .` clean; full suite run before the PR (count in the PR text).
+* `ruff check .` clean; full suite 529 passed, 22 skipped.
 
 ## Findings and caveats
 1. A convex surface does **not** give 0: the smoothing + threshold places the hull ≈ 2–3 mm outside the pial solid. Spec's "sphere ≈ 0" is true only to that voxel tolerance; this is a property of the algorithm, not a port defect.
