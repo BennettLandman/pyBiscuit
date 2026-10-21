@@ -24,7 +24,7 @@ evidence, and stop conditions; AGENTS.md rules always apply.
 | [17](proposed-12-21.md#17--sulcal-depth-b95) | Sulcal depth | 07 | Done (PR #11, merged; provisional) |
 | [18](proposed-12-21.md#18--statistics-legacy-output-view-pipeline-wiring-b101-b104-integration) | Statistics, legacy view, pipeline wiring | 08, 12–17 | Proposed |
 | [19](proposed-12-21.md#19--pdf--qa-layout-b123) | PDF/QA layout | 09, 18 | Proposed |
-| [20](proposed-12-21.md#20--lgi-on-the-ported-trace-follow-up-to-07) | LGI on the ported TRACE | 04, 07 | Running |
+| [20](proposed-12-21.md#20--lgi-on-the-ported-trace-follow-up-to-07) | LGI on the ported TRACE | 04, 07 | Done (PR #13, merged; template per-vertex bound open, Q14) |
 | [21](proposed-12-21.md#21--hsd-follow-up-biscuits-four-call-chain-follow-up-to-05) | HSD four-call replay | 05 | Queued |
 
 Unblocked by the MATLAB source (2026-10-21); brief 11 wrote the spec ([outlines of the port briefs](proposed-12-21.md)): B5 (surface prep), B7.1/B7.4/B7.5
