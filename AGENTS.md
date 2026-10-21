@@ -19,6 +19,7 @@ plus visualization ([docs/visualization-plan.md](docs/visualization-plan.md)).
 ├── pyBiscuit/                  ← this repository (BennettLandman/pyBiscuit, private)
 ├── biscuit_FC_v2.2.sif         ← production image (BISCUIT 2.2 = CBT v1.3 + templates + models)
 ├── biscuit_cbt_v1.3.sif        ← base image (no reg/ or parc/ assets)
+├── BISCUIT-master/             ← BISCUIT MATLAB source from Ilwoo Lyu (NOT in git)
 └── reference/                  ← NOT in git; regenerate with scripts/extract_reference.py
     ├── sif_FC_v2.2/root/opt/   ← extracted /opt/biscuit and /opt/cmorph
     ├── ctf_plain/              ← plaintext files from the MATLAB CTF (parc Python, meshes)
@@ -41,10 +42,13 @@ subject data. `reference/` and large assets stay outside git; record hashes.
    binaries in the image (CBT v1.3 / cmorph v1.7, June 2021). When they
    disagree, the image binary wins; record the discrepancy.
 3. **Papers** (listed in [docs/source-map.md](docs/source-map.md)) explain intent.
-4. **The MATLAB orchestrator is encrypted.** Its file manifest
-   ([docs/reference/ctf-manifest.tsv](docs/reference/ctf-manifest.tsv)) gives
-   structure only. Reconstruct its behavior from container runs with preserved
-   intermediates, never by guessing. Do not attempt to decrypt the CTF.
+4. **BISCUIT MATLAB source** (from Ilwoo Lyu, 2026-10-21) is at
+   `~/dev/biscuit/BISCUIT-master/` (outside git; don't commit it).
+   `BISCUIT/GenericRecon` is the variant the FC image runs. It is the
+   **specification** for orchestration and in-MATLAB computation, but the
+   files are dated 2022-02, after the image (2021-06), so image behavior still
+   decides acceptance. Never decrypt the CTF;
+   [docs/reference/ctf-manifest.tsv](docs/reference/ctf-manifest.tsv) maps it.
 
 ## Working rules
 
