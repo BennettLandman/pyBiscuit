@@ -87,3 +87,54 @@ Inputs for the first tier-1 case: `~/dev/mipav/sample-macruise/output/`
 (`Surfaces_FreeView/target_image_GMimg_innerSurf.asc`,
 `Surfaces_MNI/target_image_GMimg_innerSurf.asc` → `*_mni.asc`,
 `SegRefine/SEG_refine.nii.gz`, `Raw/T1.nii.gz`).
+
+## How to run the image harness (Linux x86-64 only)
+
+Everything below lives in `scripts/reference/` (overview: its `README.md`) and has been
+mock-tested on macOS without the image (`tests/test_reference_harness.py`); it has **not** yet been
+run against the real image. Never run it on macOS, never trigger the workflow before Q1 is answered,
+and never upload the image or a licence file anywhere except where the owner decides.
+
+Prerequisites on the host: Apptainer or Singularity, the image (SHA-256 above is checked; override with
+`--sif-sha256`), Python with NumPy and `pip install -e .` of this repo (fixture generators only), and for
+full runs a FreeSurfer `license.txt` plus a MaCRUISE v3 input directory.
+
+```bash
+# 1. Per-tool goldens (B1.4): replays scripts/oracles/make_golden.py cases and the image-only tools.
+python scripts/reference/make_image_golden.py --sif biscuit_FC_v2.2.sif --list
+python scripts/reference/make_image_golden.py --sif biscuit_FC_v2.2.sif --all --keep-going
+# -> tests/data/golden-image/<tool>/<case>/{outputs, command.json ("oracle": "image-biscuit_FC_v2.2", image_sha256), help.txt}
+```
+
+```bash
+# 2. Full pipeline with intermediates and command trace (B1.1 + B1.2)
+scripts/reference/run_full.sh --sif biscuit_FC_v2.2.sif --input "$IN" --out "$OUT/subj" \
+    --license "$HOME/.freesurfer/license.txt" --reg oasis45      # add --dry-run to print the commands
+python scripts/reference/trace_to_spec.py "$OUT/subj.harness/trace.jsonl" -o orchestrator-trace.md
+```
+
+`run_full.sh` writes the output tree with `.tmp` kept (a copy of `run_biscuit` without its
+`rm -rf $TMP` and `rm $CONF` lines is run), `<out>.harness/{trace.jsonl, trace/, run.json,
+MANIFEST.sha256, <name>.tar.gz}`. The trace comes from `PATH` shims for every compiled sub-tool of
+`/opt/biscuit/bin` and `/opt/cmorph/bin`, plus a copy of the `lgi` tcsh script placed beside them so its
+`$0:h/<tool>` calls are traced as well. Known limits: calls made by absolute path from inside the compiled
+MATLAB orchestrator bypass the shims (use `--strace` to add `strace -f -e trace=execve` if the image has
+strace, or compare the call list against `trace_to_spec.py` output); "modified" files are detected by
+size or whole-second mtime. Review the first trace by hand before treating it as the orchestrator spec (B1.3).
+
+**Flags not yet confirmed.** MeshProperty, MeshDeform, ShapeComplexityIndex, klaplace and OuterHull flags in
+`make_image_golden.py` come from `strings` on the binaries and the `lgi` script, not from running them.
+Each such golden stores `help.txt` (`<tool> --help`); a case with wrong flags fails loudly and
+`--keep-going` records the rest, so fix the flags from the first `help.txt` and rerun.
+
+**ACCRE:** copy `scripts/reference/accre_slurm.sbatch`, set `SIF`, `FS_LICENSE`, optional `CASE_INPUT`,
+`MODULES`, then `sbatch` it (`DRY_RUN=1 bash accre_slurm.sbatch` prints the commands).
+**GitHub Actions:** `.github/workflows/reference.yml` (`workflow_dispatch` only, input `confirm` must be
+`RUN`): downloads the image from a release asset given by `release_tag`, `sif_asset`, `sif_sha256`,
+checks the hash, takes the licence from the secret `FS_LICENSE`, runs step 1 (and step 2 when
+`full_case_asset`, a tar.gz containing an `input/` directory, and `full_case_sha256` are given), and
+uploads the goldens and trace as workflow artifacts. It never commits; review the artifacts and commit
+goldens by hand (each case stays under ~1 MB, `make_image_golden.py` warns otherwise).
+
+Tests choose goldens with `tests/_golden.py::golden_dir(tool, case)`, which prefers
+`tests/data/golden-image/` over `tests/data/golden/` when both exist.
