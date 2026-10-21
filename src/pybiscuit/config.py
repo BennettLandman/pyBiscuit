@@ -228,6 +228,7 @@ class Config:
 
     values: Mapping[str, Any]
     sources: tuple[str, ...] = ("defaults",)
+    explicit: frozenset[str] = frozenset()  # keys set by a file or override, not by defaults
 
     def __getitem__(self, key: str) -> Any:
         return self.values[key]
@@ -239,7 +240,7 @@ class Config:
         merged = dict(self.values)
         for k, v in updates.items():
             merged[k] = _coerce(k, v)
-        return Config(merged, self.sources)
+        return Config(merged, self.sources, self.explicit | frozenset(updates))
 
     def active_items(self) -> dict[str, Any]:
         """Items ``run_biscuit`` passes on: the other routes' prefixed blocks are dropped."""
@@ -282,13 +283,16 @@ def load_config(
     """
     values = dict(DEFAULTS)
     sources = ["defaults"]
+    explicit: set[str] = set()
     if conf is not None:
         for k, v in read_conf(conf).items():
             values[k] = _coerce(k, v)
+            explicit.add(k)
         sources.append(f"conf:{conf}")
     if toml is not None:
         for k, v in read_toml(toml).items():
             values[k] = _coerce(k, v)
+            explicit.add(k)
         sources.append(f"toml:{toml}")
     applied = []
     for flag, v in (overrides or {}).items():
@@ -297,6 +301,7 @@ def load_config(
         key = CLI_FLAGS.get(flag, flag)
         values[key] = _coerce(key, v)
         applied.append(key)
+        explicit.add(key)
     if applied:
         sources.append("overrides:" + ",".join(applied))
-    return Config(values, tuple(sources))
+    return Config(values, tuple(sources), frozenset(explicit))

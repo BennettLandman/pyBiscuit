@@ -395,7 +395,8 @@ def format_plan(plans: list[StagePlan]) -> str:
                "stale": "STALE (resume refused)", "corrupt": "DAMAGED (resume refused)"}[p.state]
         lines.append(f"{i:2d}. {st.name:<10} [{', '.join(st.plan_rows)}] {tag}")
         lines.append(f"      signature {p.signature[:16]}  outputs: {', '.join(st.outputs) or '-'}")
-        deps = st.upstream()
+        present = {q.stage.name for q in plans}
+        deps = [d for d in st.upstream() if d in present]
         if deps:
             lines.append(f"      needs: {', '.join(deps)}")
         if st.params:
