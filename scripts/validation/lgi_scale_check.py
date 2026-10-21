@@ -17,10 +17,11 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(REPO / "src"), str(REPO)]
+from tests.fixtures.lgi import fold_case  # noqa: E402
+
 from pybiscuit.io import read_vtk, write_vtk  # noqa: E402
 from pybiscuit.mesh.geometry import vertex_areas  # noqa: E402
 from pybiscuit.quant.lgi import gyrification  # noqa: E402
-from tests.fixtures.lgi import fold_case  # noqa: E402
 
 O = Path.home() / "dev" / "biscuit" / "oracles"  # noqa: E741
 level = int(sys.argv[1]) if len(sys.argv) > 1 else 6
