@@ -231,11 +231,11 @@ per [validation-tolerances](docs/validation-tolerances.md).
 
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
-| B12.1 | GIfTI/TSV exports (core) | loads in NiiVue + Workbench (manual check recorded) | Todo |
-| B12.2 | Off-screen renderer, camera presets, colour conventions | snapshot tests | Todo |
+| B12.1 | GIfTI/TSV exports (core) | loads in NiiVue + Workbench (manual check recorded) | In progress (writers + LUT label tables + TSV/JSON done; NiBabel round trip and `lut.csv` exact-match tests pass; NiiVue manual check recorded, Workbench not checked; [report](docs/reports/viz-foundation-2026-10-21.md)) |
+| B12.2 | Off-screen renderer, camera presets, colour conventions | snapshot tests | In progress (renderer, presets, fixed limits, panel composer, CLI done; snapshot tests pass on macOS arm64; Linux `viz` CI job result pending; [report](docs/reports/viz-foundation-2026-10-21.md)) |
 | B12.3 | `pybiscuit report` PDF (pages 1–7) + PNG panels | owner visual review vs original PDF | Todo |
-| B12.4 | `qa/index.html` with embedded NiiVue | opens offline in Chrome/Safari/Firefox | Todo |
-| B12.5 | `pybiscuit view` desktop + Jupyter | manual checklist | Todo |
+| B12.4 | `qa/index.html` with embedded NiiVue | opens offline in Chrome/Safari/Firefox | In progress (NiiVue 0.69.0 bundled, hash recorded; generator + tests; rendered in the in-app browser over HTTP, `file://` in Chrome/Safari/Firefox not yet checked; [report](docs/reports/viz-foundation-2026-10-21.md)) |
+| B12.5 | `pybiscuit view` desktop + Jupyter | manual checklist | In progress (desktop `view` + `render` CLIs done by brief 09; Jupyter and manual checklist outstanding) |
 | B12.6 | Cohort mosaic + parity views (used by B11 reports) | used in B11.2 report | Todo |
 
 ### B13 — Release
