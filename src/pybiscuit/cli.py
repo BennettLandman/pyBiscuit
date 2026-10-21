@@ -23,7 +23,16 @@ def main(argv: list[str] | None = None) -> int:
         help="local gyrification index (port of Gyrification; same flags as the original binary)",
         add_help=False,
     )
+    sub.add_parser(
+        "outer-hull",
+        help="cerebral outer hull of a surface (port of OuterHull; provisional, no oracle)",
+        add_help=False,
+    )
     argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "outer-hull":
+        from .quant.hull_cli import main as hull_main
+
+        return hull_main(argv[1:])
     if argv and argv[0] == "lgi":  # remaining args are passed through verbatim
         from .quant.lgi_cli import main as lgi_main
 
