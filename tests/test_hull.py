@@ -6,8 +6,8 @@ geometry the hull must satisfy (encloses the surface, closed, smooth, small marg
 
 import numpy as np
 import pytest
-from tests.fixtures.meshes import ellipsoid, folded_sphere, icosphere
 
+from fixtures.meshes import ellipsoid, folded_sphere, icosphere
 from pybiscuit.mesh import euler_characteristic
 from pybiscuit.mesh.geometry import vertex_areas
 from pybiscuit.quant._voxelise import voxelise

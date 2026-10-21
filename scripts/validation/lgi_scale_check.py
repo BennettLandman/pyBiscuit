@@ -16,9 +16,8 @@ from pathlib import Path
 import numpy as np
 
 REPO = Path(__file__).resolve().parents[2]
-sys.path[:0] = [str(REPO / "src"), str(REPO)]
-from tests.fixtures.lgi import fold_case  # noqa: E402
-
+sys.path[:0] = [str(REPO / "src"), str(REPO / "tests")]
+from fixtures.lgi import fold_case  # noqa: E402
 from pybiscuit.io import read_vtk, write_vtk  # noqa: E402
 from pybiscuit.mesh.geometry import vertex_areas  # noqa: E402
 from pybiscuit.quant.lgi import gyrification  # noqa: E402
@@ -42,7 +41,9 @@ with tempfile.TemporaryDirectory() as td:
                     "--kArea1", "--kArea2"], cwd=w, check=True, capture_output=True)  # fmt: skip
     t_or = time.time() - t
     s2, h2 = read_vtk(w / "s.vtk"), read_vtk(w / "h.vtk")
-    gyrification(s2, h2, sulcus=w / "s.scurve.bary", gyrus=w / "s.gcurve.bary", ref_hull_area=ha)  # JIT warm-up
+    gyrification(
+        s2, h2, sulcus=w / "s.scurve.bary", gyrus=w / "s.gcurve.bary", ref_hull_area=ha
+    )  # JIT warm-up
     t = time.time()
     r = gyrification(s2, h2, sulcus=w / "s.scurve.bary", gyrus=w / "s.gcurve.bary", ref_hull_area=ha,
                      n_threads=threads)  # fmt: skip
@@ -52,4 +53,6 @@ with tempfile.TemporaryDirectory() as td:
         g = np.loadtxt(w / f"o.{k}.map.{lab}.txt")
         rel = np.abs(a[:, 0] - g) / np.abs(g)
         print(f"{k}: max rel {rel.max():.2e}, n>1e-5: {(rel > 1e-5).sum()} of {g.size}")
-    print(f"vertices {s2.n_vertices}; oracle {t_or:.1f} s (1 thread), port {t_py:.1f} s ({threads} threads)")
+    print(
+        f"vertices {s2.n_vertices}; oracle {t_or:.1f} s (1 thread), port {t_py:.1f} s ({threads} threads)"
+    )

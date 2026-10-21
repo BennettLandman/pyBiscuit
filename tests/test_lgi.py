@@ -9,8 +9,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from tests._compare import assert_close_float32
 
+from _compare import assert_close_float32
 from pybiscuit.io import read_vtk
 from pybiscuit.quant.lgi import gyrification, read_curves, read_geodesic_map
 
@@ -96,7 +96,7 @@ def _curve_ids(n, k=24, seed=7):
 
 
 def test_convex_sphere_lgi_is_one():
-    from tests.fixtures.lgi import fold_case
+    from fixtures.lgi import fold_case
 
     surf, _ = fold_case(a=0.0, noise=0.0, hull_scale=1.0)
     res = gyrification(
@@ -106,7 +106,7 @@ def test_convex_sphere_lgi_is_one():
 
 
 def test_lgi_increases_with_fold_amplitude():
-    from tests.fixtures.lgi import fold_case
+    from fixtures.lgi import fold_case
 
     med = []
     for a in (0.03, 0.08, 0.14, 0.2):
@@ -125,7 +125,7 @@ def test_heap_variants_agree_without_ties(meshes):
 
 
 def test_open_mesh_rejected():
-    from tests.fixtures.meshes import cut_sphere
+    from fixtures.meshes import cut_sphere
 
     m = cut_sphere(3)
     with pytest.raises(ValueError, match="closed"):

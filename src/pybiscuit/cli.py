@@ -18,25 +18,21 @@ def main(argv: list[str] | None = None) -> int:
         help="port of SphericalRemesh (same flags as the original binary; see its --help)",
         add_help=False,
     )
-    sub.add_parser(
-        "lgi",
-        help="local gyrification index (port of Gyrification; same flags as the original binary)",
-        add_help=False,
-    )
-    sub.add_parser(
-        "outer-hull",
-        help="cerebral outer hull of a surface (port of OuterHull; provisional, no oracle)",
-        add_help=False,
-    )
     argv = list(sys.argv[1:] if argv is None else argv)
-    if argv and argv[0] == "outer-hull":
-        from .quant.hull_cli import main as hull_main
+    # --- quant (brief 07): lgi, outer-hull; remaining args are passed through verbatim
+    for name, text in (
+        ("lgi", "local gyrification index (port of Gyrification; flags of the original binary)"),
+        ("outer-hull", "cerebral outer hull of a surface (port of OuterHull; provisional)"),
+    ):
+        sub.add_parser(name, help=text, add_help=False)
+    if argv and argv[0] in ("lgi", "outer-hull"):
+        if argv[0] == "lgi":
+            from .quant.lgi_cli import main as quant_main
+        else:
+            from .quant.hull_cli import main as quant_main
 
-        return hull_main(argv[1:])
-    if argv and argv[0] == "lgi":  # remaining args are passed through verbatim
-        from .quant.lgi_cli import main as lgi_main
-
-        return lgi_main(argv[1:])
+        return quant_main(argv[1:])
+    # --- end quant
     if argv and argv[0] == "spherical-remesh":  # remaining args are passed through verbatim
         from .sphere.remesh_cli import main as remesh_main
 

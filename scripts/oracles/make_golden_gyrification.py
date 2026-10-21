@@ -27,7 +27,7 @@ GYR = ORACLES / "gyrification-nofma" / "bin" / "Gyrification"
 CURVE = ORACLES / "curve_extraction-nofma" / "bin" / "CurveExtraction"
 GOLDEN = REPO / "tests" / "data" / "golden" / "gyrification"
 sys.path.insert(0, str(REPO / "src"))
-sys.path.insert(0, str(REPO))
+sys.path.insert(0, str(REPO / "tests"))
 
 HULL_AREA = None  # filled from the fixture (ratio 1 => kernel sizes are the nominal ones)
 COMMON = [
@@ -62,8 +62,7 @@ CASES = {  # name -> extra args (HULL placeholder = fixture hull area)
 
 
 def make_inputs(work: Path) -> float:
-    from tests.fixtures.lgi import fold_case
-
+    from fixtures.lgi import fold_case
     from pybiscuit.io import write_vtk
     from pybiscuit.mesh.geometry import vertex_areas
 
