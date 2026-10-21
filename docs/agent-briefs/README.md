@@ -11,21 +11,21 @@ evidence, and stop conditions; AGENTS.md rules always apply.
 | [04](04-geodesics-trace.md) | Geodesics + TRACE | 03 | Done (PR #4, merged) |
 | [05](05-hsd.md) | HSD registration | 03 | Done (PR #5, merged) |
 | [06](06-parcellation-net.md) | Parcellation network inference | 03 | Done (PR #3, merged) |
-| [07](07-lgi.md) | OuterHull + Gyrification | 03 | Running (PR #6, fixing a Windows crash) |
-| [08](08-pipeline-infra.md) | Config, stage graph, resume, run.json, input adapters | 03 | Running |
-| [09](09-viz-foundation.md) | GIfTI exports, renderer, NiiVue HTML viewer | 03 | Running |
-| [10](10-reference-harness.md) | Image reference scripts + Actions workflow (not run) | 03 | Running |
-| [11](11-orchestrator-spec.md) | Orchestrator spec from MATLAB source; reconcile 04–07 | — | Done (docs PR; spec in `docs/reference/orchestrator-spec.md`) |
-| [12](proposed-12-21.md#12--maccruise-hemisphere-separation-b52) | MaCRUISE hemisphere separation | 11 | Proposed |
+| [07](07-lgi.md) | OuterHull + Gyrification | 03 | Done (PR #6, merged) |
+| [08](08-pipeline-infra.md) | Config, stage graph, resume, run.json, input adapters | 03 | Done (PR #8, merged) |
+| [09](09-viz-foundation.md) | GIfTI exports, renderer, NiiVue HTML viewer | 03 | Done (PR #9, merged) |
+| [10](10-reference-harness.md) | Image reference scripts + Actions workflow (not run) | 03 | Done (PR #7, merged; not run, needs Q1) |
+| [11](11-orchestrator-spec.md) | Orchestrator spec from MATLAB source; reconcile 04–07 | — | Done (PR #10, merged) |
+| [12](proposed-12-21.md#12--maccruise-hemisphere-separation-b52) | MaCRUISE hemisphere separation | 11 | Running |
 | [13](proposed-12-21.md#13--meshproperty--meshdeform-black-box-port-and-feature-maps-b31b33-b91) | MeshProperty/MeshDeform black-box port, feature maps | 11, Q1 | Proposed |
 | [14](proposed-12-21.md#14--freesurfer-replacement-surface-prep-b53b57) | FreeSurfer-replacement surface prep | 12, 13, Q3 | Proposed |
 | [15](proposed-12-21.md#15--parcellation-features-alignment-and-fusion-b71-b73) | Parcellation features, alignment, fusion | 13 | Proposed |
 | [16](proposed-12-21.md#16--graph-cut-and-roi-cleanup-b74-b75) | Graph cut + ROI cleanup | 06, Q13 | Proposed |
-| [17](proposed-12-21.md#17--sulcal-depth-b95) | Sulcal depth | 07 | Proposed |
+| [17](proposed-12-21.md#17--sulcal-depth-b95) | Sulcal depth | 07 | Running |
 | [18](proposed-12-21.md#18--statistics-legacy-output-view-pipeline-wiring-b101-b104-integration) | Statistics, legacy view, pipeline wiring | 08, 12–17 | Proposed |
 | [19](proposed-12-21.md#19--pdf--qa-layout-b123) | PDF/QA layout | 09, 18 | Proposed |
-| [20](proposed-12-21.md#20--lgi-on-the-ported-trace-follow-up-to-07) | LGI on the ported TRACE | 04, 07 | Proposed |
-| [21](proposed-12-21.md#21--hsd-follow-up-biscuits-four-call-chain-follow-up-to-05) | HSD four-call replay | 05 | Proposed |
+| [20](proposed-12-21.md#20--lgi-on-the-ported-trace-follow-up-to-07) | LGI on the ported TRACE | 04, 07 | Running |
+| [21](proposed-12-21.md#21--hsd-follow-up-biscuits-four-call-chain-follow-up-to-05) | HSD four-call replay | 05 | Queued |
 
 Unblocked by the MATLAB source (2026-10-21); brief 11 wrote the spec ([outlines of the port briefs](proposed-12-21.md)): B5 (surface prep), B7.1/B7.4/B7.5
 (parc features, graph cut, cleanup), B9.5 (sulcal depth), B10 (stats,
