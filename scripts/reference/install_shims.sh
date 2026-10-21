@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Create the PATH-shim directory for command tracing (plan B1.2).
 #   install_shims.sh [--dry-run] SHIM_DIR [TOOL...]
-# Default tools: every sub-tool of the BISCUIT FC v2.2 image (see below).
+# Default tools: every compiled sub-tool of the BISCUIT FC v2.2 image. `lgi` is a tcsh script that
+# calls its tools as $0:h/<tool>; container_inner.sh therefore copies it into the shim directory
+# so those calls reach the shims too.
 set -euo pipefail
 
 dry=0
@@ -15,7 +17,7 @@ shift
 # /opt/biscuit/bin and /opt/cmorph/bin of biscuit_FC_v2.2.sif
 default_tools=(MeshContour MeshDeform MeshProperty ShapeComplexityIndex mri_convert mri_normalize
     mris_inflate mris_make_surfaces mris_sphere CurveExtraction Gyrification HSD OuterHull
-    SphericalRemesh klaplace lgi)
+    SphericalRemesh klaplace)
 tools=("$@")
 [ ${#tools[@]} -gt 0 ] || tools=("${default_tools[@]}")
 
