@@ -24,12 +24,11 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "src"))
-sys.path.insert(0, str(REPO))
+sys.path.insert(0, str(REPO / "tests"))
 ORA = Path.home() / "dev" / "biscuit" / "oracles" / "hsd-nofma" / "bin"
 GOLDEN = REPO / "tests" / "data" / "golden" / "hsd"
 
-from tests.fixtures.hsd_cases import EVAL_CASES, RUN_CASES, coeff_states, write_case  # noqa: E402
-
+from fixtures.hsd_cases import EVAL_CASES, RUN_CASES, coeff_states, write_case  # noqa: E402
 from pybiscuit.io import read_vtk  # noqa: E402
 
 

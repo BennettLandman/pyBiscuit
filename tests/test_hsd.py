@@ -14,8 +14,8 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from tests.fixtures.hsd_cases import EVAL_CASES, RUN_CASES, coeff_states, write_case
 
+from fixtures.hsd_cases import EVAL_CASES, RUN_CASES, coeff_states, write_case
 from pybiscuit.hsd.cli import build_parser
 from pybiscuit.hsd.cli import main as hsd_main
 from pybiscuit.hsd.icosahedron import icosahedron, icosahedron_counts
