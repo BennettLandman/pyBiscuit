@@ -15,7 +15,7 @@ No stage science. Port note: [docs/ports/pipeline.md](../ports/pipeline.md).
 | `aff.txt` maps FreeView inner vertices onto MNI within 1e-4 mm | `test_legacy_aff_maps_native_onto_mni`: **5.0e-6 mm** (using the inverse of `aff.txt`, see below) |
 | `pybiscuit run --dry-run` prints a full plan, blocked stages marked, exit 0 on both reference inputs | `test_dry_run_reference_inputs` (8 of 9 stages BLOCKED, `ingest` runs); real `run` on the sample ingests, then exits 3 with `stage 'surfprep' is blocked: B5: ...` |
 | No new runtime dependency | `tomllib` on 3.11+. `pyproject.toml` gains `tomli>=2.0; python_version < '3.11'` (MIT, one line, needed only so TOML configs work on 3.10; `biscuit.conf` needs nothing). Owner can drop it and lose TOML on 3.10. |
-| Full suite and lint | 432 passed, 14 skipped; `ruff check .` clean |
+| Full suite and lint | 480 passed, 18 skipped (after rebase onto e225437); `ruff check .` clean |
 
 ## Findings
 1. `Surfaces_MNI/aff.txt` maps **MNI -> native**, not native -> MNI. Applying it forward to the FreeView vertices leaves 77 mm residual; its inverse leaves 5.0e-6 mm. `native_to_mni_matrix()` encodes this. docs/io-contract.md calls it "the rigid transform" without direction.
