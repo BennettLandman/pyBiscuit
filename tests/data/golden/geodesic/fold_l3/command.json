@@ -1,0 +1,14 @@
+{
+  "tool": "geodesic",
+  "fixture": {
+    "a": 0.15,
+    "l": 6,
+    "m": 3,
+    "level": 3,
+    "radius": 50.0,
+    "query_seed": 20261020
+  },
+  "oracle": "upstream-macos-arm64 (-ffp-contract=off)",
+  "meshlib": "dcef807",
+  "curve_extraction": "ded932d"
+}

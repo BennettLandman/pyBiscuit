@@ -139,7 +139,7 @@ per [validation-tolerances](docs/validation-tolerances.md).
 | B2.3 | Topology: edges, one-ring, face adjacency, boundary loops, connected components, Euler/genus, orientation consistency | tests on fixtures | Done (tests/test_topology.py 27 pass; all spheres + template white surfaces chi=2 genus 0) |
 | B2.4 | Geometry: face/vertex normals (MeshLib weighting), areas, Voronoi areas, Laplacian smoothing variants as in MeshLib `Util/SurfaceUtil.cpp` | match MeshLib (compile-free: compare against values derived from goldens) | Done, oracle-provisional (geometry.py, curvature.py, sphere_map.py; tests/test_geometry.py, test_curvature.py, test_sphere_map.py; bit-identical vs non-FMA MeshLib incl. reg/mb101/lh.white; [report](docs/reports/geometry-remesh-2026-10-20.md)) |
 | B2.5 | Spherical AABB / point location + barycentric interpolation (MeshLib `AABB_Sphere`) | E-class vs SphericalRemesh goldens (via B4) | Done, oracle-provisional (sphere/aabb.py; tests/test_aabb_sphere.py 29 pass; 0 face mismatches, bary diff 0 on 1e5 queries x 5 cases; ico7 163,842 queries 0.02 s warm) |
-| B2.6 | Geodesics: Dijkstra on edge graph (SciPy) + exact geodesic port of MeshLib `GeodesicA`/Peyré (Numba) | distances on analytic sphere within 0.1 %; E-class vs TRACE `.bary` later | Todo |
+| B2.6 | Geodesics: Dijkstra on edge graph (SciPy) + exact geodesic port of MeshLib `GeodesicA`/Peyré (Numba) | distances on analytic sphere within 0.1 %; E-class vs TRACE `.bary` later | Done, oracle-provisional (mesh/geodesic.py, mesh/slicer.py; tests/test_geodesic.py, test_slicer.py; fast marching + GeodesicPath bit-identical vs no-FMA MeshLib incl. reg/mb101/lh.white; unit-sphere mean error 0.9 % vs 0.5 % diagnostic target - intrinsic to the upstream scheme; [report](docs/reports/geodesics-trace-2026-10-20.md), [note](docs/ports/geodesic.md)) |
 
 ### B3 — MeshProperty (closed binary, black-box)
 
@@ -194,10 +194,10 @@ per [validation-tolerances](docs/validation-tolerances.md).
 
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
-| B8.1 | Port note + parameter map (`trace_r`, `trace_delta`, smoothing, `--bary`, junctions) from B1.2 | `docs/ports/trace.md` | Todo |
-| B8.2 | SulcalPoint / GyralPoint (fundic/crown point selection, line simplification) | point sets E | Todo |
-| B8.3 | SulcalCurve / GyralCurve (graph construction, Dijkstra tracing, pruning) | curves E (Jaccard, Hausdorff) | Todo |
-| B8.4 | Writers `.scurve/.gcurve/.bary` + VTK | byte-compatible text format | Todo |
+| B8.1 | Port note + parameter map (`trace_r`, `trace_delta`, smoothing, `--bary`, junctions) from B1.2 | `docs/ports/trace.md` | Done ([docs/ports/trace.md](docs/ports/trace.md): function map, flag table, trace_r/trace_delta hypothesis, precision notes) |
+| B8.2 | SulcalPoint / GyralPoint (fundic/crown point selection, line simplification) | point sets E | Done, oracle-provisional (trace/points.py; spoint/gpoint identical on lh.white, folded fixtures differ by 1 tie flag in 20,484; tests/test_trace.py) |
+| B8.3 | SulcalCurve / GyralCurve (graph construction, Dijkstra tracing, pruning) | curves E (Jaccard, Hausdorff) | Done, oracle-provisional (trace/curves.py; curve files byte-identical vs no-FMA CurveExtraction on lh.white and 2 folded fixtures; open question: GyralCurve uninitialised `current`) |
+| B8.4 | Writers `.scurve/.gcurve/.bary` + VTK | byte-compatible text format | Done, oracle-provisional (trace/extract.py, `pybiscuit trace`; .scurve/.gcurve/.bary/.cart/.vtk byte-identical vs oracle) |
 
 ### B9 — Quantification
 
