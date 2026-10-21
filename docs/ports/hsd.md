@@ -117,6 +117,7 @@ Consequences found by replaying it (tests: `tests/test_hsd_chain.py`; report: [h
   "no closest triangle found"; the original `hsd-nofma` build cannot run any `--icomesh` call. The goldens come from
   `hsd-icomesh-nofma` (`HSD_PATCH_ICOMESH=1 scripts/oracles/build_hsd_nofma.sh`, one-line fix, otherwise identical). The port computes
   the intended value. Whether BISCUIT's gcc build keeps the value is unknown (it must, or production would fail; Q1).
+* **Latent upstream abort at ico7.** `updateProperties` exits with "no closest triangle found" when a sample lies within float32 noise of an edge and the float32 `cart2bary` of both adjacent faces is below -1e-5; the oracle's own `AABB_Sphere` does the same on the port's dumped mesh. A port run aborted this way at template scale (call 4); not handled (stopping rules are preserved).
 * **H-4** same file as `-c` and `--outputcoeff` for both subjects: the fixed template neither reads nor writes it; tested.
 * **H-7** `rh` call 2 order: both orders supported (`--rh-stage2`), both with goldens.
 * **H-8** parcellation alignment (`parc.m:61`, `-d 0 --noguess --icosahedron 5`, `-o` = input sphere, native-resolution mesh):
