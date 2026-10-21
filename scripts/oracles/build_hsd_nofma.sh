@@ -14,7 +14,11 @@ ORA="${ORACLES:-$ROOT/oracles}"
 ML="$ROOT/reference/repos/MeshLib"
 HSD="$ROOT/reference/repos/HSD"
 CLI="$ORA/_deps/cli11-1.9.1"
-OUT="$ORA/hsd-nofma"
+# HSD_PATCH_ICOMESH=1: also fix the dangling pointer in the --icomesh branch of HSD::init (HSD.cpp:316,
+# `const float *p = V.unit().fv();` reads a destroyed temporary; clang -O2 reuses its stack slot, so every
+# icomesh sample becomes garbage and the run dies).  The patched build goes to hsd-icomesh-nofma and is
+# otherwise identical; the image's gcc build is assumed to keep the value (queue: Q1).
+if [ "${HSD_PATCH_ICOMESH:-0}" = 1 ]; then OUT="$ORA/hsd-icomesh-nofma"; else OUT="$ORA/hsd-nofma"; fi
 [ "$(git -C "$ML" rev-parse --short HEAD)" = dcef807 ] || { echo "MeshLib pin mismatch" >&2; exit 1; }
 [ "$(git -C "$HSD" rev-parse --short HEAD)" = f169595 ] || { echo "HSD pin mismatch" >&2; exit 1; }
 [ -f "$CLI/CLI11.hpp" ] || { echo "missing $CLI/CLI11.hpp (run build_hsd.sh first)" >&2; exit 1; }
@@ -24,12 +28,19 @@ SHIM="$HERE/patches/hsd-shim"
 FLAGS="-std=c++11 -O2 -DNDEBUG -ffp-contract=off -w -include cstddef"
 INC="-I$SHIM -I$CLI -I$HSD/src -I$HSD/wrapper -I$ML/include -I$ML/include/Util"
 mkdir -p "$OUT/bin" "$OUT/obj"
+HSD_SRC="$HSD/src/HSD.cpp"
+if [ "${HSD_PATCH_ICOMESH:-0}" = 1 ]; then
+  mkdir -p "$OUT/src"
+  HSD_SRC="$OUT/src/HSD.cpp"
+  sed '316s|const float \*p = V.unit().fv();|Vector U = V.unit(); const float *p = U.fv();|' "$HSD/src/HSD.cpp" > "$HSD_SRC"
+  [ "$(diff "$HSD/src/HSD.cpp" "$HSD_SRC" | grep -c '^>')" = 1 ] || { echo "icomesh patch did not apply" >&2; exit 1; }
+fi
 {
   echo "# $($CXX --version | head -1)"
   set -x
   for f in Mesh MeshIO MNIObjIO VtkIO; do $CXX $FLAGS $INC -c "$ML/src/$f.cpp" -o "$OUT/obj/$f.o"; done
   for f in AABB_Sphere AABB Geom SphericalHarmonics SurfaceUtil; do $CXX $FLAGS $INC -c "$ML/src/Util/$f.cpp" -o "$OUT/obj/$f.o"; done
-  $CXX $FLAGS $INC -D_USE_SYSV '-DHSD_VERSION="v1.3.9"' -c "$HSD/src/HSD.cpp" -o "$OUT/obj/HSD.o"
+  $CXX $FLAGS $INC -D_USE_SYSV '-DHSD_VERSION="v1.3.9"' -c "$HSD_SRC" -o "$OUT/obj/HSD.o"
   $CXX $FLAGS $INC -D_USE_SYSV '-DHSD_VERSION="v1.3.9"' -c "$HSD/wrapper/main.cpp" -o "$OUT/obj/main.o"
   $CXX $FLAGS $INC -D_USE_SYSV '-DHSD_VERSION="v1.3.9"' -c "$HERE/harness_hsd.cpp" -o "$OUT/obj/harness.o"
   LIBS="$OUT/obj/Mesh.o $OUT/obj/MeshIO.o $OUT/obj/MNIObjIO.o $OUT/obj/VtkIO.o $OUT/obj/AABB_Sphere.o $OUT/obj/AABB.o $OUT/obj/Geom.o $OUT/obj/SphericalHarmonics.o $OUT/obj/SurfaceUtil.o"

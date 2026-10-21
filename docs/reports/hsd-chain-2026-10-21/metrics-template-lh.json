@@ -1,0 +1,253 @@
+{
+ "template": "mb101",
+ "threads": 4,
+ "n_ens": 3,
+ "oracle": {
+  "call1": {
+   "iters": 74,
+   "E_final": 0.741962,
+   "seconds": 10.111039876937866
+  },
+  "call2": {
+   "iters": 27,
+   "E_final": 0.803875,
+   "seconds": 18.4728262424469
+  },
+  "call3": {
+   "iters": 36,
+   "E_final": 11.9528,
+   "seconds": 68.57156419754028
+  },
+  "call4": {
+   "iters": 25,
+   "E_final": 3.70021,
+   "seconds": 215.41337490081787
+  }
+ },
+ "per_call": {
+  "call1": {
+   "iters_port": 74,
+   "iters_oracle": 74,
+   "E_rel": 1.34777791858445e-06,
+   "coeff_maxdiff": 1.000000000001e-06,
+   "pole_maxdiff": 0.0,
+   "seconds_port": 4.429089069366455
+  },
+  "call2": {
+   "iters_port": 28,
+   "iters_oracle": 27,
+   "E_rel": 0.001409423106826373,
+   "coeff_maxdiff": 0.0031449999999999985,
+   "pole_maxdiff": 0.0,
+   "seconds_port": 5.962755918502808
+  },
+  "call3": {
+   "iters_port": 39,
+   "iters_oracle": 36,
+   "E_rel": 0.004224951475804794,
+   "coeff_maxdiff": 0.012491999999999996,
+   "pole_maxdiff": 0.0,
+   "seconds_port": 15.954635858535767
+  },
+  "call4": {
+   "iters_port": 25,
+   "iters_oracle": 25,
+   "E_rel": 0.0009242718656509226,
+   "coeff_maxdiff": 0.009223,
+   "pole_maxdiff": 0.0,
+   "seconds_port": 30.628368854522705,
+   "ang_median": 0.15181283307451393,
+   "ang_p99": 0.4951289946373688,
+   "ang_max": 0.6198468278477979
+  }
+ },
+ "end_to_end": {
+  "port_failed": "Fatal error: Property - no closest triangle found in subject 1",
+  "log_tail": [
+   "[17] 3.53718: 3.53535 2.92602e-06",
+   "Phase: 2",
+   "[0] 3.53718",
+   "[2] 3.53419: 3.52386 1.65297e-05",
+   "Phase: 3",
+   "[0] 3.53419"
+  ]
+ },
+ "oracle_sensitivity": {
+  "per_call": {
+   "call1": [
+    {
+     "iters": 76,
+     "E_rel": 1.8868890859583764e-05,
+     "coeff_maxdiff": 8.000000000000021e-05
+    },
+    {
+     "iters": 74,
+     "E_rel": 0.0,
+     "coeff_maxdiff": 0.0
+    },
+    {
+     "iters": 74,
+     "E_rel": 0.0,
+     "coeff_maxdiff": 0.0
+    }
+   ],
+   "call2": [
+    {
+     "iters": 28,
+     "E_rel": 0.00010324988337745949,
+     "coeff_maxdiff": 0.0016569999999999988
+    },
+    {
+     "iters": 27,
+     "E_rel": 1.1195770486750746e-05,
+     "coeff_maxdiff": 0.0004289999999999988
+    },
+    {
+     "iters": 27,
+     "E_rel": 0.0,
+     "coeff_maxdiff": 0.0
+    }
+   ],
+   "call3": [
+    {
+     "iters": 35,
+     "E_rel": 8.366240546128685e-06,
+     "coeff_maxdiff": 3.799999999999984e-05
+    },
+    {
+     "iters": 35,
+     "E_rel": 0.0016816143497757295,
+     "coeff_maxdiff": 0.00715
+    },
+    {
+     "iters": 36,
+     "E_rel": 0.0,
+     "coeff_maxdiff": 0.0
+    }
+   ],
+   "call4": [
+    {
+     "iters": 25,
+     "E_rel": 0.0,
+     "coeff_maxdiff": 0.0,
+     "ang_median": 0.0,
+     "ang_p99": 1.2074182697257333e-06
+    },
+    {
+     "iters": 26,
+     "E_rel": 0.0009242718656509226,
+     "coeff_maxdiff": 0.00925,
+     "ang_median": 0.15193498982948198,
+     "ang_p99": 0.4940683613020808
+    },
+    {
+     "iters": 25,
+     "E_rel": 0.0,
+     "coeff_maxdiff": 0.0,
+     "ang_median": 0.0,
+     "ang_p99": 1.2074182697257333e-06
+    }
+   ]
+  },
+  "end_to_end": [
+   {
+    "ang_median": 0.4683100295755559,
+    "ang_p99": 1.633220303585676,
+    "ang_max": 1.9572002788555618,
+    "E_rel": 0.0017134162655633692
+   },
+   {
+    "ang_median": 2.048637399846409,
+    "ang_p99": 5.260541603578744,
+    "ang_max": 6.244350974738285,
+    "E_rel": 0.003132254655816829
+   },
+   {
+    "ang_median": 5.924051486562702,
+    "ang_p99": 11.457737680842747,
+    "ang_max": 12.458952008795432,
+    "E_rel": 0.08039813956505178
+   }
+  ]
+ },
+ "oracle_noise": {
+  "call3": [
+   {
+    "iters": 36,
+    "E_rel": 0.003706244561943627,
+    "coeff_maxdiff": 0.019669
+   },
+   {
+    "iters": 35,
+    "E_rel": 0.004258416437989457,
+    "coeff_maxdiff": 0.014859999999999998
+   },
+   {
+    "iters": 36,
+    "E_rel": 6.69299243691781e-05,
+    "coeff_maxdiff": 0.03096100000000001
+   }
+  ],
+  "call4": [
+   {
+    "iters": 28,
+    "E_rel": 1.8917845203384266e-05,
+    "coeff_maxdiff": 0.00024499999999999956,
+    "ang_median": 0.004445535142800639,
+    "ang_p99": 0.016741376214771092
+   },
+   {
+    "iters": 25,
+    "E_rel": 0.0009485948094838795,
+    "coeff_maxdiff": 0.009062,
+    "ang_median": 0.14962394607667334,
+    "ang_p99": 0.48495041554475127
+   },
+   {
+    "iters": 27,
+    "E_rel": 0.0009594050067429048,
+    "coeff_maxdiff": 0.009259,
+    "ang_median": 0.15136909726377962,
+    "ang_p99": 0.4925700417591922
+   }
+  ],
+  "call2": [
+   {
+    "iters": 31,
+    "E_rel": 0.00022391540973404816,
+    "coeff_maxdiff": 0.001059000000000001
+   },
+   {
+    "iters": 28,
+    "E_rel": 4.975897994096098e-06,
+    "coeff_maxdiff": 3.0000000000030003e-06
+   },
+   {
+    "iters": 28,
+    "E_rel": 0.00017291245529466674,
+    "coeff_maxdiff": 0.00024699999999999896
+   }
+  ]
+ },
+ "oracle_noise_call2_extended": {
+  "n": 14,
+  "note": "14 runs, every value of the subject feature moved by 0 or +-1 ulp (seed 102); max E_rel 1.413e-3, max coeff diff 3.146e-3, iterations 27-31"
+ },
+ "port_crash_probe": {
+  "description": "port call 4 from the port's own C3 (end-to-end state) with 1-ulp variants of res.H: 3 of 5 runs end with 'Property - no closest triangle found' (iterations of the 2 survivors 72 and 55; E 3.496, 3.488); the same call from the ORACLE's C3: 5 of 5 complete (25-29 iterations, E 3.6968-3.7002); the ORACLE from the port's C3: 5 of 5 complete (42-60 iterations, E 3.491-3.517). Unmodified MeshLib AABB_Sphere::closestFace (harness_aabb) returns -1 for the one failing sample on the dumped port mesh (float32 cart2bary of the two faces adjacent to an edge 2e-7 away are both below -1e-5; float64 barycentric of one face is +2.6e-5)."
+ },
+ "state_level_check": {
+  "description": "call 4 state (port's call-3 file, template-scale inputs): energy and damped gradient direction of port vs oracle harness 'eval' at the same coefficients",
+  "energy_rel_degree0": [
+   2.5e-11,
+   7.3e-11
+  ],
+  "energy_rel_degree10": [
+   5.4e-10,
+   5.1e-11
+  ],
+  "gradient_dir_rel_degree0": 1e-07,
+  "gradient_dir_rel_degree10": 6.5e-08,
+  "note": "throwaway script, not kept"
+ }
+}
