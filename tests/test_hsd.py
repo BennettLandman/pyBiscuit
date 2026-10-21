@@ -279,3 +279,18 @@ def test_live_oracle_icosahedron_levels():
             v, f = icosahedron(lvl)
             assert np.array_equal(v, np.load(d / f"o{lvl}" / "samples.npy"))
             assert np.array_equal(f, np.load(d / f"o{lvl}" / "ico_faces.npy"))
+
+
+def test_writecoeff_and_coefficient_restart(tmp_path):
+    """``--writecoeff`` writes coefficients during the run; ``-c`` reads them back (degree cropped)."""
+    write_case(tmp_path, 2)
+    s = [str(tmp_path / f"s{k}.sphere.vtk") for k in range(2)]
+    p = [str(tmp_path / f"s{k}.curv.txt") for k in range(2)]
+    cf = [str(tmp_path / f"c{k}.txt") for k in range(2)]
+    base = ["-s", *s, "-p", *p, "--icosahedron", "4", "--noguess", "--outputcoeff", *cf]
+    assert hsd_main(base + ["-d", "3", "--writecoeff"]) == 0
+    toks = Path(cf[0]).read_text().split()
+    assert toks[0] == "3" and len(toks) == 3 + 3 * 16
+    out = [str(tmp_path / f"r{k}.vtk") for k in range(2)]
+    assert hsd_main(["-s", *s, "-p", *p, "--icosahedron", "4", "--noguess", "-d", "2", "-c", *cf, "-o", *out]) == 0
+    assert read_vtk(out[0]).vertices.shape[0] == 2562
