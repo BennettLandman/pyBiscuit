@@ -66,6 +66,16 @@ def main(argv: list[str] | None = None) -> int:
 
         return viz_main(argv)
     # --- end viz ---
+    # --- surfprep (brief 12): mesh-contour, hemi-split; implementation in pybiscuit.surfprep.cli
+    sub.add_parser("mesh-contour", help="MeshContour stand-in (cutting plane)", add_help=False)
+    sub.add_parser("hemi-split", help="MaCRUISE hemisphere separation", add_help=False)
+    if argv and argv[0] in ("mesh-contour", "hemi-split"):
+        from .surfprep import cli as surfprep_cli
+
+        if argv[0] == "mesh-contour":
+            return surfprep_cli.mesh_contour_main(argv[1:])
+        return surfprep_cli.hemi_split_main(argv[1:])
+    # --- end surfprep ---
     args = p.parse_args(argv)
     if args.cmd == "info":
         return _info()

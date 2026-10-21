@@ -135,3 +135,27 @@ def test_rotated_head_needs_reference_frame():
     aff[:3, :3] = rz  # aligned -> native
     ref2 = frames.reference_from_affine(rotated.vertices, aff)
     assert np.allclose(ref2, mesh.vertices, atol=1e-9)
+
+
+def test_cli_mesh_contour_and_hemi_split(tmp_path, capsys):
+    from pybiscuit.cli import main
+    from pybiscuit.io.vtk import read_vtk, write_vtk
+
+    mesh = bridged_ellipsoids(level=4)
+    src = tmp_path / "in.vtk"
+    write_vtk(mesh, src)
+    offs = ",".join(f"{d:f}" for d in (-35.0, 0.0, 20.0)) + ","
+    assert main(["mesh-contour", str(src), "1", "0", "0", offs]) == 0
+    lines = capsys.readouterr().out.split()
+    assert lines[-1] == "1" and len(lines) > 2
+    out = tmp_path / "o"
+    assert main(["hemi-split", "--surf", str(src), "--out", str(out)]) == 0
+    capsys.readouterr()
+    for name in ("lh.target_image_GMimg_innerSurf.vtk", "rh.target_image_GMimg_innerSurf.vtk"):
+        m = read_vtk(out / name)
+        assert topology_summary(m).genus == 0
+    lh_mask = np.loadtxt(out / "lh.mask.txt", dtype=int)
+    assert set(np.unique(lh_mask)) == {0, 1}
+    tab = np.loadtxt(out / "hemi_map.txt", dtype=int)
+    assert tab.shape[1] == 3 and set(np.unique(tab[:, 2])) == {0, 1}
+    assert (out / "hemisphere.json").exists()
