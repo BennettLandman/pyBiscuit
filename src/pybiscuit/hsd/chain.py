@@ -15,7 +15,12 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePath
+
+def _p(x) -> str:
+    """argv path with forward slashes (valid on Windows too; matches the MATLAB-built strings of the spec)."""
+    return PurePath(x).as_posix()
+
 
 #: sphere files by name in ``$ROOT/sphere`` -> vertices / icosahedral level
 SPHERES = {"sphere_5120": 2562, "sphere_20480": 10242, "sphere_81920": 40962, "sphere_327680": 163842}
@@ -60,7 +65,7 @@ def chain_argv(paths: ChainPaths, *, rh_stage2: str = "macruise") -> list[list[s
     """The four ``HSD`` argument lists (without the program name), as strings."""
     if rh_stage2 not in ("macruise", "lh"):
         raise ValueError("rh_stage2 must be 'macruise' or 'lh'")
-    c = str(paths.coeff)
+    c = _p(paths.coeff)
     out = []
     for i, (subj, ico, feat, stem, var) in enumerate(_SCHEDULE):
         spheres = ["sphere_327680", subj]
@@ -69,15 +74,15 @@ def chain_argv(paths: ChainPaths, *, rh_stage2: str = "macruise") -> list[list[s
         a: list[str] = []
         if i:
             a += ["-c", c, c]
-        a += ["-s", *(str(paths.sphere(s)) for s in spheres)]
+        a += ["-s", *(_p(paths.sphere(s)) for s in spheres)]
         if i == 3:
-            r = str(paths.registered)
+            r = _p(paths.registered)
             a += ["-o", r, r]
         a += ["--outputcoeff", c, c]
-        a += ["-p", str(paths.template(stem, "mean")), str(paths.feature(feat))]
-        a += ["--fixedSubjects", "0", "-d", "10", "--icomesh", str(paths.sphere(ico))]
+        a += ["-p", _p(paths.template(stem, "mean")), _p(paths.feature(feat))]
+        a += ["--fixedSubjects", "0", "-d", "10", "--icomesh", _p(paths.sphere(ico))]
         if var:
-            a += ["--tmpVar", str(paths.template(stem, "var"))]
+            a += ["--tmpVar", _p(paths.template(stem, "var"))]
         out.append(a)
     return out
 
@@ -86,9 +91,9 @@ def parc_alignment_argv(
     sphere_327680: str | Path, native_sphere: str | Path, curv_mean: str | Path, h_txt: str | Path
 ) -> list[str]:
     """``parc.m:61``: rigid refinement of the native sphere to the parcellation protocol's curvature (``-o`` = input)."""
-    n = str(native_sphere)
+    n = _p(native_sphere)
     return [
-        "-s", str(sphere_327680), n, "-o", n, n, "-p", str(curv_mean), str(h_txt),
+        "-s", _p(sphere_327680), n, "-o", n, n, "-p", _p(curv_mean), _p(h_txt),
         "--fixedSubjects", "0", "--noguess", "-d", "0", "--icosahedron", "5",
     ]  # fmt: skip
 
