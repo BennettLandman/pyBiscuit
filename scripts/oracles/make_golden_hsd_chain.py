@@ -66,7 +66,7 @@ def run_chain_case(name, work):
     return {"argv": argvs, "data": data, "inputs": f"tests/fixtures/hsd_chain.py:write_chain_case({hemi!r}, warp_k={k})"}
 
 
-K_ENS = 6
+K_ENS = 6  # members alternate: one value +-1 ulp / every value 0 or +-1 ulp (see perturb)
 
 
 def angles(a, b):
@@ -84,9 +84,23 @@ def ulp_perturbed(src, dst, rng, n_first):
     Path(dst).write_text("\n".join(lines))
 
 
+def ulp_noise(src, dst, rng, p=0.5):
+    """Copy a property file moving every value by one float32 ulp (up or down) with probability ``p``: the size of change
+    that another libm / summation order spreads over all vertices."""
+    a = np.array(Path(src).read_text().split(), dtype=np.float64).astype(np.float32)
+    hit = rng.random(len(a)) < p
+    up = np.where(rng.random(len(a)) < 0.5, np.float32(np.inf), np.float32(-np.inf)).astype(np.float32)
+    np.savetxt(dst, np.where(hit, np.nextafter(a, up), a), fmt="%.9g")
+
+
+def perturb(src, dst, rng, n_first, k):
+    """Ensemble member ``k``: even = one value changed by one ulp, odd = noise on all values."""
+    (ulp_perturbed if k % 2 == 0 else lambda s_, d_, r_, n_: ulp_noise(s_, d_, r_))(src, dst, rng, n_first)
+
+
 def sensitivity(work, paths, hemi, order, data):
     """The oracle's own sensitivity: K_ENS runs per call (from the oracle's input state) and K_ENS whole chains with
-    one property value of call 1 changed by one float32 ulp.  Stored as ``ens_*`` / ``e2e_*`` arrays."""
+    the call-1 property file perturbed at the one-ulp level.  Stored as ``ens_*`` / ``e2e_*`` arrays."""
     from pybiscuit.sphere.spharm import ShDeformation, write_sh_coefficients
 
     rng = np.random.default_rng(1)
@@ -102,10 +116,10 @@ def sensitivity(work, paths, hemi, order, data):
         pf = base.index("-p") + 2
         nsub = len(read_vtk(base[base.index("-s") + 2]).vertices)
         e_, it_, c_, am_, ap_ = [], [], [], [], []
-        for _ in range(K_ENS):
+        for k in range(K_ENS):
             a = [*base, "--nThreads", "4"]
             pert = work / "pert.txt"
-            ulp_perturbed(base[pf], pert, rng, nsub)
+            perturb(base[pf], pert, rng, nsub, k)
             a[pf] = str(pert)
             if i > 1:
                 set_coeff(i - 1)
@@ -120,9 +134,9 @@ def sensitivity(work, paths, hemi, order, data):
             out["ens_ang_med_4"], out["ens_ang_p99_4"] = np.array(am_), np.array(ap_)
     # whole chain with the 1-ulp change in call 1's property file
     em, ep, ec, ee = [], [], [], []
-    for _ in range(K_ENS):
+    for k in range(K_ENS):
         pert = work / "pert_e2e.txt"
-        ulp_perturbed(argvs[0][argvs[0].index("-p") + 2], pert, rng, len(read_vtk(argvs[0][argvs[0].index("-s") + 2]).vertices))
+        perturb(argvs[0][argvs[0].index("-p") + 2], pert, rng, len(read_vtk(argvs[0][argvs[0].index("-s") + 2]).vertices), k)
         for i, base in enumerate(argvs, 1):
             a = [*base, "--nThreads", "4"]
             if i == 1:

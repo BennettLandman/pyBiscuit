@@ -83,13 +83,47 @@ whose order is the BLAS library's. Port: `prange` over chunks for deformation, p
 per chunk, accumulated in chunk order. Subject loops are sequential (per-subject kernels are parallel inside).
 Remaining platform-dependent pieces: libm, BLAS summation (about 1e-13 relative), `dsysv` pivoting.
 
-## Hypothesis: how BISCUIT supplies the template (unverified, orchestrator is encrypted)
+## How BISCUIT calls HSD (source-derived, brief 11 spec §5.3; implemented in brief 21)
 
-The image ships per-template files `reg/<tmpl>/{lh,rh}.{curv,sulc,iH}.{mean,var}.txt` (163,842 lines each) and
-`lh.white.vtk`/`lh.inflated.vtk`. Consistent call: `HSD -s <template ico sphere> <subject sphere> -p
-<tmpl mean x3> <subject curv sulc iH> --fixedSubjects 0 --tmpVar <3 var files concatenated> -d D --icosahedron L --weight w1 w2 w3
--o ... --outputcoeff ... [--resample]` (properties subject-major, template first). This is pair-wise mode; the
-three `.var.txt` files must be concatenated property-major into one `--tmpVar` file. To be confirmed by B1.2.
+This replaces the single-call hypothesis of brief 05 (spec item H-1: **mismatch**). `surf_reg_macruise.m:55-66` runs
+**four chained single-property calls** per hemisphere, template first and fixed (`--fixedSubjects 0`, pair-wise mode),
+degree 10, no `--weight`, no `--noguess`, no `--resample`, default `--idprior 625 --maxIter 20 --gres 3`:
+
+| # | `-c C C` | `-s` (template, subject) | `-p` (template mean, subject) | `--icomesh` (level) | `--tmpVar` |
+|---|---|---|---|---|---|
+| 1 | no | `sphere_327680`, `sphere_20480` | `iH.mean`, `res.iH` | `sphere_5120` (4) | no |
+| 2 | yes | `sphere_327680`, `sphere_81920` (rh, MaCRUISE script: swapped) | `sulc.mean`, `res.sulc` | `sphere_20480` (5) | no |
+| 3 | yes | `sphere_327680`, `sphere_327680` | `sulc.mean`, `res.sulc` | `sphere_81920` (6) | `sulc.var` |
+| 4 | yes | `sphere_327680`, `sphere_327680` | `curv.mean`, `res.H` (= -4H) | `sphere_327680` (7) | `curv.var`; also `-o R R` |
+
+`--outputcoeff C C` in every call. Levels 4-5 run the gradient-descent branch and levels 6-7 the damped Newton branch,
+so both run in every registration. Code: `pybiscuit.hsd.chain` (`chain_argv`, `run_chain`, `parc_alignment_argv`);
+CLI `pybiscuit register --surf-dir J --template-dir T --sphere-dir S [--hemi lh rh] [--rh-stage2 macruise|lh] [--dry-run]`.
+`pybiscuit hsd` stays the plain tool (the original flags).
+
+Consequences found by replaying it (tests: `tests/test_hsd_chain.py`; report: [hsd-chain-2026-10-21](../reports/hsd-chain-2026-10-21.md)):
+
+* **H-2** subject mesh shorter than the property files (calls 1-2: 10,242 / 40,962 vertices against 163,842 lines): only
+  the first `nVertex` lines are read; the icosphere vertex order is hierarchical, so they are the right values. Tested
+  (cut file == long file) and exercised by the chain goldens (fixtures use the same length ratio).
+* **H-3** `--icomesh` takes radius-100 spheres. The guess builds `AABB_Sphere` on the raw mesh and queries it with unit
+  vectors, so **every** query misses (642 of 642 in the fixture) and the template mean map used by the guess is 0 everywhere.
+  The cost is then the plain sum of squared subject features, and the guess picks an arbitrary rigid rotation
+  (degree-0 coefficients 16.3 / -2.2 / 2.2 in the fixture, whatever the true alignment). It runs in call 1 only: calls 2-4 read
+  non-zero `-c` coefficients and skip it. Port and oracle agree on the result (golden `guess_icomesh`). Whether the **image**
+  behaves the same needs one run (Q1).
+* **New oracle finding (UB, `HSD.cpp:316`)**: `const float *p = V.unit().fv();` in the `--icomesh` branch reads the stack slot of a
+  destroyed temporary (`unit()` returns by value). With Apple clang -O2 every icomesh sample is garbage and HSD dies with
+  "no closest triangle found"; the original `hsd-nofma` build cannot run any `--icomesh` call. The goldens come from
+  `hsd-icomesh-nofma` (`HSD_PATCH_ICOMESH=1 scripts/oracles/build_hsd_nofma.sh`, one-line fix, otherwise identical). The port computes
+  the intended value. Whether BISCUIT's gcc build keeps the value is unknown (it must, or production would fail; Q1).
+* **H-4** same file as `-c` and `--outputcoeff` for both subjects: the fixed template neither reads nor writes it; tested.
+* **H-7** `rh` call 2 order: both orders supported (`--rh-stage2`), both with goldens.
+* **H-8** parcellation alignment (`parc.m:61`, `-d 0 --noguess --icosahedron 5`, `-o` = input sphere, native-resolution mesh):
+  `parc_alignment_argv`, golden `parc_align`.
+* **Chaos.** The per-call result of a call with a poor start (lh call 2 in the fixture, after the arbitrary guess rotation) or a
+  Newton stage can depend on one float32 ulp of one input value even inside the oracle (iteration counts 38-45, final energy
+  +-1 %). The tests therefore compare the port with the oracle's own 1-ulp spread (stored in the goldens); see the report.
 
 ## Known gaps and quirks
 
@@ -97,7 +131,8 @@ three `.var.txt` files must be concatenated property-major into one `--tmpVar` f
   check the HSD licence text before porting.
 * `--icosahedron 0-2` is accepted by the CLI but `m_nSamples` is uninitialised upstream (UB); port uses the real count.
 * `--icomesh` with a radius-100 mesh and without `--resample`: `guessInitCoeff` builds `AABB_Sphere` on the raw mesh;
-  unit queries lie inside it, so no face is found and the template mean map becomes 0 (reproduced). Verify BISCUIT's call.
+  unit queries lie inside it, so no face is found and the template mean map becomes 0 (reproduced; this **is** BISCUIT's call,
+  see the section above and golden `guess_icomesh`).
 * `const float *` into destroyed temporaries (`initTangentPlane`) assumed to keep their values (true in both builds tested).
 * `m_cost_lm` is uninitialised upstream when there are no landmarks; assumed 0 (constant offset).
 

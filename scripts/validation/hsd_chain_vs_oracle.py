@@ -79,9 +79,21 @@ def ulp_perturb(src, dst, rng, n_first):
     Path(dst).write_text("\n".join(lines))
 
 
+def ulp_noise(src, dst, rng, p=0.5):
+    """Copy a property file moving every value by one float32 ulp (up or down) with probability ``p``: the size of
+    perturbation that a different libm / FMA / summation order spreads over all vertices."""
+    a = np.array(Path(src).read_text().split(), dtype=np.float64).astype(np.float32)
+    hit = rng.random(len(a)) < p
+    up = np.where(rng.random(len(a)) < 0.5, np.float32(np.inf), np.float32(-np.inf)).astype(np.float32)
+    a = np.where(hit, np.nextafter(a, up), a)
+    np.savetxt(dst, a, fmt="%.9g")
+
+
 def oracle(argv, threads):
     t = time.time()
-    r = subprocess.run([str(ORA), *argv, "--nThreads", str(threads)], capture_output=True, text=True, check=True)
+    r = subprocess.run([str(ORA), *argv, "--nThreads", str(threads)], capture_output=True, text=True)
+    if r.returncode:
+        raise RuntimeError(f"oracle exit {r.returncode}: {r.stdout.strip().splitlines()[-1] if r.stdout.strip() else ''}")
     return energies(r.stdout), time.time() - t
 
 
@@ -146,8 +158,14 @@ def main():
     save()
     buf = io.StringIO()
     t = time.time()
-    with redirect_stdout(buf):
-        run_chain(paths, n_threads=threads)
+    try:
+        with redirect_stdout(buf):
+            run_chain(paths, n_threads=threads)
+    except RuntimeError as exc:  # "Fatal error: Property - no closest triangle found" (upstream exits the same way)
+        M["end_to_end"] = {"port_failed": str(exc), "log_tail": buf.getvalue().splitlines()[-6:]}
+        print("end to end FAILED", exc, flush=True)
+        save()
+        return finish(M, ens_args=(work, odir, paths, argvs, ov, n_ens, threads, save))
     a = angles(read_vtk(paths.registered).vertices, ov)
     M["end_to_end"] = {"ang_median": float(np.median(a)), "ang_p99": float(np.percentile(a, 99)), "ang_max": float(a.max()),
                        "E_rel": abs(energies(buf.getvalue())[-1] - M["oracle"]["call4"]["E_final"]) / M["oracle"]["call4"]["E_final"],
@@ -156,6 +174,11 @@ def main():
     print("end to end", M["end_to_end"], flush=True)
     save()
 
+    return finish(M, ens_args=(work, odir, paths, argvs, ov, n_ens, threads, save))
+
+
+def finish(M, ens_args):
+    work, odir, paths, argvs, ov, n_ens, threads, save = ens_args
     # ---- oracle sensitivity: one float32 ulp in one input value
     rng = np.random.default_rng(1)
     ens = M.setdefault("oracle_sensitivity", {"per_call": {}, "end_to_end": []})
@@ -173,7 +196,12 @@ def main():
             a_[pf] = str(pert)
             if i > 1:
                 shutil.copy(odir / f"C{i - 1}.txt", paths.coeff)
-            e, _dt = oracle(a_, threads)
+            try:
+                e, _dt = oracle(a_, threads)
+            except RuntimeError as exc:
+                rows.append({"failed": str(exc)})
+                print("oracle ulp, call", i, "FAILED", exc, flush=True)
+                continue
             _, c = coeff_of(paths.coeff)
             row = {"iters": len(e), "E_rel": abs(e[-1] - M["oracle"][f"call{i}"]["E_final"]) / M["oracle"][f"call{i}"]["E_final"],
                    "coeff_maxdiff": float(np.abs(c - coeff_of(odir / f"C{i}.txt")[1]).max())}  # fmt: skip
@@ -184,14 +212,49 @@ def main():
             print("oracle ulp, call", i, row, flush=True)
         ens["per_call"][f"call{i}"] = rows
         save()
+    noise = M.setdefault("oracle_noise", {})
+    for i in (2, 3, 4):  # all values of the subject feature moved by <= 1 ulp
+        if f"call{i}" in noise:
+            continue
+        base = argvs[i - 1]
+        pf = base.index("-p") + 2
+        rows = []
+        for _ in range(n_ens):
+            a_ = list(base)
+            pert = work / "noise.txt"
+            ulp_noise(base[pf], pert, rng)
+            a_[pf] = str(pert)
+            shutil.copy(odir / f"C{i - 1}.txt", paths.coeff)
+            try:
+                e, _dt = oracle(a_, threads)
+            except RuntimeError as exc:
+                rows.append({"failed": str(exc)})
+                print("oracle noise, call", i, "FAILED", exc, flush=True)
+                continue
+            _, c = coeff_of(paths.coeff)
+            row = {"iters": len(e), "E_rel": abs(e[-1] - M["oracle"][f"call{i}"]["E_final"]) / M["oracle"][f"call{i}"]["E_final"],
+                   "coeff_maxdiff": float(np.abs(c - coeff_of(odir / f"C{i}.txt")[1]).max())}  # fmt: skip
+            if i == 4:
+                ang = angles(read_vtk(paths.registered).vertices, ov)
+                row |= {"ang_median": float(np.median(ang)), "ang_p99": float(np.percentile(ang, 99))}
+            rows.append(row)
+            print("oracle noise, call", i, row, flush=True)
+        noise[f"call{i}"] = rows
+        save()
     for _ in range(max(0, n_ens - len(ens["end_to_end"]))):
         pert = work / "pert_e2e.txt"
         ulp_perturb(argvs[0][argvs[0].index("-p") + 2], pert, rng, len(read_vtk(argvs[0][argvs[0].index("-s") + 2]).vertices))
-        for i, base in enumerate(argvs, 1):
-            a_ = list(base)
-            if i == 1:
-                a_[a_.index("-p") + 2] = str(pert)
-            e, _dt = oracle(a_, threads)
+        try:
+            for i, base in enumerate(argvs, 1):
+                a_ = list(base)
+                if i == 1:
+                    a_[a_.index("-p") + 2] = str(pert)
+                e, _dt = oracle(a_, threads)
+        except RuntimeError as exc:
+            ens["end_to_end"].append({"failed": f"call {i}: {exc}"})
+            print("oracle ulp, end to end FAILED", exc, flush=True)
+            save()
+            continue
         ang = angles(read_vtk(paths.registered).vertices, ov)
         row = {"ang_median": float(np.median(ang)), "ang_p99": float(np.percentile(ang, 99)), "ang_max": float(ang.max()),
                "E_rel": abs(e[-1] - M["oracle"]["call4"]["E_final"]) / M["oracle"]["call4"]["E_final"]}  # fmt: skip

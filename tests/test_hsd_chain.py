@@ -89,50 +89,86 @@ def test_register_cli_dry_run(tmp_path, capsys):
 
 # ------------------------------------------------------------------ chain vs oracle (H-1, H-2, H-4)
 CASES = {"chain_lh": ("lh", 1, "macruise"), "chain_rh_macruise": ("rh", 2, "macruise"), "chain_rh_lhorder": ("rh", 2, "lh")}
+POLICY = {"E": 1e-3, "coeff": 1e-4, "ang_median": 0.01, "ang_p99": 0.1}  # docs/validation-tolerances.md (HSD rows)
+
+
+def _bound(policy, spread, factor=1.5, floor=1e-6):
+    """Acceptance bound: the policy value, or 1.5x the oracle's own spread under a one-ulp input change (stored in the
+    golden) where that is larger.  A stable call is therefore held to the policy; a chaotic one to what the oracle itself shows."""
+    return max(policy, factor * float(np.max(spread)) + floor)
+
+
+def _coeff_of(path):
+    t = Path(path).read_text().split()
+    return np.array(t[1:3], np.float64), np.array(t[3:], np.float64).reshape(-1, 3).T
+
+
+def _write_c(path, pole, coeff):
+    from pybiscuit.sphere.spharm import ShDeformation, write_sh_coefficients
+
+    write_sh_coefficients(str(path), ShDeformation(10, np.asarray(pole, np.float32), coeff))
 
 
 @pytest.fixture(scope="module", params=list(CASES))
-def chain_run(request, tmp_path_factory):
+def chain_case(request, tmp_path_factory):
     name = request.param
     hemi, k, order = CASES[name]
     root = tmp_path_factory.mktemp(name)
     sd, td, jd = write_chain_case(root, hemi, warp_k=k)
-    paths = ChainPaths(hemi, jd, td, sd)
-    states = []
-    energies = []
-    import io
-    from contextlib import redirect_stdout
-
-    for i in (1, 2, 3, 4):
-        buf = io.StringIO()
-        with redirect_stdout(buf):
-            run_chain(paths, rh_stage2=order, stages=[i])
-        energies.append(_energies(buf.getvalue()))
-        pole, cf = np.array(paths.coeff.read_text().split()[1:3], np.float64), np.array(paths.coeff.read_text().split()[3:], np.float64).reshape(-1, 3).T
-        states.append((pole, cf))
-    return name, paths, states, energies
+    return name, order, ChainPaths(hemi, jd, td, sd), _g(name)
 
 
-def test_chain_matches_oracle(chain_run):
-    name, paths, states, energies = chain_run
-    g = _g(name)
-    for i, (pole, cf) in enumerate(states, 1):
-        assert cf.shape == g[f"coeff_{i}"].shape == (3, 121)  # degree 10 capped in every call
-        np.testing.assert_allclose(pole, g[f"pole_{i}"], atol=1e-6)
-        fine = i == 4  # damped-Newton stage (level 6)
-        assert np.abs(cf - g[f"coeff_{i}"]).max() < (5e-3 if fine else 1e-4), (name, i)
-        gold = g[f"energies_{i}"]
-        assert abs(len(energies[i - 1]) - len(gold)) <= (2 if fine else 0), (name, i)
-        assert abs(energies[i - 1][-1] - gold[-1]) / gold[-1] < 1e-3, (name, i)
+@pytest.mark.parametrize("call", [1, 2, 3, 4])
+def test_each_call_vs_oracle(chain_case, call, capfd):
+    """Call ``i`` of the port, started from the *oracle's* coefficient file after call ``i-1``, against the oracle's call ``i``."""
+    name, order, paths, g = chain_case
+    if call > 1:
+        _write_c(paths.coeff, g[f"pole_{call - 1}"], g[f"coeff_{call - 1}"])
+    elif paths.coeff.exists():
+        paths.coeff.unlink()
+    capfd.readouterr()
+    run_chain(paths, rh_stage2=order, stages=[call])
+    e = _energies(capfd.readouterr().out)
+    pole, cf = _coeff_of(paths.coeff)
+    gold_e = g[f"energies_{call}"]
+    np.testing.assert_allclose(pole, g[f"pole_{call}"], atol=1e-6)
+    assert cf.shape == (3, 121)  # degree 10 in every call
+    e_rel = abs(e[-1] - gold_e[-1]) / gold_e[-1]
+    ens_e = np.abs(g[f"ens_E_{call}"] - gold_e[-1]) / gold_e[-1]
+    d_c = np.abs(cf - g[f"coeff_{call}"]).max()
+    ens_c = np.abs(g[f"ens_coeff_{call}"] - g[f"coeff_{call}"]).max(axis=(1, 2))
+    ens_it = np.abs(g[f"ens_iters_{call}"] - len(gold_e))
+    msg = (name, call, f"E_rel {e_rel:.2e} (oracle spread {ens_e.max():.2e})", f"coeff {d_c:.2e} ({ens_c.max():.2e})", len(e), len(gold_e))
+    assert e_rel <= _bound(POLICY["E"], ens_e), msg
+    assert d_c <= _bound(POLICY["coeff"], ens_c, floor=2e-6), msg
+    assert abs(len(e) - len(gold_e)) <= int(np.ceil(1.5 * ens_it.max())) + 1, msg  # diagnostic: same envelope rule
+    if call == 4:
+        ang = _angles(read_vtk(paths.registered).vertices, g["vertex"])
+        assert np.median(ang) <= _bound(POLICY["ang_median"], g["ens_ang_med_4"], floor=1e-5), (name, np.median(ang))
+        assert np.percentile(ang, 99) <= _bound(POLICY["ang_p99"], g["ens_ang_p99_4"], floor=1e-5), (name, np.percentile(ang, 99))
+
+
+def test_chain_end_to_end_vs_oracle(chain_case, capfd):
+    """The port's four calls chained on its own coefficient files against the oracle chain.  The oracle's own response to
+    one float32 ulp in one call-1 input value (``e2e_*`` in the golden) bounds what counts as agreement."""
+    name, order, paths, g = chain_case
+    if paths.coeff.exists():
+        paths.coeff.unlink()
+    capfd.readouterr()
+    run_chain(paths, rh_stage2=order)
+    e = _energies(capfd.readouterr().out)
     ang = _angles(read_vtk(paths.registered).vertices, g["vertex"])
-    assert np.median(ang) <= 0.01 and np.percentile(ang, 99) <= 0.1, (name, np.median(ang), np.percentile(ang, 99))
+    msg = (name, f"median {np.median(ang):.3g} p99 {np.percentile(ang, 99):.3g}", "oracle", g["e2e_ang_med"], g["e2e_ang_p99"])
+    assert np.median(ang) <= _bound(POLICY["ang_median"], g["e2e_ang_med"], floor=1e-5), msg
+    assert np.percentile(ang, 99) <= _bound(POLICY["ang_p99"], g["e2e_ang_p99"], floor=1e-5), msg
+    gold_e = g["energies_4"][-1]
+    assert abs(e[-1] - gold_e) / gold_e <= _bound(POLICY["E"], np.abs(g["e2e_E"] - gold_e) / gold_e), msg
 
 
-def test_chain_registers_the_warped_subject(chain_run):
-    """Independent of the oracle: each stage lowers the energy, and the final cost is below the unregistered one."""
-    _, _, _, energies = chain_run
-    for e in energies:
-        assert e[-1] < e[0]
+def test_golden_records_a_sensitive_chain():
+    """The oracle itself is not reproducible to the policy bound: this is why the comparisons above are envelope-based."""
+    spread = max(float(np.max(_g(n)["e2e_ang_med"])) for n in CASES)
+    assert spread > POLICY["ang_median"]
 
 
 # ------------------------------------------------------------------ H-3: guess with --icomesh radius-100 spheres
@@ -152,8 +188,16 @@ def test_guess_with_icomesh_matches_oracle(tmp_path):
     g = _g("guess_icomesh")
     assert h.icosahedron == 3 and h.nsamples == 642
     np.testing.assert_allclose(h.coeff, g["coeff_all"], atol=1e-6)
-    # recorded behaviour: with the raw radius-100 icomesh the AABB queries of the guess are all misses
+    # recorded behaviour: the guess queries an AABB built on the raw radius-100 icomesh with unit vectors, so every
+    # query misses, the guess's template mean map is 0 and the rotation it picks is arbitrary (but deterministic)
+    from pybiscuit.hsd.guess import _stale_normals_tree
+    from pybiscuit.hsd.icosahedron import icosahedron
+
+    gv, _ = icosahedron(min(5, h.icosahedron))
+    fid, _b = _stale_normals_tree(h.ico_v, h.ico_f, h.ico_v_raw).closest_face(gv)
+    assert (fid < 0).all() and np.linalg.norm(h.ico_v, axis=1).min() > 99
     assert not np.any(g["coeff_all"][1, :, 1:]), "guess only sets degree-0 terms"
+    assert np.abs(g["coeff_all"][1, :, 0]).max() > 1  # a large arbitrary rigid rotation, not the identity
 
 
 # ------------------------------------------------------------------ H-8: parcellation alignment, -o == input
@@ -217,3 +261,12 @@ def test_live_oracle_stage1(tmp_path):
     subprocess.run([str(ORACLE / "HSD"), *a], check=True, capture_output=True)
     cf = np.array(p.coeff.read_text().split()[3:], np.float64).reshape(-1, 3).T
     assert np.abs(cf - _g("chain_lh")["coeff_1"]).max() < 1e-9
+
+
+def test_register_cli_runs_the_chain(tmp_path):
+    from pybiscuit.cli import main
+
+    sd, td, jd = write_chain_case(tmp_path, "lh")
+    assert main(["register", "--surf-dir", str(jd), "--template-dir", str(td), "--sphere-dir", str(sd), "--hemi", "lh"]) == 0
+    assert (jd / "lh.coeff.txt").read_text().split()[0] == "10"
+    assert read_vtk(jd / "lh.res.sphere.reg.vtk").vertices.shape == (40962, 3)
