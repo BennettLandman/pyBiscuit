@@ -30,6 +30,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "pybiscuit.data" = ["*.json"]
+"pybiscuit.viz" = ["data/*.js", "data/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
