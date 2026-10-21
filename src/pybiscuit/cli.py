@@ -19,11 +19,20 @@ def main(argv: list[str] | None = None) -> int:
         add_help=False,
     )
     sub.add_parser("trace", help="port of CurveExtraction/TRACE (original flags)", add_help=False)
+    sub.add_parser(
+        "hsd",
+        help="port of HSD spherical registration (flags as the original binary)",
+        add_help=False,
+    )
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] == "trace":
         from .trace.extract import main as trace_main
 
         return trace_main(argv[1:])
+    if argv and argv[0] == "hsd":  # remaining args are passed through verbatim
+        from .hsd.cli import main as hsd_main
+
+        return hsd_main(argv[1:])
     if argv and argv[0] == "spherical-remesh":  # remaining args are passed through verbatim
         from .sphere.remesh_cli import main as remesh_main
 

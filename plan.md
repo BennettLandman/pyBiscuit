@@ -173,12 +173,12 @@ per [validation-tolerances](docs/validation-tolerances.md).
 
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
-| B6.1 | Port note: map `HSD.cpp` functions, image binary version vs upstream `master` (`f169595`) | `docs/ports/hsd.md` | Todo |
-| B6.2 | Real spherical harmonics basis as implemented (CBT v1.3 "fixed SH bases") | E vs analytic + golden coefficients | In progress (SH basis ported: sphere/spharm.py, tests/test_spharm.py 14 pass, ≤1.3e-13 f64 vs oracle; HSD uses the same MeshLib basis, so remaining work is B6.2 integration only) |
-| B6.3 | Feature resampling on icosahedron (`--icosahedron`, `--icomesh`, `--resample`), AABB cache | E | Todo |
-| B6.4 | Energy (feature similarity vs template mean/var + rigidity/distortion regularization), Jacobian/Hessian 2nd-order approx | per-iteration energy matches golden to 1e-6 relative on fixtures | Todo |
-| B6.5 | Optimizer: Levenberg–Marquardt step + BOBYQA (port of `bobyqa.h`), initial guess ("improved initial guess" in v1.3), multi-resolution schedule used by BISCUIT (from B1.2) | E on fixtures; final energy within 0.1 % on legacy sample | Todo |
-| B6.6 | Numba-parallel performance; optional GPU backend deferred (Q10) | lh+rh within 2× of reference single-thread wall time | Todo |
+| B6.1 | Port note: map `HSD.cpp` functions, image binary version vs upstream `master` (`f169595`) | `docs/ports/hsd.md` | Done (docs/ports/hsd.md; image HSD CLI == upstream wrapper at `f169595`, landmark/location flags absent from both) |
+| B6.2 | Real spherical harmonics basis as implemented (CBT v1.3 "fixed SH bases") | E vs analytic + golden coefficients | Done, oracle-provisional (SH basis sphere/spharm.py as used by HSD; HSD integration validated in tests/test_hsd.py) |
+| B6.3 | Feature resampling on icosahedron (`--icosahedron`, `--icomesh`, `--resample`), AABB cache | E | Done, oracle-provisional (hsd/icosahedron.py, kernels.py; construction state bit-identical vs non-FMA oracle; tests/test_hsd.py; [report](docs/reports/hsd-2026-10-20.md)) |
+| B6.4 | Energy (feature similarity vs template mean/var + rigidity/distortion regularization), Jacobian/Hessian 2nd-order approx | per-iteration energy matches golden to 1e-6 relative on fixtures | Done for GD path (energy/gradient <= 9e-9); Newton path energy <= 1e-7, Hessian/direction <= 3.5e-6 (float32 ulp noise), so the 1e-8 unit target is not met there; oracle-provisional ([report](docs/reports/hsd-2026-10-20.md)) |
+| B6.5 | Optimizer: Levenberg–Marquardt step + BOBYQA (port of `bobyqa.h`), initial guess ("improved initial guess" in v1.3), multi-resolution schedule used by BISCUIT (from B1.2) | E on fixtures; final energy within 0.1 % on legacy sample | Done for the shipped CLI (property-only), oracle-provisional: full runs match (final energy <= 9e-5 rel, median angle <= 0.005 deg); BOBYQA + landmark/location paths not ported (unreachable, see port note) |
+| B6.6 | Numba-parallel performance; optional GPU backend deferred (Q10) | lh+rh within 2× of reference single-thread wall time | Done: prange kernels, fixed-order chunk reductions; ico7 degree 8: port 37 s (1 thread) vs oracle 81 s |
 
 ### B7 — Parcellation (E-class)
 
