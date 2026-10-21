@@ -1,0 +1,26 @@
+{
+ "tool": "hsd",
+ "case": "guess_icomesh",
+ "argv": [
+  "-s",
+  "<root>/sphere/sphere_327680.vtk",
+  "<root>/sphere/sphere_20480.vtk",
+  "--outputcoeff",
+  "<root>/J/lh.coeff.txt",
+  "<root>/J/lh.coeff.txt",
+  "-p",
+  "<root>/reg/lh.iH.mean.txt",
+  "<root>/J/lh.res.iH.txt",
+  "--fixedSubjects",
+  "0",
+  "-d",
+  "10",
+  "--icomesh",
+  "<root>/sphere/sphere_5120.vtk"
+ ],
+ "commit": "f169595",
+ "version": "v1.3.9",
+ "meshlib": "dcef807",
+ "oracle": "upstream-macos-arm64, -ffp-contract=off, Accelerate LAPACK/BLAS (hsd-nofma)",
+ "inputs": "write_chain_case('lh')"
+}

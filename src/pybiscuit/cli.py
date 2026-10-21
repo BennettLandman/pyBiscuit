@@ -24,7 +24,12 @@ def main(argv: list[str] | None = None) -> int:
         help="port of HSD spherical registration (flags as the original binary)",
         add_help=False,
     )
+    sub.add_parser("register", help="BISCUIT's four-call HSD chain (brief 21)", add_help=False)
     argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "register":
+        from .hsd.chain_cli import main as register_main
+
+        return register_main(argv[1:])
     if argv and argv[0] == "trace":
         from .trace.extract import main as trace_main
 

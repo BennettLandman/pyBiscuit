@@ -1,0 +1,27 @@
+{
+ "tool": "hsd",
+ "case": "parc_align",
+ "argv": [
+  "-s",
+  "<root>/template.sphere.vtk",
+  "<root>/native.sphere.vtk",
+  "-o",
+  "<root>/native.sphere.vtk",
+  "<root>/native.sphere.vtk",
+  "-p",
+  "<root>/curv.mean.txt",
+  "<root>/native.H.txt",
+  "--fixedSubjects",
+  "0",
+  "--noguess",
+  "-d",
+  "0",
+  "--icosahedron",
+  "5"
+ ],
+ "commit": "f169595",
+ "version": "v1.3.9",
+ "meshlib": "dcef807",
+ "oracle": "upstream-macos-arm64, -ffp-contract=off, Accelerate LAPACK/BLAS (hsd-nofma)",
+ "inputs": "write_parc_case()"
+}
