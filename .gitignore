@@ -12,6 +12,7 @@ dist/
 *.sif
 *.simg
 *.pth
+*.safetensors
 *.nii
 *.nii.gz
 /reference/

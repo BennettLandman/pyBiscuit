@@ -1,0 +1,274 @@
+{
+ "converted_with_torch": [
+  "2.14.1"
+ ],
+ "files": [
+  {
+   "aliases_merged": 80,
+   "arch": {
+    "fdim": 64,
+    "in_ch": 3,
+    "max_level": 5,
+    "min_level": 0,
+    "out_ch": 50
+   },
+   "globals_audited": {
+    "collections.OrderedDict": 1,
+    "torch.FloatStorage": 1,
+    "torch._utils._rebuild_tensor_v2": 1
+   },
+   "ns_ew_max_abs_diff": 5.927515989156973e-08,
+   "path": "parc/braincolor/lh.safetensors",
+   "sha256": "8f4e3217fbba3219b9a955cfe768e87bd47cfd6fecd41e9ff3803daaf76f85a5",
+   "size": 82858456,
+   "source": "parc/braincolor/lh.pth",
+   "source_sha256": "874704205b4aaaac33b7d8a4b2307d82086250ff2aecd2ff63b82cbde9f273e0",
+   "tensors": 254
+  },
+  {
+   "aliases_merged": 80,
+   "arch": {
+    "fdim": 64,
+    "in_ch": 3,
+    "max_level": 5,
+    "min_level": 0,
+    "out_ch": 50
+   },
+   "globals_audited": {
+    "collections.OrderedDict": 1,
+    "torch.FloatStorage": 1,
+    "torch._utils._rebuild_tensor_v2": 1
+   },
+   "ns_ew_max_abs_diff": 5.927515989156973e-08,
+   "path": "parc/braincolor/rh.safetensors",
+   "sha256": "7c8786166870796344f9650398059c5369f436ed092b8f308963d776bde19e5b",
+   "size": 82858456,
+   "source": "parc/braincolor/rh.pth",
+   "source_sha256": "6eab57574156480361d3cc0df2cd621533deee6a768e6d4eefe83bb9291af224",
+   "tensors": 254
+  },
+  {
+   "aliases_merged": 80,
+   "arch": {
+    "fdim": 64,
+    "in_ch": 3,
+    "max_level": 5,
+    "min_level": 0,
+    "out_ch": 32
+   },
+   "globals_audited": {
+    "collections.OrderedDict": 1,
+    "torch.FloatStorage": 1,
+    "torch._utils._rebuild_tensor_v2": 1
+   },
+   "ns_ew_max_abs_diff": 5.927515989156973e-08,
+   "path": "parc/dkt31/lh.safetensors",
+   "sha256": "3888b4b6054263916f78d78ffa37a94418b0bd22bc186b89c0c3bb6abf3d6444",
+   "size": 82839944,
+   "source": "parc/dkt31/lh.pth",
+   "source_sha256": "60a3f130b49480bcb3995dc7d4564a84e589c0438b75f5876d02c1c8b7905b5e",
+   "tensors": 254
+  },
+  {
+   "aliases_merged": 80,
+   "arch": {
+    "fdim": 64,
+    "in_ch": 3,
+    "max_level": 5,
+    "min_level": 0,
+    "out_ch": 32
+   },
+   "globals_audited": {
+    "collections.OrderedDict": 1,
+    "torch.FloatStorage": 1,
+    "torch._utils._rebuild_tensor_v2": 1
+   },
+   "ns_ew_max_abs_diff": 5.927515989156973e-08,
+   "path": "parc/dkt31/lh_2.safetensors",
+   "sha256": "8d8dcaf8ce9f6c882eda1af2a2e46c05720c72cc6f9196596cdea9e630b0b74a",
+   "size": 82839944,
+   "source": "parc/dkt31/lh_2.pth",
+   "source_sha256": "f3b8e5285ea39d13c8cd8e3c9d74e8d65a4a5229bbed81d8d6ba05ddc63088df",
+   "tensors": 254
+  },
+  {
+   "aliases_merged": 80,
+   "arch": {
+    "fdim": 64,
+    "in_ch": 3,
+    "max_level": 5,
+    "min_level": 0,
+    "out_ch": 32
+   },
+   "globals_audited": {
+    "collections.OrderedDict": 1,
+    "torch.FloatStorage": 1,
+    "torch._utils._rebuild_tensor_v2": 1
+   },
+   "ns_ew_max_abs_diff": 5.927515989156973e-08,
+   "path": "parc/dkt31/lh_3.safetensors",
+   "sha256": "927e257820fdad96973b99458ea4be2f0ebd3791252189b1f0507dbf926ca8ff",
+   "size": 82839944,
+   "source": "parc/dkt31/lh_3.pth",
+   "source_sha256": "9fdda473899b3f58510bc63c3ccebe994ccdd682a673d0d0a6bec11f0676fc58",
+   "tensors": 254
+  },
+  {
+   "aliases_merged": 80,
+   "arch": {
+    "fdim": 64,
+    "in_ch": 3,
+    "max_level": 5,
+    "min_level": 0,
+    "out_ch": 32
+   },
+   "globals_audited": {
+    "collections.OrderedDict": 1,
+    "torch.FloatStorage": 1,
+    "torch._utils._rebuild_tensor_v2": 1
+   },
+   "ns_ew_max_abs_diff": 5.927515989156973e-08,
+   "path": "parc/dkt31/lh_4.safetensors",
+   "sha256": "01adf56ed56dcec953bb725f8a22a0fb4fa8e6138f9e5aa7dbeca0b7e41f76e2",
+   "size": 82839944,
+   "source": "parc/dkt31/lh_4.pth",
+   "source_sha256": "284e91a9553360560eadb3ebd14d8b03c116f91200cc95bdc2ec81453f689113",
+   "tensors": 254
+  },
+  {
+   "aliases_merged": 80,
+   "arch": {
+    "fdim": 64,
+    "in_ch": 3,
+    "max_level": 5,
+    "min_level": 0,
+    "out_ch": 32
+   },
+   "globals_audited": {
+    "collections.OrderedDict": 1,
+    "torch.FloatStorage": 1,
+    "torch._utils._rebuild_tensor_v2": 1
+   },
+   "ns_ew_max_abs_diff": 5.927515989156973e-08,
+   "path": "parc/dkt31/lh_5.safetensors",
+   "sha256": "7caa3495ab6d81c7c3cabba3ebb974ea73d044f42f1c8025a260f0f1f0f09fe8",
+   "size": 82839944,
+   "source": "parc/dkt31/lh_5.pth",
+   "source_sha256": "6703f4e69ff7790932644c98e8021591cc799719a8cddb06f16666a13647fc81",
+   "tensors": 254
+  },
+  {
+   "aliases_merged": 80,
+   "arch": {
+    "fdim": 64,
+    "in_ch": 3,
+    "max_level": 5,
+    "min_level": 0,
+    "out_ch": 32
+   },
+   "globals_audited": {
+    "collections.OrderedDict": 1,
+    "torch.FloatStorage": 1,
+    "torch._utils._rebuild_tensor_v2": 1
+   },
+   "ns_ew_max_abs_diff": 5.927515989156973e-08,
+   "path": "parc/dkt31/rh.safetensors",
+   "sha256": "ef2d99bad40e344391a8f970cd58d814a32b1b76c0623fc59fd5adff427e0abc",
+   "size": 82839944,
+   "source": "parc/dkt31/rh.pth",
+   "source_sha256": "342eb8253e7179e9dd6affe0a5c48281a8283fd03b6517455dd4726ecbcee16a",
+   "tensors": 254
+  },
+  {
+   "aliases_merged": 80,
+   "arch": {
+    "fdim": 64,
+    "in_ch": 3,
+    "max_level": 5,
+    "min_level": 0,
+    "out_ch": 32
+   },
+   "globals_audited": {
+    "collections.OrderedDict": 1,
+    "torch.FloatStorage": 1,
+    "torch._utils._rebuild_tensor_v2": 1
+   },
+   "ns_ew_max_abs_diff": 5.927515989156973e-08,
+   "path": "parc/dkt31/rh_2.safetensors",
+   "sha256": "a607ed60ffe4315327923ba89a816392903f5f346d8be25f466e7eecd5508a79",
+   "size": 82839944,
+   "source": "parc/dkt31/rh_2.pth",
+   "source_sha256": "c1ac0498b2aaf0e7ae523d0c954a0c823d6014826f0ab59350e6c0e1e6c26747",
+   "tensors": 254
+  },
+  {
+   "aliases_merged": 80,
+   "arch": {
+    "fdim": 64,
+    "in_ch": 3,
+    "max_level": 5,
+    "min_level": 0,
+    "out_ch": 32
+   },
+   "globals_audited": {
+    "collections.OrderedDict": 1,
+    "torch.FloatStorage": 1,
+    "torch._utils._rebuild_tensor_v2": 1
+   },
+   "ns_ew_max_abs_diff": 5.927515989156973e-08,
+   "path": "parc/dkt31/rh_3.safetensors",
+   "sha256": "64b0100f5c51a510bb98b2fe04abfcf61f6b7650fbcf54031a0747d29f2d6fbb",
+   "size": 82839944,
+   "source": "parc/dkt31/rh_3.pth",
+   "source_sha256": "63b98a234475fa2c3ae479b7376340046965ea7297ed3fa0b818143a97a817dc",
+   "tensors": 254
+  },
+  {
+   "aliases_merged": 80,
+   "arch": {
+    "fdim": 64,
+    "in_ch": 3,
+    "max_level": 5,
+    "min_level": 0,
+    "out_ch": 32
+   },
+   "globals_audited": {
+    "collections.OrderedDict": 1,
+    "torch.FloatStorage": 1,
+    "torch._utils._rebuild_tensor_v2": 1
+   },
+   "ns_ew_max_abs_diff": 5.927515989156973e-08,
+   "path": "parc/dkt31/rh_4.safetensors",
+   "sha256": "43dd3d6a79fc0772941509e967f4fc6fd156f1b46b193b0fd02707cbf79f1898",
+   "size": 82839944,
+   "source": "parc/dkt31/rh_4.pth",
+   "source_sha256": "cd4f8be5257c88a41aee5691e9a1b076e98fec8ad9a81f67b96c9a6869780bce",
+   "tensors": 254
+  },
+  {
+   "aliases_merged": 80,
+   "arch": {
+    "fdim": 64,
+    "in_ch": 3,
+    "max_level": 5,
+    "min_level": 0,
+    "out_ch": 32
+   },
+   "globals_audited": {
+    "collections.OrderedDict": 1,
+    "torch.FloatStorage": 1,
+    "torch._utils._rebuild_tensor_v2": 1
+   },
+   "ns_ew_max_abs_diff": 5.927515989156973e-08,
+   "path": "parc/dkt31/rh_5.safetensors",
+   "sha256": "618da034474caebf7f328f2e2f896a2f6c6f697b254368d377fb0c3e5af9ef3b",
+   "size": 82839944,
+   "source": "parc/dkt31/rh_5.pth",
+   "source_sha256": "7fac114fdc57a8186b0feb0740cccf9958591861ae259b391995c86119f45b4a",
+   "tensors": 254
+  }
+ ],
+ "format": "pybiscuit-parc-unet/1",
+ "note": "hashes of converted checkpoints only; the weights are not redistributable (open-questions Q6/Q7)",
+ "schema_version": 1
+}

@@ -185,8 +185,8 @@ per [validation-tolerances](docs/validation-tolerances.md).
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
 | B7.1 | Feature extraction (`extract_features.m`): which 3 channels, normalisation with `parc/<p>/?h.curv.mean.txt`, resampling to icosphere | match `.tmp` feature files from B1.1 | Todo |
-| B7.2 | Spherical U-Net in modern PyTorch; load the original `.pth` (torch 1.4 format) and convert to a safetensors asset | per-class output E vs `test.sh` goldens | Todo |
-| B7.3 | Probability resampling to native sphere (B4) + DKT31 5-model fusion | E | Todo |
+| B7.2 | Spherical U-Net in modern PyTorch; load the original `.pth` (torch 1.4 format) and convert to a safetensors asset | per-class output E vs `test.sh` goldens | Done, oracle-provisional (parc/unet.py, checkpoint.py, infer.py; all 12 `.pth` converted via audited `weights_only=True` load; scores bit-identical (max abs diff 0.0, argmax 100 %) to the image's original `test.py` code under torch 2.14.1, 24 cases; shipped-pickle vs regenerated operators 0.0; CPU 0.60 s/hemisphere (2.15 s 1 thread); tests/test_parc_{core,net,reference}.py; [port note](docs/ports/parcellation-net.md), [report](docs/reports/parcellation-net-2026-10-20.md)) |
+| B7.3 | Probability resampling to native sphere (B4) + DKT31 5-model fusion | E | Partial (resampling done: `infer.resample_to_native` vs original text round trip + non-FMA SphericalRemesh, max abs diff 5e-7, argmax 100 %; outputs are raw scores, `test.py` has no softmax; DKT31 fusion is not in `test.py`: `parc/fusion.py` is an interface, rule pending B7.1) |
 | B7.4 | Graph-cut label smoothing (`gcut.m`; alpha-expansion, Potts or as reconstructed) with a license-clean max-flow | labels E vs reference post-gcut | Todo |
 | B7.5 | `roi_correction.m` (connected-component cleanup) | final labels E | Todo |
 
