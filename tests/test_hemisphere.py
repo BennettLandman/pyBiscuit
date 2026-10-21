@@ -103,3 +103,35 @@ def test_no_neck_fails_cleanly():
     mesh.vertices[:, 0] *= 0.0  # degenerate: every candidate plane cuts everything
     with pytest.raises((HemisphereError, ValueError, np.linalg.LinAlgError)):
         separate_hemispheres(mesh)
+
+
+def test_rotation_to_x_and_label_fit():
+    from pybiscuit.surfprep import frames
+
+    rng = np.random.default_rng(0)
+    n = np.array([0.9, -0.3, 0.2])
+    n /= np.linalg.norm(n)
+    rot = frames.rotation_to_x(n)
+    assert np.allclose(rot @ n, [1, 0, 0]) and np.isclose(np.linalg.det(rot), 1)
+    left = rng.normal(size=(500, 3)) * 8 - 12 * n
+    right = rng.normal(size=(500, 3)) * 8 + 12 * n
+    got = frames.fit_midline_normal(left, right)
+    assert got @ n > 0.99
+
+
+def test_rotated_head_needs_reference_frame():
+    from pybiscuit.surfprep import frames
+
+    mesh = bridged_ellipsoids(level=4)
+    th = np.radians(20)
+    rz = np.array([[np.cos(th), -np.sin(th), 0], [np.sin(th), np.cos(th), 0], [0, 0, 1]])
+    rotated = type(mesh)(mesh.vertices @ rz.T, mesh.faces)
+    ref = mesh.vertices  # the aligned copy, same vertex order (an "MNI" copy)
+    r = separate_hemispheres(rotated, ref)
+    for h in (r.lh, r.rh):
+        t = topology_summary(h)
+        assert t.is_closed and t.genus == 0
+    aff = np.eye(4)
+    aff[:3, :3] = rz  # aligned -> native
+    ref2 = frames.reference_from_affine(rotated.vertices, aff)
+    assert np.allclose(ref2, mesh.vertices, atol=1e-9)

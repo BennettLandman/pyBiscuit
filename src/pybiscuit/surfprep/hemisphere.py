@@ -14,6 +14,8 @@ Deviations from the MATLAB source (also in ``docs/ports/hemisphere.md``):
 * D2 patch boundary points sit at angles ``2*pi*i/m`` (``m`` distinct points)
   and loop vertex ``i`` is paired with boundary point ``i``; MATLAB pairs in
   Qhull hull order with a duplicated end point.
+* D4 more than two boundary loops are all patched (a second bridge is cut at the
+  same plane in the legacy sample); MATLAB handles exactly two.
 * D3 on a failed cut (not exactly two loops) the next-ranked plane is tried;
   MATLAB prints "the cutting plane is wrong!" and exits.
 """
@@ -113,8 +115,14 @@ def _kept_faces(idx, v):
     return fi[ptr[v] : ptr[v + 1]]
 
 
-def _boundary_loops(f, idx, removed_cnt, n):
-    """``getBoundary``: two loops by walking kept faces in stored order."""
+def _boundary_loops(f, idx, removed_cnt, n, allow_extra_loops=True):
+    """``getBoundary``: loops by walking kept faces in stored order.
+
+    MATLAB walks exactly two loops (the second from the last unvisited boundary
+    vertex).  Deviation D4: the same walk repeats until every boundary vertex is
+    visited, so a second bridge (e.g. at the occipital poles in the legacy
+    sample) is cut and patched like the first.
+    """
     ptr, _ = idx
     kept_cnt = ptr[1:] - ptr[:-1]
     pid = np.flatnonzero((kept_cnt > 0) & (removed_cnt > 0))
@@ -143,27 +151,33 @@ def _boundary_loops(f, idx, removed_cnt, n):
             loop.append(src)
         return loop[::-1]
 
-    tr1 = walk(int(pid[0]), 1)
-    left = np.flatnonzero(~visited[pid])
-    if left.size == 0:
+    loops = [np.asarray(walk(int(pid[0]), 1), dtype=np.int64)]
+    while True:
+        left = np.flatnonzero(~visited[pid])
+        if left.size == 0:
+            break
+        loops.append(np.asarray(walk(int(pid[left[-1]]), len(loops) + 1), dtype=np.int64))
+    if len(loops) < 2:
         raise HemisphereError("only one boundary loop")
-    tr2 = walk(int(pid[left[-1]]), 2)
-    if (~visited[pid]).any():
-        raise HemisphereError("more than two boundary loops")
-    return np.asarray(tr1, dtype=np.int64), np.asarray(tr2, dtype=np.int64)
+    if len(loops) > 2 and not allow_extra_loops:
+        raise HemisphereError(f"{len(loops)} boundary loops (MATLAB assumes exactly two)")
+    return loops
 
 
-def _cleanup_boundary(n, f, tr, bdry_mask):
-    """``cleanupBoundary``: drop every component except the two largest (D1)."""
-    drop = np.zeros(n, dtype=bool)
-    drop[tr] = True
-    w = _adjacency(n, f, drop)
+def _hemisphere_components(n, f, invalid_f):
+    """Components of the kept mesh; the two largest are the hemispheres (D1).
+
+    Returns ``(label per vertex, hemisphere labels, island vertex mask)``.
+    """
+    keep = np.ones(f.shape[0], dtype=bool)
+    keep[invalid_f] = False
+    fk = f[keep]
     used = np.zeros(n, dtype=bool)
-    used[np.asarray(f).ravel()] = True
-    _, lab = connected_components(w, directed=False)
+    used[fk.ravel()] = True
+    _, lab = connected_components(_adjacency(n, fk), directed=False)
     sizes = np.bincount(lab[used], minlength=lab.max() + 1)
     top = np.argsort(-sizes, kind="stable")[:2]
-    return used & ~np.isin(lab, top) & ~drop
+    return lab, top, used & ~np.isin(lab, top)
 
 
 @lru_cache(maxsize=64)
@@ -231,7 +245,7 @@ class SplitDiagnostics:
     plane_rule: str = DEFAULT_RULE
     n_cut_faces: int = 0
     n_removed_faces: int = 0
-    loop_sizes: tuple[int, int] = (0, 0)
+    loop_sizes: tuple[int, ...] = ()
     n_island_vertices: int = 0
     n_patch: dict = field(default_factory=dict)
     orientation_inverted: bool = False
@@ -248,7 +262,7 @@ class HemisphereResult:
     diagnostics: SplitDiagnostics
 
 
-def _split_with_cut(v, f, cut_faces):
+def _split_with_cut(v, f, cut_faces, allow_extra_loops=True):
     """Everything after the plane choice (steps 3-10) for one candidate cut."""
     n = v.shape[0]
     bd = np.zeros(n, dtype=bool)
@@ -259,17 +273,22 @@ def _split_with_cut(v, f, cut_faces):
     nb = w @ bd.astype(float)
     bd |= (~bd) & (deg == nb)
     invalid_f, idx, removed = _face_index(n, f, bd)
-    tr1, tr2 = _boundary_loops(f, idx, removed, n)
-    tr = np.concatenate([tr1, tr2])
-    isl = _cleanup_boundary(n, f, tr, bd)
+    loops = _boundary_loops(f, idx, removed, n, allow_extra_loops)
+    # cleanupBoundary: pieces other than the two hemispheres (islands, such as a
+    # knob cut off at the plane) are removed together with their own boundary loops
+    lab, top, isl = _hemisphere_components(n, f, invalid_f)
     n_isl = int(isl.sum())
-    if (isl & ~bd).any():
+    if n_isl:
         bd = bd | isl
         invalid_f, idx, removed = _face_index(n, f, bd)
+        loops = [lp for lp in loops if lab[lp[0]] in top]
+    if {int(lab[lp[0]]) for lp in loops} != {int(t) for t in top}:
+        raise HemisphereError("a hemisphere has no boundary loop (nothing was cut)")
+    tr = np.concatenate(loops)
 
     # patches (circlePatch + poisson) and stitching (closeSurface)
     patches, pf_all, x_all = [], [], []
-    for loop in (tr1, tr2):
+    for loop in loops:
         x, pf = harmonic_fill(v, loop)
         patches.append(x.shape[0])
         pf_all.append(pf)
@@ -277,7 +296,7 @@ def _split_with_cut(v, f, cut_faces):
     pv = np.vstack(x_all)
     off = 0
     new_faces, drop_patch = [], []
-    for loop, pf, x in zip((tr1, tr2), pf_all, x_all, strict=True):
+    for loop, pf, x in zip(loops, pf_all, x_all, strict=True):
         bnd = np.arange(x.shape[0] - len(loop), x.shape[0]) + (n + off)
         lut = np.arange(n + pv.shape[0])
         lut[bnd] = loop  # patch boundary points are replaced by the loop vertices
@@ -323,9 +342,9 @@ def _split_with_cut(v, f, cut_faces):
         c1, c2 = c2, c1
     diag = SplitDiagnostics(
         n_removed_faces=int(invalid_f.size),
-        loop_sizes=(len(tr1), len(tr2)),
+        loop_sizes=tuple(len(lp) for lp in loops),
         n_island_vertices=n_isl,
-        n_patch={"loop1": patches[0], "loop2": patches[1]},
+        n_patch={f"loop{i + 1}": p for i, p in enumerate(patches)},
     )
     out = []
     bins = np.where(lab == c1, 1, np.where(lab == c2, 2, 3))
@@ -350,6 +369,7 @@ def separate_hemispheres(
     rule: str = DEFAULT_RULE,
     max_plane_tries: int = 5,
     fallback: bool = True,
+    allow_extra_loops: bool = True,
 ) -> HemisphereResult:
     """Port of ``hemi_separation``.
 
@@ -375,7 +395,7 @@ def separate_hemispheres(
     last = None
     for rank, pi in enumerate(ranking[: max(1, max_plane_tries if fallback else 1)]):
         try:
-            out, hemi_map, diag = _split_with_cut(v, f, cut[pi])
+            out, hemi_map, diag = _split_with_cut(v, f, cut[pi], allow_extra_loops)
         except HemisphereError as exc:
             tried.append((int(pi), str(exc)))
             last = exc
