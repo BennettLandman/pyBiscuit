@@ -1,0 +1,132 @@
+"""Gyrification port vs upstream oracle goldens (plan row B9.4).
+
+Goldens: ``tests/data/golden/gyrification/<case>/`` from the non-FMA Gyrification oracle
+(``scripts/oracles/make_golden_gyrification.py``); inputs are shared in ``.../inputs``.
+"""
+
+import json
+from pathlib import Path
+
+import numpy as np
+import pytest
+from tests._compare import assert_close_float32
+
+from pybiscuit.io import read_vtk
+from pybiscuit.quant.lgi import gyrification, read_curves, read_geodesic_map
+
+G = Path(__file__).parent / "data" / "golden" / "gyrification"
+INP = G / "inputs"
+CASES = sorted(p.name for p in G.iterdir() if p.is_dir() and p.name != "inputs")
+
+
+def _kwargs(argv):
+    kw = {"sulcus": INP / "surface.scurve.bary", "gyrus": INP / "surface.gcurve.bary"}
+    opts = {
+        "-m": ("max_area", float), "-t": ("intv_area", float), "--speed": ("speed", float),
+        "--refHullArea": ("ref_hull_area", float), "--refCortexArea": ("ref_cortex_area", float),
+    }  # fmt: skip
+    a = argv[1:]
+    i = 0
+    while i < len(a):
+        o = a[i]
+        if o in opts:
+            kw[opts[o][0]] = opts[o][1](a[i + 1])
+            i += 2
+        elif o == "-s":
+            kw["sulcus"] = INP / a[i + 1]
+            i += 2
+        elif o == "-g":
+            kw["gyrus"] = INP / a[i + 1]
+            i += 2
+        elif o == "--inputMap":
+            kw["input_map"] = G / "ratio1" / "gmap.txt"
+            i += 2
+        elif o == "-c":
+            kw["corr"] = np.loadtxt(INP / a[i + 1], dtype=int)
+            i += 2
+        elif o in ("-i", "--outer", "-o", "--geodesicMap"):
+            i += 2
+        else:
+            i += 1  # --kArea1/2
+    return kw
+
+
+@pytest.fixture(scope="module")
+def meshes():
+    return read_vtk(INP / "surface.vtk"), read_vtk(INP / "hull.vtk")
+
+
+@pytest.mark.parametrize("case", CASES)
+def test_gyrification_matches_oracle(case, meshes):
+    cmd = json.loads((G / case / "command.json").read_text())
+    res = gyrification(*meshes, **_kwargs(cmd["argv"]))
+    labels = res.file_labels
+    for name in cmd["outputs"]:
+        gold = np.loadtxt(G / case / name)
+        if name.startswith("lgi.lgi.map."):
+            t = labels.index(int(name.split(".")[3]))
+            assert_close_float32(res.lgi[:, t], gold, label=f"{case}:{name}")
+        elif name.startswith("lgi.k1.map."):
+            assert_close_float32(res.k1[:, labels.index(int(name.split(".")[3]))], gold, label=name)
+        elif name.startswith("lgi.k2.map."):
+            assert_close_float32(res.k2[:, labels.index(int(name.split(".")[3]))], gold, label=name)
+        elif name == "gmap.txt":
+            assert_close_float32(res.adj_dist, gold[:, 0], label="geodesic distance")
+            assert np.array_equal(res.source, gold[:, 1].astype(int)), "nearest-source ids differ"
+    assert sorted(labels) == sorted(
+        int(n.split(".")[3]) for n in cmd["outputs"] if n.startswith("lgi.lgi.")
+    )
+
+
+def test_readers():
+    plain = read_curves(INP / "surface.scurve")
+    bary = read_curves(INP / "surface.scurve.bary")
+    assert len(bary) == int((INP / "surface.scurve.bary").read_text().split()[0])
+    assert {int(v) for c in plain for v in c} >= {int(v) for c in bary for v in c}
+
+
+def test_input_map_roundtrip(meshes):
+    d, s = read_geodesic_map(G / "ratio1" / "gmap.txt", meshes[0].n_vertices)
+    assert d.shape == s.shape == (meshes[0].n_vertices,)
+
+
+# ---------------------------------------------------------------- analytic diagnostics (no oracle)
+def _curve_ids(n, k=24, seed=7):
+    return np.sort(np.random.default_rng(seed).choice(n, size=k, replace=False))
+
+
+def test_convex_sphere_lgi_is_one():
+    from tests.fixtures.lgi import fold_case
+
+    surf, _ = fold_case(a=0.0, noise=0.0, hull_scale=1.0)
+    res = gyrification(
+        surf, surf, curve_ids=_curve_ids(surf.n_vertices), ref_hull_area=4 * np.pi * 50**2
+    )
+    assert np.allclose(res.lgi, 1.0, atol=1e-12)
+
+
+def test_lgi_increases_with_fold_amplitude():
+    from tests.fixtures.lgi import fold_case
+
+    med = []
+    for a in (0.03, 0.08, 0.14, 0.2):
+        surf, hull = fold_case(a=a)
+        res = gyrification(surf, hull, curve_ids=_curve_ids(surf.n_vertices), ref_hull_area=20000.0)
+        assert np.isfinite(res.lgi).all() and res.lgi.min() > 0
+        med.append(float(np.median(res.lgi)))
+    assert all(b > a for a, b in zip(med, med[1:], strict=False)), med
+
+
+def test_heap_variants_agree_without_ties(meshes):
+    kw = _kwargs(["x", "-m", "316", "--refHullArea", "20082.166"])
+    a = gyrification(*meshes, **kw)
+    b = gyrification(*meshes, heap="libstdcxx", **kw)
+    assert_close_float32(b.lgi, a.lgi, label="libstdc++ vs libc++ heap order")
+
+
+def test_open_mesh_rejected():
+    from tests.fixtures.meshes import cut_sphere
+
+    m = cut_sphere(3)
+    with pytest.raises(ValueError, match="closed"):
+        gyrification(m, m, curve_ids=np.array([0, 5]))

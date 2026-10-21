@@ -103,7 +103,7 @@ def write_geodesic_map(path, dist, source) -> None:
     """``Gyrification::saveGMap``: ``"%f %d"`` per vertex."""
     with open(path, "w") as fh:
         for d, s in zip(dist, source, strict=True):
-            fh.write("%f %d\n" % (d, s))
+            fh.write(f"{d:f} {s:d}\n")
 
 
 def read_geodesic_map(path, n_vertices: int) -> tuple[np.ndarray, np.ndarray]:
@@ -124,7 +124,7 @@ def _fnorm(x, y, z):
 
 @njit(cache=True, error_model="numpy")
 def _initial_tensor(v, indptr, indices, nrm, adj):
-    """First loop of ``setupTensorEqualArea``: rank-2 tensor from the distance gradient (float32 Vector math)."""
+    """First loop of ``setupTensorEqualArea``: rank-2 tensor from the distance gradient."""
     n = v.shape[0]
     T = np.zeros((n, 9))
     zero = F32(0.0)
@@ -188,7 +188,7 @@ def _initial_tensor(v, indptr, indices, nrm, adj):
 
 @njit(cache=True, error_model="numpy")
 def _smooth_tensor(T, v, indptr, indices, nrm, iters):
-    """``smoothingTensor``: inverse projected-distance weighted ring mean, Jacobi, ``w`` is float32."""
+    """``smoothingTensor``: inverse projected-distance weighted ring mean (float32 w)."""
     n = v.shape[0]
     one = F32(1.0)
     cur = T.copy()
@@ -259,7 +259,7 @@ def _max_dist(adj, source, indptr, indices):
 
 @njit(cache=True, error_model="numpy")
 def _principal_axis(T):
-    """Eigenvector of the largest eigenvalue of every 3x3 tensor (``LinearAlgebra::eig3symmetric``)."""
+    """Largest-eigenvalue eigenvector of every 3x3 tensor (``eig3symmetric``)."""
     n = T.shape[0]
     u = np.zeros((n, 3))
     M = np.empty((3, 3))
@@ -352,7 +352,7 @@ def gyrification(
     ``surface`` / ``outer``: :class:`Mesh` or VTK path.  ``outer`` must have the surface's
     topology, with every vertex moved to the hull (klaplace ``-surfaceCorrespondence`` output);
     that file is what ``--outer`` takes.  Curves: ``sulcus`` / ``gyrus`` as TRACE ``.scurve`` /
-    ``.gcurve`` (or ``.bary``) paths or lists of id arrays; ``curve_ids`` may give the union directly.
+    ``.gcurve`` (or ``.bary``) paths or lists of id arrays; ``curve_ids`` gives the union directly.
     ``corr``: optional lookup surface vertex -> outer vertex (``--corr``).
     ``heap``: ``"libcxx"`` (oracle build) or ``"libstdcxx"`` (Linux image) std::heap tie order.
     """
@@ -371,7 +371,9 @@ def gyrification(
         if lookup.size != n:
             raise ValueError("corr must give one outer vertex per surface vertex")
         if hull.n_vertices != n:  # MeshLib reads out of bounds here (varea indexed by surface id)
-            raise ValueError("--corr with an outer surface of different vertex count is undefined upstream")
+            raise ValueError(
+                "--corr with an outer surface of different vertex count is undefined upstream"
+            )
     else:
         lookup = np.zeros(1, dtype=np.int64)
 
@@ -384,7 +386,11 @@ def gyrification(
         adj, source = read_geodesic_map(input_map, n)
     else:
         sets = [c for c in (sulcus, gyrus) if c is not None]
-        ids = np.asarray(curve_ids, dtype=np.int64) if curve_ids is not None else curve_vertex_ids(*sets)
+        ids = (
+            np.asarray(curve_ids, dtype=np.int64)
+            if curve_ids is not None
+            else curve_vertex_ids(*sets)
+        )
         if ids.size == 0:
             raise ValueError("no sulcal/gyral curve vertices")
         if ids.min() < 0 or ids.max() >= n:
@@ -425,9 +431,30 @@ def gyrification(
     def work(lo_hi):
         lo, hi = lo_hi
         fm.kernel_range(
-            kind, gw.pos, gw.faces, gw.fnbr, gw.vf_ptr, gw.vf_idx, gw.ring_ptr, gw.ring_idx, gw.normal,
-            T, V1, lam1, lam2, a2, a1, a2, lookup, corr is not None, max_adj, deltas, lo, hi, k1, k2,
-        )  # fmt: skip
+            kind,
+            *gw[:2],
+            gw.fnbr,
+            gw.vf_ptr,
+            gw.vf_idx,
+            gw.ring_ptr,
+            gw.ring_idx,
+            gw.normal,
+            T,
+            V1,
+            lam1,
+            lam2,
+            a2,
+            a1,
+            a2,
+            lookup,
+            corr is not None,
+            max_adj,
+            deltas,
+            lo,
+            hi,
+            k1,
+            k2,
+        )
 
     chunks = list(zip(bounds[:-1], bounds[1:], strict=True))
     if nt > 1:
@@ -450,13 +477,13 @@ def _seq_sum(a):
 
 
 def write_lgi_maps(result: LgiResult, prefix, *, kind: str = "lgi") -> list[Path]:
-    """``saveGI`` / ``saveKMap1`` / ``saveKMap2``: ``<prefix>.{lgi,k1,k2}.map.<int(delta)>.txt`` (``%f`` lines)."""
+    """``saveGI`` / ``saveKMap{1,2}``: ``<prefix>.{lgi,k1,k2}.map.<int(delta)>.txt``, ``%f``."""
     arr = {"lgi": result.lgi, "k1": result.k1, "k2": result.k2}[kind]
     out = []
     for t, d in enumerate(result.deltas):
         p = Path(f"{prefix}.{kind}.map.{int(d)}.txt")
         with open(p, "w") as fh:
             for x in arr[:, t]:
-                fh.write("%f\n" % x)
+                fh.write(f"{x:f}\n")
         out.append(p)
     return out

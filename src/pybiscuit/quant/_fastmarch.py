@@ -4,8 +4,8 @@ Port of the Peyre ``GW_GeodesicMesh`` / Lyu ``GW_GeodesicMeshA`` fast marching u
 ``Gyrification`` (``MeshLib/include/Geodesic/gw/gw_geodesic/GW_GeodesicMesh{,A}.inl``,
 ``src/Geodesic/{Geodesic,GeodesicA}.cpp``, commit ``dcef807``).  Two flavours:
 
-* isotropic (``Geodesic``): Sethian update, speed 1; used to get distance to the sulcal/gyral curves;
-* anisotropic (``GeodesicA``): Qian "fast sweeping" tensor update with an area-limited stopping rule;
+* isotropic (``Geodesic``): Sethian update, speed 1; distance to the sulcal/gyral curves;
+* anisotropic (``GeodesicA``): Qian "fast sweeping" tensor update, area-limited stopping rule;
   used for the kernel of every vertex.
 
 All state is float64 (MeshLib ``GW_Float`` = double; vertex positions are the float32 file
@@ -98,7 +98,7 @@ def _p(pos, i):
 # --------------------------------------------------------------------------- #
 @njit(cache=True, error_model="numpy")
 def _edge_number(faces, f, v1, v2):
-    """``GW_Face::GetEdgeNumber(Vert1, Vert2)``: slot of the vertex opposite the edge (0 if absent)."""
+    """``GW_Face::GetEdgeNumber(Vert1, Vert2)``: slot opposite the edge (0 if absent)."""
     for i in range(3):
         if faces[f, i] == v1:
             if faces[f, (i + 1) % 3] == v2:
@@ -116,7 +116,7 @@ def _third(faces, f, v1, v2):
 
 @njit(cache=True, error_model="numpy", inline="always")
 def _face_nbr_of(faces, fnbr, f, v):
-    """``GW_Face::GetFaceNeighbor(Vert)``: neighbour opposite ``v`` (-1 if v not in the face / no neighbour)."""
+    """``GW_Face::GetFaceNeighbor(Vert)``: neighbour opposite ``v`` (-1 if none)."""
     for i in range(3):
         if faces[f, i] == v:
             return fnbr[f, i]
@@ -222,7 +222,7 @@ def _connectivity(pos, faces):
 
 
 def build_gw_mesh(vertices, faces) -> GWMesh:
-    """Connectivity, vertex rings and raw normals as MeshLib builds them (vertices cast to float32 first)."""
+    """Connectivity, vertex rings, raw normals as MeshLib builds them (float32 vertices)."""
     pos = np.ascontiguousarray(np.asarray(vertices, dtype=np.float32), dtype=np.float64)
     f = np.ascontiguousarray(faces, dtype=np.int32)
     vf_ptr, vf_idx, fnbr, ring_ptr, ring_idx, normal, ok = _connectivity(pos, f)
@@ -565,7 +565,7 @@ def _unfold(m_pos, faces, fnbr, f, v, v1, v2):
 
 @njit(cache=True, error_model="numpy", inline="always")
 def _speed_weight(pos, normal, T, i, q):
-    """``GeodesicA::WeightCallback(Vert i, position q)``: 1 / (e . T e) with e the projected direction."""
+    """``GeodesicA::WeightCallback(Vert i, position q)``: 1 / (e . T e), e projected."""
     E = _sub(q, _p(pos, i))
     N = (normal[i, 0], normal[i, 1], normal[i, 2])
     p = _dot(N, E)
@@ -581,7 +581,7 @@ def _speed_weight(pos, normal, T, i, q):
 def _vertex_distance(
     aniso, pos, faces, fnbr, normal, T, V1, lam1, lam2, dist, state, front, f, cur, a1, a2, cfront
 ):
-    """``ComputeVertexDistance`` for vertex ``cur`` inside face ``f`` with neighbours a1 (nearer), a2."""
+    """``ComputeVertexDistance`` for ``cur`` in face ``f``; a1 is the nearer neighbour."""
     if state[a1] == FAR and state[a2] == FAR:
         return GW_INF
     Pc = _p(pos, cur)
@@ -616,8 +616,12 @@ def _vertex_distance(
                 d3 = dist[pv]
                 if aniso:
                     F3 = _speed_weight(pos, normal, T, cur, _p(pos, pv))
-                    t = _update_fsm(Pc, P1, _p(pos, pv), d1, d3, dot1, F1, F3, vv, lam1[cur], lam2[cur])
-                    t2 = _update_fsm(Pc, _p(pos, pv), P2, d3, d2, dot2, F3, F2, vv, lam1[cur], lam2[cur])
+                    t = _update_fsm(
+                        Pc, P1, _p(pos, pv), d1, d3, dot1, F1, F3, vv, lam1[cur], lam2[cur]
+                    )
+                    t2 = _update_fsm(
+                        Pc, _p(pos, pv), P2, d3, d2, dot2, F3, F2, vv, lam1[cur], lam2[cur]
+                    )
                 else:
                     t = _update_sethian(d1, d3, c, b, dot1, 1.0)
                     t2 = _update_sethian(d3, d2, a, c, dot2, 1.0)
@@ -702,8 +706,23 @@ def _march(
                     a1 = a2
                     a2 = t_
                 val = _vertex_distance(
-                    aniso, pos, faces, fnbr, normal, T, V1, lam1, lam2, dist, state, front,
-                    f, nw, a1, a2, cfront,
+                    aniso,
+                    pos,
+                    faces,
+                    fnbr,
+                    normal,
+                    T,
+                    V1,
+                    lam1,
+                    lam2,
+                    dist,
+                    state,
+                    front,
+                    f,
+                    nw,
+                    a1,
+                    a2,
+                    cfront,
                 )
                 if val < rnew:
                     rnew = val
@@ -776,9 +795,16 @@ def set_tensor(mesh: GWMesh, u, lam1, lam2):
     n = mesh.pos.shape[0]
     T = np.zeros((n, 9))
     V1 = np.zeros((n, 3))
-    _set_tensor(mesh.normal, np.ascontiguousarray(u, dtype=np.float64), T, V1,
-                np.ascontiguousarray(lam1, dtype=np.float64), np.ascontiguousarray(lam2, dtype=np.float64))  # fmt: skip
-    return T, V1, np.ascontiguousarray(lam1, dtype=np.float64), np.ascontiguousarray(lam2, dtype=np.float64)
+    u = np.ascontiguousarray(u, dtype=np.float64)
+    lam1 = np.ascontiguousarray(lam1, dtype=np.float64)
+    lam2 = np.ascontiguousarray(lam2, dtype=np.float64)
+    _set_tensor(mesh.normal, u, T, V1, lam1, lam2)
+    return (
+        T,
+        V1,
+        np.ascontiguousarray(lam1, dtype=np.float64),
+        np.ascontiguousarray(lam2, dtype=np.float64),
+    )
 
 
 @njit(cache=True, error_model="numpy")
@@ -806,7 +832,7 @@ def kernel_range(
     kind, pos, faces, fnbr, vf_ptr, vf_idx, ring_ptr, ring_idx, normal, T, V1, lam1, lam2, varea,
     area1, area2, lookup, use_lookup, max_area, deltas, v_begin, v_end, out_k1, out_k2,
 ):  # fmt: skip
-    """Area-limited anisotropic propagation from every vertex in [v_begin, v_end) with private workspace.
+    """Area-limited anisotropic propagation from each vertex in [v_begin, v_end).
 
     ``out_k1/out_k2[v, t]`` = sum of surface / outer areas over dead vertices whose cumulative
     propagated area is below ``deltas[t]`` (``Gyrification::kernelArea``, index-ordered sums).
