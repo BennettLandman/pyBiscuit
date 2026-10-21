@@ -17,6 +17,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path, PurePath
 
+
 def _p(x) -> str:
     """argv path with forward slashes (valid on Windows too; matches the MATLAB-built strings of the spec)."""
     return PurePath(x).as_posix()
