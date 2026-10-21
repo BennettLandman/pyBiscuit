@@ -2,7 +2,8 @@
 
 Rows: B10.2, B10.3 (machinery only). Modelled on PyMaCRUISE's restartable workflow
 (`base_resume_workflow.py`, `run.json` schema_version 1), not a port of BISCUIT code:
-the orchestrator is encrypted MATLAB and its stage semantics are still blocked (Q7).
+the orchestrator is encrypted MATLAB; its stage semantics wait on the orchestrator spec
+(brief 11, written from the MATLAB source Lyu supplied on 2026-10-21).
 
 ## Config (`pybiscuit.config`)
 - Reads the original `biscuit.conf` (`key = value`, `%` comment lines); unknown keys are
@@ -36,12 +37,13 @@ the orchestrator is encrypted MATLAB and its stage semantics are still blocked (
 - Stage registry (`stages.py`): `ingest` (real: records the adapter findings) then
   `surfprep` (macruise route only), `features`, `register`, `parc`, `trace`, `quant`,
   `stats`, `report`. All raise `StageBlocked` naming the plan row(s), e.g.
-  `stage 'surfprep' is blocked: B5: needs BISCUIT MATLAB source (orchestrator, Q7); ...`.
+  `stage 'surfprep' is blocked: B5: not specified yet; waits on the orchestrator spec (brief 11, ...`.
   Output file names declared there are placeholders following docs/io-contract.md; they
   are not claimed to match BISCUIT's, and the stage input lists encode only what each
-  stage plausibly consumes. Both must be revisited when B1.3 / the MATLAB source land.
-- No implemented component is wired as a stage body: SphericalRemesh's inputs
-  (`sphere.reg`, native sphere) are only defined after the blocked `register`/`surfprep`.
+  stage plausibly consumes. Both must be revisited against the brief 11 spec / B1.3.
+- No implemented component (SphericalRemesh, HSD, TRACE, the parcellation net) is wired as
+  a stage body: their inputs (native sphere, features, `sphere.reg`) are only defined by the
+  blocked `surfprep`/`features`, and the call sequence is the orchestrator's.
 
 ## Adapters (`pipeline/adapters/`)
 | Adapter | Identifies products by | Checks |

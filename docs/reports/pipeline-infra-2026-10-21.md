@@ -24,13 +24,13 @@ No stage science. Port note: [docs/ports/pipeline.md](../ports/pipeline.md).
 4. macOS is case-insensitive, so `Output/` vs `output/` probing cannot distinguish them there; tests compare with `samefile`.
 
 ## Decisions to review
-- Stage names, output file names and stage-to-stage inputs in `pipeline/stages.py` are placeholders from docs/io-contract.md and the plan rows; they must be revised against B1.3 / the MATLAB source. Each blocked reason cites its rows (B5, B5.6/B3.2, B6, B7.1/B7.4/B7.5, B8, B9, B10.1, B12.3).
+- Stage names, output file names and stage-to-stage inputs in `pipeline/stages.py` are placeholders from docs/io-contract.md and the plan rows; they must be revised against the brief 11 orchestrator spec / B1.3. Each blocked reason cites its rows (B5, B5.6/B3.2, B6, B7.1/B7.4/B7.5, B8, B9, B10.1, B12.3). Rebased onto `e225437`: HSD (PR #5), TRACE (PR #4) and the parcellation net (PR #3) are on main but, like SphericalRemesh, not wired in because their inputs and call order are the orchestrator's.
 - FreeSurfer-route `REQUIRED` products (white, pial, inflated, sphere per hemisphere) are a guess pending the orchestrator spec. No FS6 subject exists locally; that adapter is tested on synthetic NiBabel-written surfaces only.
 - Resume never recomputes a stage whose signature changed; it refuses (PyMaCRUISE-like). The message says to use a new output directory or remove the stage's attempt and `run.json` entry. A `--restart-from` option can be added when real stages exist.
 - Asset digests come from the committed registry rather than hashing installed files (plans work without assets); verifying installed assets against the registry is left to `fetch-assets`/`assets.verify`.
 
 ## Not done / out of scope
-Stage science; `legacy/` output naming (B10.4); wiring SphericalRemesh into a stage (its inputs exist only after the blocked `surfprep`/`register`); CIVET route (no adapter).
+Stage science; wiring HSD/TRACE/parc/SphericalRemesh into stage bodies; `legacy/` output naming (B10.4); CIVET route (no adapter).
 
 ## Shared-file edits
 `cli.py`: one block (`run` dispatch, marked with comments). `pyproject.toml`: the `tomli` marker line. `plan.md`: B10.2 and B10.3 Status cells only.

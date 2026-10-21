@@ -234,7 +234,7 @@ def test_blocked_stage_cites_plan_row(tmp_path):
     out = tmp_path / "out"
     with pytest.raises(StageBlocked, match=r"surfprep.*B5") as e:
         Run(out, f, cfg, STAGES).execute()
-    assert "MATLAB" in str(e.value)
+    assert "brief 11" in str(e.value)
     rj = json.loads((out / "run.json").read_text())
     assert rj["status"] == "blocked"
     assert rj["stages"]["ingest"]["status"] == "complete"
