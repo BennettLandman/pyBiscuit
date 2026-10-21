@@ -31,7 +31,7 @@ parses the header and compares flag sets. Defaults are the CLI's (`idprior 625`,
 
 | HSD.cpp (lines) | Python | Notes |
 |---|---|---|
-| `icosahedron` 2890-3050 | `icosahedron.icosahedron` | float32 vectors, first-come edge map, per-child orientation fix; bit-identical to the oracle for levels 3-5 (and 0-2, 6 live) |
+| `icosahedron` 2890-3050 | `icosahedron.icosahedron` | float32 vectors, first-come edge map, per-child orientation fix; bit-identical to the oracle for levels 3-6 (3-5 in committed goldens, 3 and 6 live) |
 | `init` 180-744 | `HSD._init` | same order; resampling / pair-wise branches included |
 | `initSphericalHarmonics`, `initTangentPlane` (no landmarks) 746-864 | `HSD._init`, `kernels.pole_axis/tangent_plane` | `-c` file: pole `%f`, coefficients `%lf`, degree cropped |
 | `initLocalPatch` 866-891 | `register._patch_cache` | neighbour across each directed edge, first insertion wins |
@@ -105,6 +105,7 @@ three `.var.txt` files must be concatenated property-major into one `--tmpVar` f
 
 See the report. Unit level (state A/B, 3 subjects, degree 6): GD path rel <= 9e-9 (energy, gradient); Newton path
 energy <= 1e-7, damped direction / Hessian <= 3.5e-6 in the final phase (float32 ulp flips in the deformed vertices
-amplified by `1/sqrt(1-x^2)`). Full runs: identical iteration counts (GD, ico7 degree 8), final energy rel <= 1e-4,
-angular difference median <= 5e-3 deg, p99 <= 0.03 deg. Platform differences vs the Linux image are untested (owner
+amplified by `1/sqrt(1-x^2)`). Full runs: identical iteration counts on the GD cases (ico4/5, with guess / resample / fixed subject / pair-wise) and on an
+ico7 degree-8 Newton-path run (82 iterations, median angular difference 3e-5 deg); the ico6 case differs by one iteration
+(64 vs 63, final energy rel 9e-5, median 5e-3 deg, p99 0.027 deg). Platform differences vs the Linux image are untested (owner
 decision on the Linux host).
