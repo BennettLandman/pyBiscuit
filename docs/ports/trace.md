@@ -34,10 +34,13 @@ and `curves.py`); one implementation with a `gyral` flag serves both. Not ported
 `--bary`, `--noVtk`, `--interm`, `--nojunction`, `--gyralSeed` (0.03), `--sulcalSeed` (-0.05), `--epRad` (4), `--nhDist` (4),
 `--lsTh` (2.5), `--prune` (5), `--simplification`, `-s/--smoothIter` (0), `--smoothTensorIter` (3), `--nThreads` (ignored).
 
-**BISCUIT's `trace_r = 4`, `trace_delta = 2.5` (hypothesis, unverified; the orchestrator is encrypted):** both equal the tool defaults of
-`--epRad`/`--nhDist` (4 mm) and `--lsTh` (2.5 mm); in the TMI 2018 paper r is the geodesic neighbourhood radius and delta the
-line-simplification threshold, so `trace_r -> --nhDist` (and probably `--epRad`) and `trace_delta -> --lsTh`, and BISCUIT may simply
-not pass them. Confirm from the B1.2 command trace. The default seeds (-0.05 / 0.03) are tuned for real cortex in mm; the synthetic
+**BISCUIT's call (resolved from the MATLAB source, orchestrator spec §8, `curve_extract_pipeline.m:39,47`):**
+`CurveExtraction --sulcus|--gyrus -i <h>.gray.vtk|<h>.white.vtk -o <prefix> --nThreads n --epRad r --nhDist r --lsTh d --bary --noVtk`
+with `r = trace_r` (both `--epRad` and `--nhDist`) and `d = trace_delta` (`--lsTh`), each through MATLAB `num2str`; every other option stays at
+its default (seeds -0.05 / 0.03, `--prune 5`, `-s 0`, `--smoothTensorIter 3`). The configured `trace_r = 4`, `trace_delta = 2.5` equal the
+tool defaults, so the port's defaults already reproduce BISCUIT; non-default config values reach the tool. Sulci are extracted on the pial
+(`gray`) surface, gyri on the white surface. Driver: `pybiscuit.trace.pipeline` (`curve_argv`, `curve_extract_pipeline`; brief 20), tested by
+`tests/test_lgi_chain.py::test_biscuit_trace_argv_is_the_spec_call`. (This replaces the earlier "hypothesis, unverified" paragraph.) The default seeds (-0.05 / 0.03) are tuned for real cortex in mm; the synthetic
 fixtures need `--sulcalSeed -0.01 --gyralSeed 0.01`.
 
 ## Precision

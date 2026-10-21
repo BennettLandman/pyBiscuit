@@ -120,3 +120,36 @@ def test_end_to_end_cli_with_outer_hull(tmp_path):
     assert lgi.shape == (surf.n_vertices,) and np.isfinite(lgi).all()
     assert (out / "curve" / "lh.white.gcurve.bary").exists()
     assert (out / "lgi_pipeline.json").exists()
+
+
+def test_curves_unchanged_by_six_decimal_vtk_rounding(tmp_path):
+    """T-7: BISCUIT's ``write_vtk`` writes ``%f`` (6 decimals); rounding the input must not matter."""
+    surf = read_vtk(G / "lh.gray.vtk")
+    for f in ("lh.gray.vtk", "lh.white.vtk"):
+        text = (G / f).read_text().splitlines()
+        i = next(k for k, ln in enumerate(text) if ln.startswith("POINTS"))
+        n = int(text[i].split()[1])
+        for k in range(i + 1, i + 1 + n):
+            text[k] = " ".join(f"{float(x):.6f}" for x in text[k].split())
+        (tmp_path / f).write_text("\n".join(text) + "\n")
+    assert surf.n_vertices == n
+    curve_extract_pipeline(tmp_path, tmp_path / "curve", hemis=("lh",))
+    for name in CURVES:
+        assert (tmp_path / "curve" / name).read_bytes() == (G / name).read_bytes(), name
+
+
+def test_flat_patch_region_does_not_stop_the_chain(tmp_path):
+    """T-4: the hemisphere meshes include a (flat) medial-wall patch; curves are not masked."""
+    surf, hull = fold_case(a=0.25, level=4)
+    v = surf.vertices.copy()
+    cap = v[:, 2] > 0.8 * np.linalg.norm(v, axis=1).max()  # polar cap flattened to a plane
+    v[cap, 2] = v[cap, 2].min()
+    patched = type(surf)(v, surf.faces, frame=surf.frame, units=surf.units)
+    for f in ("lh.gray.vtk", "lh.white.vtk"):
+        write_vtk(patched, tmp_path / f, binary=False, dtype="float")
+    curve_extract_pipeline(tmp_path, tmp_path / "curve", hemis=("lh",))
+    run = lgi_pipeline(
+        tmp_path / "lh.gray.vtk", tmp_path / "curve/lh.gray.scurve.bary",
+        tmp_path / "curve/lh.white.gcurve.bary", tmp_path, outer=hull,
+    )  # fmt: skip
+    assert cap.sum() > 20 and np.isfinite(run.lgi).all()

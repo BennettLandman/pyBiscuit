@@ -1,7 +1,7 @@
 """BISCUIT's TRACE phase (``curve_extract_pipeline.m``, spec §8): the ``CurveExtraction`` calls.
 
 ``curve_argv`` builds the argument vectors BISCUIT gives ``CurveExtraction`` (``trace_r`` ->
-``--epRad`` and ``--nhDist``, ``trace_delta`` -> ``--lsTh``, both through MATLAB's ``num2str``; every
+``--epRad`` and ``--nhDist``, ``trace_delta`` -> ``--lsTh``, both through MATLAB `num2str`; every
 other option at its default).  :func:`curve_extract_pipeline` runs them through the ported tool
 (``pybiscuit.trace.extract.main``), lh then rh, sulcus (pial = ``gray``) then gyrus (white), and
 skips a call when both outputs exist (``curve_extract_pipeline.m:37,45``).
