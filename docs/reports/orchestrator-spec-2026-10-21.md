@@ -3,7 +3,7 @@
 Branch `brief-11-orchestrator-spec`. Docs only; no code changed. Main deliverable: [orchestrator-spec](../reference/orchestrator-spec.md)
 (stage order, argv of every external call with its `biscuit.conf` mapping, file flows, output tree, in-MATLAB computation).
 This report holds the coverage checklist, the reconciliation with the merged and in-flight ports, the answers to Q3/Q4/Q9, and the
-surprises. Proposed follow-up briefs: [proposed-12-19](../agent-briefs/proposed-12-19.md). Plan rows and open questions were updated in the same PR.
+surprises. Proposed follow-up briefs: [proposed-12-21](../agent-briefs/proposed-12-21.md). Plan rows and open questions were updated in the same PR.
 
 ## 1. Outcome
 
@@ -142,9 +142,9 @@ If the owner considers the five views a clean-room breach, the sentences in spec
 
 ## 7. Proposed next briefs
 
-See [proposed-12-19](../agent-briefs/proposed-12-19.md): 12 MaCRUISE hemisphere separation (B5.1–B5.2), 13 FreeSurfer-replacement surface prep (B5.3–B5.7), 14 MeshProperty/MeshDeform/MeshContour black-box ports (B3) and the feature definitions (B9.1),
-15 parcellation features + alignment + fusion (B7.1, B7.3), 16 graph cut + ROI cleanup (B7.4–B7.5), 17 sulcal depth (B9.5), 18 statistics (B10.1) and pipeline wiring onto brief 08, 19 PDF/QA layout (B12.3).
-The follow-ups that were already on the launch queue (LGI on the ported TRACE; HSD part 2) are folded into the same list as 20–21.
+See [proposed-12-21](../agent-briefs/proposed-12-21.md): 12 MaCRUISE hemisphere separation (B5.2), 13 MeshProperty/MeshDeform black-box port and feature maps (B3, B9.1), 14 FreeSurfer-replacement surface prep (B5.3–B5.7, after Q3),
+15 parcellation features + alignment + fusion (B7.1, B7.3), 16 graph cut + ROI cleanup (B7.4–B7.5), 17 sulcal depth (B9.5), 18 statistics, legacy view and pipeline wiring onto brief 08 (B10.1, B10.4), 19 PDF/QA layout (B12.3),
+and the two queued follow-ups: 20 LGI on the ported TRACE, 21 HSD four-call replay.
 
 ## 8. Not done / follow-ups
 

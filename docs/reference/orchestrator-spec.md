@@ -9,7 +9,7 @@ reference ([AGENTS.md](../../AGENTS.md)).
 
 Companion documents: the coverage checklist, the per-port mismatch tables and the surprises are in
 [orchestrator-spec-2026-10-21](../reports/orchestrator-spec-2026-10-21.md); proposed next briefs in
-[proposed briefs](../agent-briefs/proposed-12-19.md).
+[proposed briefs](../agent-briefs/proposed-12-21.md).
 
 ## 0. How to read this
 
