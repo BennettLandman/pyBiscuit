@@ -15,7 +15,7 @@ _close_ball,_dilate_ball}` (brief 07). Only the pieces specific to this script a
 | `padarray(volume, [20 20 20])` | `np.pad` zeros | exact |
 | `imfill(volume, 26, 'holes')` | `binary_fill_holes`, 3x3x3 structure | background 26-connected to the array border; border voxels of the padded volume are background |
 | `smooth3(.., 'gaussian', 9, 2)` | `hull._smooth3_gaussian` | separable 9-tap Gaussian, sigma 2, zero-padded edge ("replicate" is irrelevant: 20 voxels of zeros) |
-| `imclose(.., strel('ball',15,15))`, `imdilate(.., strel('ball',1,1))` | `hull._close_ball/_dilate_ball` | **exact nonflat ellipsoid, per z-slice** (MATLAB's N=8 line decomposition approximates it; slice-wise assumption). Same unverified behaviour as OuterHull |
+| `imclose(.., strel('ball',15,15))`, `imdilate(.., strel('ball',1,1))` | `hull._close_ball/_dilate_ball` | **nonflat ellipsoid whose neighbourhood excludes the rim (`x^2+y^2 < r^2`; image evidence, brief 22, see below), per z-slice** (MATLAB's N=8 line decomposition approximates it; slice-wise assumption). Same unverified behaviour as OuterHull |
 | `volume > 25` | same | |
 | `bwperim(X, 18)` | `bwperim`: `X & ~binary_erosion(X, 18-structure, border_value=1)` | perimeter = set voxel with an unset 18-neighbour; array border is *not* a perimeter (toolbox erodes with ones padding — assumed). Matters only at the array faces, ≥ 20 voxels from the hull |
 | `field`, six thickenings | `_field` | each pass: `field |= bwperim(~field,18) | bwperim(volume0,18)` — the tissue perimeter term is constant, as in the script |
@@ -43,3 +43,14 @@ returns double. Dijkstra sums step lengths in a different order than the toolbox
 ## Open items (need an image run, spec §15 item 6)
 `strel('ball')` decomposition; `bwperim` border; `bwdistgeodesic` seed handling and exact accumulation; `interp3` with
 Inf neighbours; hull area. Acceptance E (p99 ≤ 1e-4 relative) is therefore **not** claimed.
+
+## Image evidence (brief 22, 2026-10-22)
+
+First comparison against real output (`quant/<h>.gray.SD.txt` of three FreeSurfer-route subjects). With the closed disc
+as `strel('ball')` neighbourhood the port was **0.71 mm too deep on average** (r = 0.9989): the hull dilation
+`strel('ball',1,1)` grew the hull by a voxel. Excluding the rim makes `ball(1,1)` the single centre pixel (the dilation only
+adds its height) and brings the bias to -0.04 mm (r = 0.9997, 54 % of the vertices equal to print precision, the rest
+differ by at most one chamfer step, 1.41 mm). Threshold sweeps (22-26) and other neighbourhood radii do not do better. The
+remaining differences are voxel-scale hull details (MATLAB's N = 8 line decomposition of the ball and the heights it
+produces are not reproduced), so the stage stays **below the E-class bound** (r >= 0.9999, max abs / range <= 1e-4)
+and is reported as such. The fix was inferred from the image, not from MATLAB source; it applies to `OuterHull` too.

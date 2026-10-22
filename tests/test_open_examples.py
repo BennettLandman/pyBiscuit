@@ -54,3 +54,32 @@ def test_sulcal_depth_has_no_hull_bias_against_the_image():
     ref = np.loadtxt(SUBJECT / "quant" / "lh.gray.SD.txt")
     assert abs(float((ours - ref).mean())) < 0.1
     assert np.corrcoef(ours, ref)[0, 1] > 0.9995
+
+
+@needs_data
+def test_fs_route_chain_reaches_the_images_basin(tmp_path):
+    """Regression guard for the call-1 guess fix (Q17), not an acceptance bound: upstream's raw ``--icomesh``
+    guess lands ~113 degrees (median) from the image's registered sphere; the default is within a degree."""
+    import numpy as np
+
+    from pybiscuit.hsd.chain import ChainPaths, run_chain
+    from pybiscuit.io import read_vtk
+    from pybiscuit.sphere.remesh import run as remesh_run
+    from pybiscuit.surfprep.freesurfer import prepare_fs_subject
+
+    ref = Path.home() / "dev" / "biscuit" / "reference" / "sif_FC_v2.2" / "root" / "opt" / "biscuit"
+    if not ref.exists():
+        pytest.skip("reference/ not available")
+    prepare_fs_subject(SUBJECT, tmp_path, hemis=("lh",))
+    uni = ref / "sphere" / "sphere_327680.vtk"
+    for f in ("curv", "inflated.H", "sulc"):
+        remesh_run(tmp_path / "lh.sphere.vtk", ref=uni, property=[tmp_path / f"lh.{f}.txt"],
+                   output_property=tmp_path / "lh.res", quiet=True)  # fmt: skip
+    run_chain(ChainPaths("lh", tmp_path, ref / "reg" / "mb101", ref / "sphere"), route="fs", n_threads=4)
+    ours = tmp_path / "ours.vtk"
+    remesh_run(tmp_path / "lh.sphere.vtk", coeff=tmp_path / "lh.coeff.txt", deform=ours, deg=10, quiet=True)
+    a = read_vtk(ours).vertices
+    b = read_vtk(SUBJECT / "reg" / "lh.sphere.reg.vtk").vertices
+    a, b = (x / np.linalg.norm(x, axis=1, keepdims=True) for x in (a, b))
+    ang = np.degrees(np.arccos(np.clip((a * b).sum(1), -1, 1)))
+    assert np.median(ang) < 1.0 and np.percentile(ang, 99) < 3.0

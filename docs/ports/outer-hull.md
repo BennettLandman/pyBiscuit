@@ -40,3 +40,9 @@ margin of 1 to 2.5 mm (the `1.02` factor plus the closing). At grid 256 an ellip
 Run `OuterHull` from the image (Q1) on the fixtures and on a cortical surface and compare hull vertices
 by symmetric surface distance (p99 <= 0.1 mm, validation-tolerances.md), or obtain Octave/MATLAB. Open
 questions the oracle would settle: `strel('ball')` decomposition, slice-wise application, `dmperm` block order.
+
+## Image evidence (brief 22)
+
+`hull._ball` (shared with sulcal depth) now excludes the rim of the structuring-element disc (`x^2 + y^2 < r^2`, centre kept):
+`strel('ball',1,1)` is then the centre pixel. Inferred from the image's `quant/<h>.gray.SD.txt` (bias +0.71 -> -0.04 mm), see
+[sulcal-depth.md](sulcal-depth.md); the same `strel` calls are in `OuterHull.m`, so the LGI hull follows. Not verified against MATLAB.
