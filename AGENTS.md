@@ -20,6 +20,7 @@ plus visualization ([docs/visualization-plan.md](docs/visualization-plan.md)).
 ├── biscuit_FC_v2.2.sif         ← production image (BISCUIT 2.2 = CBT v1.3 + templates + models)
 ├── biscuit_cbt_v1.3.sif        ← base image (no reg/ or parc/ assets)
 ├── BISCUIT-master/             ← BISCUIT MATLAB source from Ilwoo Lyu (NOT in git)
+├── open-examples/              ← 3 ABIDE subjects: FreeSurfer 7.4.1 + real biscuit_FC_v2.2 outputs (FS route; NOT in git)
 └── reference/                  ← NOT in git; regenerate with scripts/extract_reference.py
     ├── sif_FC_v2.2/root/opt/   ← extracted /opt/biscuit and /opt/cmorph
     ├── ctf_plain/              ← plaintext files from the MATLAB CTF (parc Python, meshes)
