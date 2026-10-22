@@ -1,0 +1,123 @@
+{
+  "tool": "lgi-chain",
+  "case": "bumpy_ico5",
+  "argv": [
+    "Gyrification",
+    "-i",
+    "bumpy.vtk",
+    "-o",
+    "lgi",
+    "--outer",
+    "bumpy.hull.corr.vtk",
+    "-s",
+    "bumpy.scurve.bary",
+    "-g",
+    "bumpy.gcurve.bary",
+    "-m",
+    "316",
+    "--speed",
+    "0.2",
+    "--refHullArea",
+    "77100",
+    "--nThreads",
+    "1"
+  ],
+  "commands": [
+    [
+      "OuterHull",
+      "bumpy.vtk",
+      "bumpy.hull.vtk"
+    ],
+    [
+      "klaplace",
+      "-thread",
+      "1",
+      "-dims",
+      "128",
+      "bumpy.vtk",
+      "bumpy.hull.vtk",
+      "-surfaceCorrespondence",
+      "bumpy.corr"
+    ],
+    [
+      "klaplace",
+      "-conv",
+      "bumpy.corr_warpedMesh.vtp",
+      "bumpy.hull.corr.vtk"
+    ],
+    [
+      "CurveExtraction",
+      "-i",
+      "bumpy.vtk",
+      "-o",
+      "bumpy",
+      "--sulcus",
+      "--gyrus",
+      "--bary",
+      "--sulcalSeed",
+      "-0.01",
+      "--gyralSeed",
+      "0.01"
+    ],
+    [
+      "Gyrification",
+      "-i",
+      "bumpy.vtk",
+      "-o",
+      "lgi",
+      "--outer",
+      "bumpy.hull.corr.vtk",
+      "-s",
+      "bumpy.scurve.bary",
+      "-g",
+      "bumpy.gcurve.bary",
+      "-m",
+      "316",
+      "--speed",
+      "0.2",
+      "--refHullArea",
+      "77100",
+      "--nThreads",
+      "1"
+    ]
+  ],
+  "commit": "image",
+  "oracle": "image-biscuit_FC_v2.2",
+  "image": "biscuit_FC_v2.2.sif",
+  "image_sha256": "e70aea6290ca3312a290618a8092b8992444bc47a7d3b42680109dfd714d4329",
+  "runtime": "apptainer version 1.4.1",
+  "inputs": {
+    "generator": "make_image_golden.bumpy_fixture",
+    "level": 5,
+    "files": [
+      "bumpy.vtk",
+      "hull.vtk"
+    ]
+  },
+  "outputs": [
+    "bumpy.corr_warpedMesh.vtp.gz",
+    "bumpy.gcurve",
+    "bumpy.gcurve.bary",
+    "bumpy.gcurve.vtk.gz",
+    "bumpy.hull.corr.vtk.gz",
+    "bumpy.scurve",
+    "bumpy.scurve.bary",
+    "bumpy.scurve.vtk.gz",
+    "lgi.lgi.map.138.txt"
+  ],
+  "excluded_outputs_sha256": {
+    "bumpy.hull.vtk": "0adb82d27dd5df59fb95237e0c942e54bfba9f173dcfa635e3a1fb41982ca449"
+  },
+  "output_sha256": {
+    "bumpy.corr_warpedMesh.vtp": "cd56c2d722155264f6baa27ea19fa20a9599e16f611b7e96072fcb37c3f109ea",
+    "bumpy.gcurve": "0a03fe00ad79ec9fe0f4ec1df18dccfd2856dbf5522d142b0fa00922eff27f9b",
+    "bumpy.gcurve.bary": "cdf817adb9f172e91ad34c447e8098ed3ec63993ca04884a5ab2ad8da83622a8",
+    "bumpy.gcurve.vtk": "99b75df17e22447c2fd567b4333661bb76ec42f3e899c0f2ec17b2d8eefe2ec3",
+    "bumpy.hull.corr.vtk": "c1a3013ee36f314c6bca3d3601c61c167748be2c8ae5d380a91c9ec6cb6176ec",
+    "bumpy.hull.vtk": "0adb82d27dd5df59fb95237e0c942e54bfba9f173dcfa635e3a1fb41982ca449",
+    "bumpy.scurve": "820e8dcad9a0cac009ff2f16a672e0cf6e0df2ade0bbc7e7d84ffa0ab81e341d",
+    "bumpy.scurve.bary": "43a833f356a217e7fb80c8a2dfcc995c471dd64998da772cdbac99274a3bd9d8",
+    "bumpy.scurve.vtk": "53f085ef71c24d97d306e8c8f3f5092764648344bd8ffa4d5267f2446c0538d5",
+    "lgi.lgi.map.138.txt": "c076e2ff06eaa1d4085e2740be2ef06a70dc61312339096a5a30b6623bd5d288"
+  }
+}

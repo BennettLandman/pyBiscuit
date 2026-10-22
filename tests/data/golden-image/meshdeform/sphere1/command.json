@@ -1,0 +1,44 @@
+{
+  "tool": "meshdeform",
+  "case": "sphere1",
+  "argv": [
+    "MeshDeform",
+    "-i",
+    "bumpy.vtk",
+    "-o",
+    "deformed.vtk",
+    "--sphere",
+    "1"
+  ],
+  "commands": [
+    [
+      "MeshDeform",
+      "-i",
+      "bumpy.vtk",
+      "-o",
+      "deformed.vtk",
+      "--sphere",
+      "1"
+    ]
+  ],
+  "commit": "image",
+  "oracle": "image-biscuit_FC_v2.2",
+  "image": "biscuit_FC_v2.2.sif",
+  "image_sha256": "e70aea6290ca3312a290618a8092b8992444bc47a7d3b42680109dfd714d4329",
+  "runtime": "apptainer version 1.4.1",
+  "inputs": {
+    "generator": "make_image_golden.bumpy_fixture",
+    "level": 4,
+    "files": [
+      "bumpy.vtk",
+      "hull.vtk"
+    ]
+  },
+  "outputs": [
+    "deformed.vtk"
+  ],
+  "excluded_outputs_sha256": {},
+  "output_sha256": {
+    "deformed.vtk": "91bcc635067f49546ec7b43a6ddf4c2911812f5bcf8902fff49f7837e9f68e36"
+  }
+}

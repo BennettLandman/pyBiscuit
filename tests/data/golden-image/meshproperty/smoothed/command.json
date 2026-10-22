@@ -1,0 +1,56 @@
+{
+  "tool": "meshproperty",
+  "case": "smoothed",
+  "argv": [
+    "MeshProperty",
+    "-i",
+    "bumpy.vtk",
+    "-o",
+    "bumpy",
+    "-m",
+    "-k",
+    "--tensorsmoothing",
+    "2",
+    "--surfsmoothing",
+    "1",
+    "--datasmoothing",
+    "2",
+    "--writevtk"
+  ],
+  "commands": [
+    [
+      "MeshProperty",
+      "-i",
+      "bumpy.vtk",
+      "-o",
+      "bumpy",
+      "-m",
+      "-k",
+      "--tensorsmoothing",
+      "2",
+      "--surfsmoothing",
+      "1",
+      "--datasmoothing",
+      "2",
+      "--writevtk"
+    ]
+  ],
+  "commit": "image",
+  "oracle": "image-biscuit_FC_v2.2",
+  "image": "biscuit_FC_v2.2.sif",
+  "image_sha256": "e70aea6290ca3312a290618a8092b8992444bc47a7d3b42680109dfd714d4329",
+  "runtime": "apptainer version 1.4.1",
+  "inputs": {
+    "generator": "make_image_golden.bumpy_fixture",
+    "level": 4,
+    "files": [
+      "bumpy.vtk",
+      "hull.vtk"
+    ]
+  },
+  "outputs": [
+    "bumpy.H.txt",
+    "bumpy.K.txt",
+    "bumpy.property.vtk"
+  ]
+}

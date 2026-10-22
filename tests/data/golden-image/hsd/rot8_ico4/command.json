@@ -1,0 +1,56 @@
+{
+  "tool": "hsd",
+  "case": "rot8_ico4",
+  "argv": [
+    "HSD",
+    "-s",
+    "s1.sphere.vtk",
+    "s2.sphere.vtk",
+    "-p",
+    "s1.curv.txt",
+    "s2.curv.txt",
+    "-o",
+    "s1.reg.vtk",
+    "s2.reg.vtk",
+    "-d",
+    "6",
+    "--icosahedron",
+    "3",
+    "--maxIter",
+    "2"
+  ],
+  "commands": [
+    [
+      "HSD",
+      "-s",
+      "s1.sphere.vtk",
+      "s2.sphere.vtk",
+      "-p",
+      "s1.curv.txt",
+      "s2.curv.txt",
+      "-o",
+      "s1.reg.vtk",
+      "s2.reg.vtk",
+      "-d",
+      "6",
+      "--icosahedron",
+      "3",
+      "--maxIter",
+      "2"
+    ]
+  ],
+  "commit": "f169595",
+  "oracle": "image-biscuit_FC_v2.2",
+  "image": "biscuit_FC_v2.2.sif",
+  "image_sha256": "e70aea6290ca3312a290618a8092b8992444bc47a7d3b42680109dfd714d4329",
+  "runtime": "apptainer version 1.4.1",
+  "inputs": {
+    "generator": "make_image_golden.hsd_case",
+    "rotation_deg": 8,
+    "level": 4
+  },
+  "outputs": [
+    "s1.reg.vtk",
+    "s2.reg.vtk"
+  ]
+}

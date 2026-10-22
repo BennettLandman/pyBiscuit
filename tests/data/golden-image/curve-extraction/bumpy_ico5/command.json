@@ -1,0 +1,63 @@
+{
+  "tool": "curve-extraction",
+  "case": "bumpy_ico5",
+  "argv": [
+    "CurveExtraction",
+    "-i",
+    "bumpy.vtk",
+    "-o",
+    "bumpy",
+    "--sulcus",
+    "--gyrus",
+    "--cart",
+    "--bary",
+    "--interm",
+    "--sulcalSeed",
+    "-0.01",
+    "--gyralSeed",
+    "0.01"
+  ],
+  "commands": [
+    [
+      "CurveExtraction",
+      "-i",
+      "bumpy.vtk",
+      "-o",
+      "bumpy",
+      "--sulcus",
+      "--gyrus",
+      "--cart",
+      "--bary",
+      "--interm",
+      "--sulcalSeed",
+      "-0.01",
+      "--gyralSeed",
+      "0.01"
+    ]
+  ],
+  "commit": "ded932d",
+  "oracle": "image-biscuit_FC_v2.2",
+  "image": "biscuit_FC_v2.2.sif",
+  "image_sha256": "e70aea6290ca3312a290618a8092b8992444bc47a7d3b42680109dfd714d4329",
+  "runtime": "apptainer version 1.4.1",
+  "inputs": {
+    "generator": "make_image_golden.bumpy_fixture",
+    "level": 5,
+    "files": [
+      "bumpy.vtk",
+      "hull.vtk"
+    ]
+  },
+  "outputs": [
+    "bumpy.gcurve",
+    "bumpy.gcurve.bary",
+    "bumpy.gcurve.cart",
+    "bumpy.gcurve.vtk",
+    "bumpy.gpoint",
+    "bumpy.scurve",
+    "bumpy.scurve.bary",
+    "bumpy.scurve.cart",
+    "bumpy.scurve.vtk",
+    "bumpy.spoint"
+  ]
+}

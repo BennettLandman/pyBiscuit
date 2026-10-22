@@ -1,0 +1,21 @@
+Mesh Deformation v1.0
+Author: Ilwoo Lyu
+
+Usage: /opt/biscuit/bin/MeshDeform [OPTIONS]
+
+Options:
+  -h,--help                   Print this help message and exit
+  --matrix FLOAT ...          provides a matrix (3 by 4)
+  -t,--translate FLOAT ...    translates points
+  --translateCentered FLOAT ...
+                              provides an origin point after centering
+  --sphere INT:INT in [1 - 2] makes a sphere (1: area preservation, 2: conformal map)
+  --scale FLOAT:POSITIVE      sets a scaling factor
+  --noise FLOAT:NONNEGATIVE   sets a random displacement (uniform distribution)
+  --smooth INT:NONNEGATIVE    sets # of iterations for surface smoothing
+  -i,--input TEXT:FILE REQUIRED
+                              provides an input filename
+  -o,--output TEXT            provides an output filename
+  -c,--center                 prints a center of the input mesh
+  --invertFace                inverts triangles
+

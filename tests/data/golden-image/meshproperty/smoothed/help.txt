@@ -1,0 +1,29 @@
+Mesh Property v1.0
+Author: Ilwoo Lyu
+
+Usage: /opt/biscuit/bin/MeshProperty [OPTIONS]
+
+Options:
+  -h,--help                   Print this help message and exit
+  -i,--input TEXT:FILE REQUIRED
+                              provides an input filename
+  -o,--output TEXT REQUIRED   provides a prefix of output
+  -c                          computes a curvedness map
+  -s                          computes a shape index map
+  -k                          computes a Gaussian curvature map
+  -m                          computes a mean curvature map
+  -v                          computes a vertex area map
+  --writevtk                  writes a vtk file with properties
+  --tensorsmoothing INT:NONNEGATIVE=0
+                              applies a smoothing over the tensor field with the specific number of iterations
+  --surfsmoothing INT:NONNEGATIVE=0
+                              applies a smoothing over the input surface with the specific number of iterations
+  --datasmoothing INT:NONNEGATIVE=0
+                              applies a smoothing over the output (except for vertex area) with the specific number of iterations
+  -q,--quad                   approximates curvatures using quadratic fitting
+  --prctile FLOAT:FLOAT in [0 - 100]
+                              crops the output between prctile and 100 - prctile
+  --normbefore                normalizes the output before data smoothing
+  --normafter                 normalizes the output after data smoothing
+  --invert                    inverts curvature signs
+
