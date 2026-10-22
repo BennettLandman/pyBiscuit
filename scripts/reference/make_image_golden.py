@@ -26,6 +26,7 @@ an ``apptainer`` stub is used by ``tests/test_reference_harness.py``.
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 import shutil
@@ -52,7 +53,8 @@ IMAGE_TOOLS = {  # tool name in the image -> directory under /opt
     "ShapeComplexityIndex": "biscuit",
 }  # fmt: skip
 LARGE = {("spherical-remesh", "up5to6")}  # >5 MB outputs: not committed (see make_golden.py)
-GOLDEN_MAX_BYTES = 1_000_000
+GOLDEN_MAX_BYTES = 1_000_000  # stored (compressed) size per case
+COMPRESS_MIN_BYTES = 256 * 1024  # outputs at least this large are stored as <name>.gz
 
 
 # ---------------------------------------------------------------- image execution
@@ -212,11 +214,13 @@ def lgi_chain_case(case: str, work: Path, run) -> dict:
     ]  # fmt: skip
     for c in cmds:
         run(c, work)
+    # The hull itself is stored once, by the outer-hull case (same fixture); here only its hash.
     return {
         "argv": cmds[-1],
         "commands": cmds,
         "commit": "image",
         "outputs": "auto",
+        "exclude": ["bumpy.hull.vtk"],
         "inputs": inputs,
     }
 
@@ -235,26 +239,31 @@ def meshproperty_case(case: str, work: Path, run) -> dict:
     return {"argv": argv, "commit": "image", "outputs": "auto", "inputs": inputs, "help": ["MeshProperty", "--help"]}  # fmt: skip
 
 
-@image_case("meshdeform", ["translate", "matrix", "sphere"])
+@image_case("meshdeform", ["translate", "matrix", "sphere1", "sphere2"])
 def meshdeform_case(case: str, work: Path, run) -> dict:
     inputs = bumpy_fixture(work, level=4)
     flags = {
         "translate": ["-t", "1.5", "-2.0", "0.5"],
         "matrix": ["--matrix", "1", "0", "0", "2", "0", "1", "0", "-1", "0", "0", "1", "0.5"],
-        "sphere": ["--sphere"],
+        # the image binary requires an INT in [1, 2] after --sphere (first job-1 run, 2026-10-22)
+        "sphere1": ["--sphere", "1"],
+        "sphere2": ["--sphere", "2"],
     }[case]  # fmt: skip
     argv = sh("MeshDeform", "-i", "bumpy.vtk", "-o", "deformed.vtk", *flags)
     run(argv, work)
     return {"argv": argv, "commit": "image", "outputs": "auto", "inputs": inputs, "help": ["MeshDeform", "--help"]}  # fmt: skip
 
 
-@image_case("shape-complexity-index", ["ico4_k6"])
+@image_case("shape-complexity-index", ["biscuit_k3_s5"])
 def sci_case(case: str, work: Path, run) -> dict:
+    """BISCUIT's own call (orchestrator-spec §9.4, `sci.m`) with the biscuit.conf defaults
+    sci_kernel_size = 3 (%f) and sci_bins = 5 (%d). The NIRAL README flags were wrong for the image."""
     inputs = bumpy_fixture(work, level=4)
-    argv = sh("ShapeComplexityIndex", "--input", "bumpy.vtk", "--templatesurface", "bumpy.vtk",
-              "--kerenlsize", "6", "--stepsize", "1", "--output", "sci.txt", "--format", "ASCII")  # fmt: skip
+    argv = sh(
+        "ShapeComplexityIndex", "-i", "bumpy.vtk", "-o", "sci.txt", "-k", "3.000000", "-s", "5"
+    )
     run(argv, work)
-    return {"argv": argv, "commit": "aea9afd", "outputs": "auto", "inputs": inputs, "help": ["ShapeComplexityIndex", "--help"]}  # fmt: skip
+    return {"argv": argv, "commit": "image", "outputs": "auto", "inputs": inputs, "help": ["ShapeComplexityIndex", "--help"]}  # fmt: skip
 
 
 @image_case("klaplace", ["corr_ico4"])
@@ -318,8 +327,24 @@ def make_image_golden(tool: str, case: str, image: Image, out_root: Path = OUT_R
             if dest.exists():
                 shutil.rmtree(dest)
             dest.mkdir(parents=True)
+            excluded = {}
+            stored = []
             for rel in outputs:
-                shutil.copy(work / rel, dest / Path(rel).name)
+                src = work / rel
+                if Path(rel).name in res.get("exclude", []):
+                    excluded[Path(rel).name] = sha256_file(src)
+                    continue
+                if src.stat().st_size >= COMPRESS_MIN_BYTES:
+                    name = Path(rel).name + ".gz"
+                    with (
+                        open(dest / name, "wb") as f,
+                        gzip.GzipFile(fileobj=f, mode="wb", mtime=0) as g,
+                    ):
+                        g.write(src.read_bytes())
+                else:
+                    name = Path(rel).name
+                    shutil.copy(src, dest / name)
+                stored.append(name)
             if res.get("help"):
                 h = subprocess.run(image.command(res["help"], work), capture_output=True, text=True)
                 (dest / "help.txt").write_text(h.stdout + h.stderr)
@@ -335,7 +360,9 @@ def make_image_golden(tool: str, case: str, image: Image, out_root: Path = OUT_R
                 "image_sha256": sha,
                 "runtime": image.version(),
                 "inputs": res.get("inputs", {}),
-                "outputs": [Path(o).name for o in outputs],
+                "outputs": stored,
+                "excluded_outputs_sha256": excluded,
+                "output_sha256": {Path(o).name: sha256_file(work / o) for o in outputs},
             }
             (dest / "command.json").write_text(json.dumps(meta, indent=2) + "\n")
     finally:
