@@ -1,0 +1,64 @@
+{
+  "tool": "spherical-remesh",
+  "case": "up3to4",
+  "argv": [
+    "SphericalRemesh",
+    "-s",
+    "sphere.vtk",
+    "-i",
+    "subject.vtk",
+    "-r",
+    "ref.vtk",
+    "-p",
+    "prop.txt",
+    "-o",
+    "out.vtk",
+    "--outputProperty",
+    "outprop",
+    "--bary",
+    "bary.txt",
+    "--quiet"
+  ],
+  "commands": [
+    [
+      "SphericalRemesh",
+      "-s",
+      "sphere.vtk",
+      "-i",
+      "subject.vtk",
+      "-r",
+      "ref.vtk",
+      "-p",
+      "prop.txt",
+      "-o",
+      "out.vtk",
+      "--outputProperty",
+      "outprop",
+      "--bary",
+      "bary.txt",
+      "--quiet"
+    ]
+  ],
+  "commit": "b677c39",
+  "oracle": "image-biscuit_FC_v2.2",
+  "image": "biscuit_FC_v2.2.sif",
+  "image_sha256": "e70aea6290ca3312a290618a8092b8992444bc47a7d3b42680109dfd714d4329",
+  "runtime": "apptainer version 1.4.1",
+  "inputs": {
+    "generator": "make_golden.sr_fixture",
+    "src_level": 3,
+    "dst_level": 4,
+    "seed": 20261020,
+    "files": [
+      "sphere.vtk",
+      "ref.vtk",
+      "subject.vtk",
+      "prop.txt"
+    ]
+  },
+  "outputs": [
+    "out.vtk",
+    "outprop.prop.txt",
+    "bary.txt"
+  ]
+}
