@@ -9,6 +9,10 @@ Call 4 also writes the registered sphere with ``-o R R``.
 
 ``rh`` call 2 is ``-s S81920 S327680`` in the MaCRUISE and CIVET scripts (``:112``) against ``-s S327680 S81920`` for
 ``lh`` (and for ``surf_reg_fs2.m``); ``rh_stage2="macruise"`` reproduces it, ``"lh"`` uses the ``lh`` order.
+
+``route="fs"`` is ``surf_reg_fs2.m`` (spec §12): call 1 takes ``<h>.res.H.txt`` (the resampled FreeSurfer
+``inflated.H``) in place of ``res.iH``, call 4 takes ``<h>.res.curv.txt`` (the resampled FreeSurfer ``curv``) in
+place of ``res.H``, and ``rh`` call 2 has the ``lh`` sphere order.  The calls are otherwise the same.
 """
 
 from __future__ import annotations
@@ -62,10 +66,20 @@ class ChainPaths:
         return self.surf_dir / f"{self.hemi}.res.{name}.txt"
 
 
-def chain_argv(paths: ChainPaths, *, rh_stage2: str = "macruise") -> list[list[str]]:
+#: feature file names (``<h>.res.<name>.txt``) of calls 1 and 4 on the FreeSurfer route
+_FS_FEATURES = {0: "H", 3: "curv"}
+
+
+def chain_argv(
+    paths: ChainPaths, *, rh_stage2: str = "macruise", route: str = "macruise"
+) -> list[list[str]]:
     """The four ``HSD`` argument lists (without the program name), as strings."""
     if rh_stage2 not in ("macruise", "lh"):
         raise ValueError("rh_stage2 must be 'macruise' or 'lh'")
+    if route not in ("macruise", "fs"):
+        raise ValueError("route must be 'macruise' or 'fs'")
+    if route == "fs":
+        rh_stage2 = "lh"
     c = _p(paths.coeff)
     out = []
     for i, (subj, ico, feat, stem, var) in enumerate(_SCHEDULE):
@@ -80,6 +94,8 @@ def chain_argv(paths: ChainPaths, *, rh_stage2: str = "macruise") -> list[list[s
             r = _p(paths.registered)
             a += ["-o", r, r]
         a += ["--outputcoeff", c, c]
+        if route == "fs":
+            feat = _FS_FEATURES.get(i, feat)
         a += ["-p", _p(paths.template(stem, "mean")), _p(paths.feature(feat))]
         a += ["--fixedSubjects", "0", "-d", "10", "--icomesh", _p(paths.sphere(ico))]
         if var:
@@ -103,6 +119,7 @@ def run_chain(
     paths: ChainPaths,
     *,
     rh_stage2: str = "macruise",
+    route: str = "macruise",
     n_threads: int = 0,
     stages: Sequence[int] = (1, 2, 3, 4),
     runner=None,
@@ -110,7 +127,7 @@ def run_chain(
     """Run the chain with the ported ``HSD`` (or ``runner(argv) -> int``); returns the argv lists run."""
     if runner is None:
         from .cli import main as runner  # noqa: N813
-    argvs = chain_argv(paths, rh_stage2=rh_stage2)
+    argvs = chain_argv(paths, rh_stage2=rh_stage2, route=route)
     done = []
     for i in stages:
         a = argvs[i - 1] + (["--nThreads", str(n_threads)] if n_threads else [])

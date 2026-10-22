@@ -22,6 +22,8 @@ def main(argv: list[str] | None = None) -> int:
     a("--hemi", nargs="+", default=["lh", "rh"], choices=["lh", "rh"])
     a("--rh-stage2", choices=["macruise", "lh"], default="macruise",
       help="rh call 2 sphere order: macruise = as the script (swapped), lh = same as lh")  # fmt: skip
+    a("--route", choices=["macruise", "fs"], default="macruise",
+      help="fs = surf_reg_fs2.m: res.H in call 1, res.curv in call 4, lh sphere order for rh")  # fmt: skip
     a("--nThreads", type=int, default=0)
     a("--dry-run", action="store_true", help="print the HSD argument lists and exit")
     args = p.parse_args(argv)
@@ -30,10 +32,10 @@ def main(argv: list[str] | None = None) -> int:
     for h in args.hemi:
         paths = ChainPaths(h, Path(args.surf_dir), Path(args.template_dir), Path(args.sphere_dir))
         if args.dry_run:
-            for i, a_ in enumerate(chain_argv(paths, rh_stage2=args.rh_stage2), 1):
+            for i, a_ in enumerate(chain_argv(paths, rh_stage2=args.rh_stage2, route=args.route), 1):
                 print(f"[{h} call {i}] HSD " + " ".join(a_))
             continue
-        run_chain(paths, rh_stage2=args.rh_stage2, n_threads=args.nThreads)
+        run_chain(paths, rh_stage2=args.rh_stage2, route=args.route, n_threads=args.nThreads)
     return 0
 
 
