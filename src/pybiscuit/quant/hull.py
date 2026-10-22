@@ -49,11 +49,18 @@ MARGIN = 1.02
 # morphology
 # --------------------------------------------------------------------------- #
 def _ball(r: int, h: float):
-    """``strel('ball', r, h, 0)``: offsets and heights of the nonflat ellipsoid."""
+    """``strel('ball', r, h, 0)``: offsets and heights of the nonflat ellipsoid.
+
+    The neighbourhood excludes the rim (``x^2 + y^2 < r^2``; the centre is always kept), so
+    ``strel('ball', 1, 1)`` is the single centre pixel and its dilation only adds the height.
+    That is what the three open examples show (brief 22): with the rim included, the sulcal-depth
+    hull is one voxel too large (mean bias +0.71 mm against the image's ``gray.SD``), without it
+    the bias is -0.04 mm.  Inferred from image output, not from MATLAB source.
+    """
     ax = np.arange(-r, r + 1)
     dx, dy = np.meshgrid(ax, ax, indexing="ij")
     rr = dx**2 + dy**2
-    keep = rr <= r * r
+    keep = (rr < r * r) | (rr == 0)
     hts = h * np.sqrt(1.0 - rr[keep] / float(r * r))
     return dx[keep].astype(np.int64), dy[keep].astype(np.int64), hts
 
