@@ -20,7 +20,7 @@ plus visualization ([docs/visualization-plan.md](docs/visualization-plan.md)).
 ├── biscuit_FC_v2.2.sif         ← production image (BISCUIT 2.2 = CBT v1.3 + templates + models)
 ├── biscuit_cbt_v1.3.sif        ← base image (no reg/ or parc/ assets)
 ├── BISCUIT-master/             ← BISCUIT MATLAB source from Ilwoo Lyu (NOT in git)
-├── open-examples/              ← 3 ABIDE subjects: FreeSurfer 7.4.1 + real biscuit_FC_v2.2 outputs (FS route; NOT in git)
+├── open-examples/              ← original copy of the 3 ABIDE subjects (FS route, real biscuit_FC_v2.2 outputs)
 └── reference/                  ← NOT in git; regenerate with scripts/extract_reference.py
     ├── sif_FC_v2.2/root/opt/   ← extracted /opt/biscuit and /opt/cmorph
     ├── ctf_plain/              ← plaintext files from the MATLAB CTF (parc Python, meshes)
@@ -32,6 +32,21 @@ plus visualization ([docs/visualization-plan.md](docs/visualization-plan.md)).
 
 Never commit SIF images, extracted binaries, model weights, templates, or
 subject data. `reference/` and large assets stay outside git; record hashes.
+
+**Exception: open-examples (owner-approved 2026-10-22).** The three ABIDE
+subjects live in the private repo
+[BennettLandman/pyBiscuit-examples](https://github.com/BennettLandman/pyBiscuit-examples),
+linked as the optional submodule `tests/data/open-examples` (gzip-compressed,
+with a SHA-256 manifest of the originals; 371 MB). It is opt-in:
+
+```bash
+git submodule update --init --checkout --depth 1 tests/data/open-examples
+```
+
+Tests find it through one helper, in this order: `$PYBISCUIT_OPEN_EXAMPLES`,
+`tests/data/open-examples/`, `~/dev/biscuit/open-examples`; they skip when
+none exists, and read `.gz` copies transparently. Add new subject data only
+to that repo, never to this one.
 
 ## Ground truth hierarchy
 

@@ -1,0 +1,5 @@
+[submodule "tests/data/open-examples"]
+	path = tests/data/open-examples
+	url = https://github.com/BennettLandman/pyBiscuit-examples.git
+	update = none
+	shallow = true
