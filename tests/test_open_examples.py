@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Replays on the open examples (brief 22): ABIDE subjects with real ``biscuit_FC_v2.2`` outputs.
 
 All tests are ``reference``-marked and skip when ``~/dev/biscuit/open-examples`` is absent; the data is
