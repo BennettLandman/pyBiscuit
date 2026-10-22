@@ -141,7 +141,7 @@ def main():
         buf = io.StringIO()
         t = time.time()
         with redirect_stdout(buf):
-            run_chain(paths, stages=[i], n_threads=threads)
+            run_chain(paths, stages=[i], n_threads=threads, guess_raw_icomesh=True)
         dt = time.time() - t
         e = energies(buf.getvalue())
         pole, c = coeff_of(paths.coeff)
@@ -160,7 +160,7 @@ def main():
     t = time.time()
     try:
         with redirect_stdout(buf):
-            run_chain(paths, n_threads=threads)
+            run_chain(paths, n_threads=threads, guess_raw_icomesh=True)
     except RuntimeError as exc:  # "Fatal error: Property - no closest triangle found" (upstream exits the same way)
         M["end_to_end"] = {"port_failed": str(exc), "log_tail": buf.getvalue().splitlines()[-6:]}
         print("end to end FAILED", exc, flush=True)

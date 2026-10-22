@@ -67,6 +67,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--maxIter", type=_nonneg_int, default=20, help="max iterations at the final phase [20]")
     p.add_argument("--icomesh", type=_file, default=None, help="pre-defined icosahedral mesh (overrides --icosahedron)")
     p.add_argument("--gres", type=_pos_int, default=3, help="search resolution for the initial guess [3]")
+    p.add_argument(
+        "--guess-raw-icomesh", action="store_true",
+        help="upstream behaviour: the guess queries the raw (radius-100) --icomesh mesh, so every query misses",
+    )  # fmt: skip
     p.add_argument("--noguess", action="store_true", help="skip the rigid initial guess")
     p.add_argument("--resample", action="store_true", help="resample properties on the current icosahedral level")
     p.add_argument("--writecoeff", action="store_true", help="write coefficients whenever the energy decreases")
@@ -116,6 +120,7 @@ def main(argv=None) -> int:
         fixed_subjects=a.fixedSubjects or None, icosahedron_level=a.icosahedron,
         realtime_coeff=a.writecoeff, tmp_variance=a.tmpVar, guess=not a.noguess,
         guess_res=a.gres, ico_mesh=a.icomesh, resampling=a.resample,
+        guess_unit_ico=not a.guess_raw_icomesh,
     )  # fmt: skip
     hsd.run()
     return 0

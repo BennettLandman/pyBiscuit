@@ -127,7 +127,7 @@ def test_each_call_vs_oracle(chain_case, call, capfd):
     elif paths.coeff.exists():
         paths.coeff.unlink()
     capfd.readouterr()
-    run_chain(paths, rh_stage2=order, stages=[call])
+    run_chain(paths, rh_stage2=order, stages=[call], guess_raw_icomesh=True)
     e = _energies(capfd.readouterr().out)
     pole, cf = _coeff_of(paths.coeff)
     gold_e = g[f"energies_{call}"]
@@ -155,7 +155,7 @@ def test_chain_end_to_end_vs_oracle(chain_case, capfd):
     if paths.coeff.exists():
         paths.coeff.unlink()
     capfd.readouterr()
-    run_chain(paths, rh_stage2=order)
+    run_chain(paths, rh_stage2=order, guess_raw_icomesh=True)
     e = _energies(capfd.readouterr().out)
     ang = _angles(read_vtk(paths.registered).vertices, g["vertex"])
     msg = (name, f"median {np.median(ang):.3g} p99 {np.percentile(ang, 99):.3g}", "oracle", g["e2e_ang_med"], g["e2e_ang_p99"])
@@ -172,7 +172,7 @@ def test_golden_records_a_sensitive_chain():
 
 
 # ------------------------------------------------------------------ H-3: guess with --icomesh radius-100 spheres
-def test_guess_with_icomesh_matches_oracle(tmp_path):
+def test_guess_with_icomesh_matches_oracle(tmp_path):  # upstream behaviour: guess_unit_ico=False
     sd, td, jd = write_chain_case(tmp_path, "lh", warp_k=1)
     a = chain_argv(ChainPaths("lh", jd, td, sd))[0]
     from pybiscuit.hsd.cli import build_parser
@@ -183,6 +183,7 @@ def test_guess_with_icomesh_matches_oracle(tmp_path):
     h = HSD(
         ns.sphere, props, output_coeff=ns.outputcoeff, degree=ns.degree, fixed_subjects=ns.fixedSubjects,
         icosahedron_level=ns.icosahedron, ico_mesh=ns.icomesh, guess=True, verbose=False,
+        guess_unit_ico=False,
     )  # fmt: skip
     guess_init_coeff(h)
     g = _g("guess_icomesh")

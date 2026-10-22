@@ -123,14 +123,21 @@ def run_chain(
     n_threads: int = 0,
     stages: Sequence[int] = (1, 2, 3, 4),
     runner=None,
+    guess_raw_icomesh: bool = False,
 ) -> list[list[str]]:
-    """Run the chain with the ported ``HSD`` (or ``runner(argv) -> int``); returns the argv lists run."""
+    """Run the chain with the ported ``HSD`` (or ``runner(argv) -> int``); returns the argv lists run.
+
+    ``guess_raw_icomesh`` adds the port-only flag that reproduces upstream master's call-1 initial guess (the
+    macOS oracle's behaviour), which the image does not show (brief 22, Q17); see ``docs/ports/hsd.md`` H-3.
+    """
     if runner is None:
         from .cli import main as runner  # noqa: N813
     argvs = chain_argv(paths, rh_stage2=rh_stage2, route=route)
     done = []
     for i in stages:
         a = argvs[i - 1] + (["--nThreads", str(n_threads)] if n_threads else [])
+        if guess_raw_icomesh:
+            a = a + ["--guess-raw-icomesh"]
         rc = runner(a)
         if rc:
             raise RuntimeError(f"HSD call {i} for {paths.hemi} failed (exit {rc})")
