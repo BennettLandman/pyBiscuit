@@ -12,7 +12,11 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import numpy as np
-import torch
+
+try:
+    import torch
+except ImportError:
+    torch = None
 
 from ..sphere import remesh
 from .checkpoint import load_safetensors
@@ -41,6 +45,33 @@ class ParcModel:
         net = SphericalUNet(operators=operators, **arch)
         return cls(_load_strict(net, tensors), meta)
 
+    @classmethod
+    def from_checkpoint(
+        cls,
+        path: str | Path,
+        *,
+        expected_sha256: str | None = None,
+        operators: Callable[[int], dict] | OperatorCache | None = None,
+    ) -> ParcModel:
+        """Load either a converted .safetensors checkpoint or a legacy .pth file."""
+        p = Path(path)
+        if p.suffix == ".safetensors":
+            return cls.from_safetensors(p, expected_sha256=expected_sha256, operators=operators)
+        elif p.suffix == ".pth":
+            from .checkpoint import (
+                audit_legacy_pickle,
+                canonicalize_state_dict,
+                load_legacy_state_dict,
+            )
+
+            audit = audit_legacy_pickle(p)
+            sd = load_legacy_state_dict(p, audit=audit)
+            canon, _ = canonicalize_state_dict(sd)
+            arch = infer_architecture(canon)
+            net = SphericalUNet(operators=operators, **arch)
+            return cls(_load_strict(net, canon), {"arch": arch})
+        raise ValueError(f"Unsupported checkpoint extension: {p}")
+
     @property
     def in_ch(self) -> int:
         return self.net.in_ch
@@ -53,18 +84,23 @@ class ParcModel:
     def nv(self) -> int:
         return 10 * 4**self.net.max_level + 2
 
-    @torch.no_grad()
     def predict(self, features: np.ndarray) -> np.ndarray:
         """Raw class scores ``(out_ch, nv)`` float32 for features ``(>= in_ch, >= nv)``.
 
         As in ``loader_individual.py`` only the first ``in_ch`` channels and the first ``nv``
         vertices are used (icosphere vertex order is hierarchical, so a finer file is truncated).
         """
+        if torch is None:
+            raise ImportError(
+                "PyTorch is required by pybiscuit.parc network inference. "
+                "Install it with: pip install 'pybiscuit[parc]'"
+            )
         f = np.asarray(features)
         if f.ndim != 2 or f.shape[0] < self.in_ch or f.shape[1] < self.nv:
             raise ValueError(f"features {f.shape}: need at least ({self.in_ch}, {self.nv})")
-        x = torch.from_numpy(np.ascontiguousarray(f[: self.in_ch, : self.nv], dtype=np.float32))
-        return self.net(x[None])[0].numpy()
+        with torch.no_grad():
+            x = torch.from_numpy(np.ascontiguousarray(f[: self.in_ch, : self.nv], dtype=np.float32))
+            return self.net(x[None])[0].numpy()
 
 
 def _load_strict(net: SphericalUNet, tensors: dict) -> SphericalUNet:

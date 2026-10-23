@@ -573,9 +573,7 @@ def gcut_from_edges(
     n = v_arr.shape[0]
     data_cost = data_cost_from_scores(prob)
     if data_cost.shape[1] != n:
-        raise ValueError(
-            f"prob vertex count ({data_cost.shape[1]}) does not match vertices ({n})"
-        )
+        raise ValueError(f"prob vertex count ({data_cost.shape[1]}) does not match vertices ({n})")
 
     label = np.ascontiguousarray(np.argmin(data_cost, axis=0), dtype=np.int32)
     edges_u, edges_v, weights = upper_triangle_edges(v_arr, directed_edges)
