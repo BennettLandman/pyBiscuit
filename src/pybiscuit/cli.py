@@ -107,6 +107,28 @@ def main(argv: list[str] | None = None) -> int:
 
         return deform_main(argv[1:])
     # --- end mesh ---
+    # --- parc (brief 15): parc ---
+    sub.add_parser(
+        "parc",
+        help="cortical surface parcellation (U-Net, graph cut, cleanup, fusion)",
+        add_help=False,
+    )
+    if argv and argv[0] == "parc":
+        from .parc.cli import main as parc_main
+
+        return parc_main(argv[1:])
+    # --- end parc ---
+    # --- stats (brief 18): stats ---
+    sub.add_parser(
+        "stats",
+        help="summary ROI and curve statistics (spec §10, B10.1)",
+        add_help=False,
+    )
+    if argv and argv[0] == "stats":
+        from .stats.cli import main as stats_main
+
+        return stats_main(argv[1:])
+    # --- end stats ---
     args = p.parse_args(argv)
     if args.cmd == "info":
         return _info()

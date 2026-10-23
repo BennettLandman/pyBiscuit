@@ -31,7 +31,6 @@ from pybiscuit.sphere.icosphere import icosphere
 
 from .features import extract_parc_features, load_protocol_labels
 from .fusion import fuse_folds
-from .infer import ParcModel, resample_to_native
 
 __all__ = [
     "find_protocol_assets",
@@ -324,6 +323,8 @@ def parcellate(
         net_features = np.stack([res_H, res_iH, res_sulc], axis=0).astype(np.float32)
 
         # 6. Model inference across folds
+        from .infer import ParcModel, resample_to_native
+
         fold_scores_list: list[np.ndarray] = []
         for ckpt in checkpoints:
             model = ParcModel.from_checkpoint(ckpt)

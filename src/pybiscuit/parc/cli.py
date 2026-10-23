@@ -37,7 +37,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--no-quantize",
         action="store_true",
-        help="disable intermediate %f text rounding",
+        help="disable intermediate %%f text rounding",
     )
     return p
 
