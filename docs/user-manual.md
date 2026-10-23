@@ -45,7 +45,27 @@ You can override the asset location at runtime by setting the `PYBISCUIT_ASSETS`
 
 ---
 
-## 2. Pipeline Execution (`pybiscuit run`)
+## 2. Quickstart with Provided Sample Data
+
+A step-by-step tutorial based on real provided sample subjects (`open-examples/0050952`, `0050961`, `0050971`) is available in:
+**[docs/sample-data-walkthrough.md](sample-data-walkthrough.md)**
+
+Quick commands:
+```bash
+# 1. Dry-run pipeline inspection on sample subject
+pybiscuit run open-examples/0050952 /tmp/run_demo --dry-run
+
+# 2. View 3D cortical surfaces, thickness, LGI, and parcellations in WebGL:
+open open-examples/0050952/qa/index_embedded.html
+
+# 3. Generate multi-subject cohort mosaic and parity report:
+pybiscuit cohort open-examples/0050952 open-examples/0050961 open-examples/0050971 -o /tmp/cohort_demo
+open /tmp/cohort_demo/cohort_report.html
+```
+
+---
+
+## 3. Pipeline Execution (`pybiscuit run`)
 
 The primary entry point is `pybiscuit run`, which automatically detects input types and coordinates all execution stages.
 

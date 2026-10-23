@@ -39,6 +39,7 @@ PyMaCRUISE run (inner/outer surfaces, level sets, SEG_refine, T1)
 ## Repository map
 
 | Path | Purpose |
+| [docs/sample-data-walkthrough.md](docs/sample-data-walkthrough.md) | Step-by-step tutorial running pyBiscuit & visualizations on provided sample data |
 | [docs/user-manual.md](docs/user-manual.md) | User manual, CLI reference, and troubleshooting guide |
 | [AGENTS.md](AGENTS.md) | Onboarding and working rules for agents and contributors |
 | [plan.md](plan.md) | Phased, step-by-step port and validation plan with acceptance table |
