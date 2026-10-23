@@ -134,13 +134,13 @@ def lgi_pipeline(
     pial, scurve, gcurve, out_dir, *, hemi: str = "lh", kernel: float = DEFAULT_KERNEL,
     speed: float = DEFAULT_SPEED, ref_area: float = DEFAULT_REF_AREA, n_threads: int = 1,
     hull: Mesh | None = None, outer: Mesh | None = None, keep_tmp: bool = True,
-    heap: str = "libcxx",
+    heap: str = "libcxx", corr_method: str = "klaplace",
 ) -> LgiRun:  # fmt: skip
     """One hemisphere of the ``lgi`` script.  ``pial``: VTK path; ``scurve`` / ``gcurve``: the
     ``.scurve.bary`` of the pial and ``.gcurve.bary`` of the white surface (TRACE products).
 
     ``hull`` / ``outer`` may be supplied (e.g. by a test) to bypass ``OuterHull`` and the
-    correspondence stand-in.  Scratch (hull, correspondence, raw map) is kept in
+    correspondence calculation.  Scratch (hull, correspondence, raw map) is kept in
     ``<out_dir>/tmp-lgi-<hemi>.gray`` like the script, unless ``keep_tmp`` is false.
     """
     out_dir = Path(out_dir)
@@ -150,7 +150,11 @@ def lgi_pipeline(
     if hull is None and outer is None:
         hull = outer_hull(surf)
     if outer is None:
-        outer = hull_correspondence(surf, hull)
+        if corr_method == "klaplace":
+            from .klaplace import surface_correspondence
+            outer = surface_correspondence(surf, hull)
+        else:
+            outer = hull_correspondence(surf, hull)
     hull_area = mesh_area(hull) if hull is not None else float("nan")
     if hull is not None:
         write_vtk(hull, tmp / f"{hemi}.gray.hull.vtk", dtype="float")

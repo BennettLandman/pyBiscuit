@@ -45,9 +45,13 @@ def main(argv: list[str] | None = None) -> int:
         ("sulcal-depth", "sulcal depth of a pial surface (port of sulcal_depth.m; provisional)"),
         ("lgi-pipeline", "BISCUIT's TRACE + LGI phases on <h>.gray.vtk / <h>.white.vtk (brief 20)"),
         ("sci", "shape complexity index (port of ShapeComplexityIndex; spec §9.4)"),
+        (
+            "klaplace",
+            "surface correspondence via Laplace PDE streamlines (port of klaplace; spec §9.3)",
+        ),
     ):
         sub.add_parser(name, help=text, add_help=False)
-    if argv and argv[0] in ("lgi", "outer-hull", "sulcal-depth", "lgi-pipeline", "sci"):
+    if argv and argv[0] in ("lgi", "outer-hull", "sulcal-depth", "lgi-pipeline", "sci", "klaplace"):
         if argv[0] == "lgi":
             from .quant.lgi_cli import main as quant_main
         elif argv[0] == "sulcal-depth":
@@ -56,6 +60,8 @@ def main(argv: list[str] | None = None) -> int:
             from .quant.lgi_pipeline_cli import main as quant_main
         elif argv[0] == "sci":
             from .quant.sci_cli import main as quant_main
+        elif argv[0] == "klaplace":
+            from .quant.klaplace_cli import main as quant_main
         else:
             from .quant.hull_cli import main as quant_main
 
