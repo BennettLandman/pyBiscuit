@@ -1190,6 +1190,63 @@ class SphereAABB:
             self._depth,
         )
 
+    def closest_face_fallback64(self, points) -> tuple[np.ndarray, np.ndarray]:
+        """Float64 radial-projection fallback for points where float32 ``closest_face`` missed.
+
+        Searches candidate boxes across the same ``trial = -1..8`` escalation schedule, evaluating
+        plane projection and barycentric coordinates in ``float64`` (threshold ``>= -1e-5``).
+        """
+        pts = _as_points(points)
+        n = len(pts)
+        out_f = np.full(n, -1, np.int32)
+        out_b = np.full((n, 3), np.nan, np.float32)
+        v64 = self._verts.astype(np.float64)
+        for q in range(n):
+            px, py, pz = float(pts[q, 0]), float(pts[q, 1]), float(pts[q, 2])
+            for trial in range(-1, _N_TRIALS):
+                rad = 0.0 if trial == -1 else float(_RAD0) * (2**trial)
+                _, cand = self.candidates(pts[q : q + 1], rad, rad)
+                if trial == -1 and self._pole0 != -1 and self._pole1 != -1:
+                    cand = np.unique(np.append(cand, [self._pole0, self._pole1]).astype(np.int32))
+                best_f = -1
+                best_d = float("inf")
+                best_c = (np.nan, np.nan, np.nan)
+                for fi in cand:
+                    f0, f1, f2 = self._faces[fi]
+                    a, b, c = v64[f0], v64[f1], v64[f2]
+                    nvec = np.cross(b - a, c - a)
+                    nn = float(np.linalg.norm(nvec))
+                    if nn == 0.0:
+                        continue
+                    nvec /= nn
+                    r0 = float(np.dot(a, nvec))
+                    r1 = px * nvec[0] + py * nvec[1] + pz * nvec[2]
+                    if r1 < r0 - 1e-5 or r1 == 0.0:
+                        continue
+                    k = r0 / r1
+                    c0, c1, c2 = _bary64(
+                        a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2],
+                        px * k, py * k, pz * k,
+                    )
+                    if c0 >= -1e-5 and c1 >= -1e-5 and c2 >= -1e-5:
+                        dist = float(
+                            _dpoint2tri(
+                                F(a[0]), F(a[1]), F(a[2]),
+                                F(b[0]), F(b[1]), F(b[2]),
+                                F(c[0]), F(c[1]), F(c[2]),
+                                F(px), F(py), F(pz),
+                            )
+                        )
+                        if dist < best_d or (dist == best_d and (best_f == -1 or fi < best_f)):
+                            best_f = int(fi)
+                            best_d = dist
+                            best_c = (c0, c1, c2)
+                if best_f != -1:
+                    out_f[q] = best_f
+                    out_b[q] = (F(best_c[0]), F(best_c[1]), F(best_c[2]))
+                    break
+        return out_f, out_b
+
 
 def closest_face(vertices, faces, points, eps1=None, eps2=None, *, poles: bool = True):
     """One-shot convenience: ``SphereAABB(vertices, faces).closest_face(points, ...)``."""

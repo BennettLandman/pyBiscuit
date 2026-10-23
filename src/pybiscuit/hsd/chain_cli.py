@@ -25,6 +25,7 @@ def main(argv: list[str] | None = None) -> int:
     a("--route", choices=["macruise", "fs"], default="macruise",
       help="fs = surf_reg_fs2.m: res.H in call 1, res.curv in call 4, lh sphere order for rh")  # fmt: skip
     a("--nThreads", type=int, default=0)
+    a("--robust-aabb", action="store_true", help="opt-in float64 AABB fallback when float32 closestFace misses (Q16)")
     a("--dry-run", action="store_true", help="print the HSD argument lists and exit")
     args = p.parse_args(argv)
     if args.nThreads:
@@ -35,7 +36,10 @@ def main(argv: list[str] | None = None) -> int:
             for i, a_ in enumerate(chain_argv(paths, rh_stage2=args.rh_stage2, route=args.route), 1):
                 print(f"[{h} call {i}] HSD " + " ".join(a_))
             continue
-        run_chain(paths, rh_stage2=args.rh_stage2, route=args.route, n_threads=args.nThreads)
+        run_chain(
+            paths, rh_stage2=args.rh_stage2, route=args.route, n_threads=args.nThreads,
+            robust_aabb=args.robust_aabb,
+        )  # fmt: skip
     return 0
 
 

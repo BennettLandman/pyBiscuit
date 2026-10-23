@@ -71,6 +71,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--guess-raw-icomesh", action="store_true",
         help="upstream behaviour: the guess queries the raw (radius-100) --icomesh mesh, so every query misses",
     )  # fmt: skip
+    p.add_argument(
+        "--robust-aabb", action="store_true",
+        help="opt-in float64 AABB fallback when float32 closestFace misses near an edge (Q16)",
+    )  # fmt: skip
     p.add_argument("--noguess", action="store_true", help="skip the rigid initial guess")
     p.add_argument("--resample", action="store_true", help="resample properties on the current icosahedral level")
     p.add_argument("--writecoeff", action="store_true", help="write coefficients whenever the energy decreases")
@@ -120,7 +124,7 @@ def main(argv=None) -> int:
         fixed_subjects=a.fixedSubjects or None, icosahedron_level=a.icosahedron,
         realtime_coeff=a.writecoeff, tmp_variance=a.tmpVar, guess=not a.noguess,
         guess_res=a.gres, ico_mesh=a.icomesh, resampling=a.resample,
-        guess_unit_ico=not a.guess_raw_icomesh,
+        guess_unit_ico=not a.guess_raw_icomesh, robust_aabb=a.robust_aabb,
     )  # fmt: skip
     hsd.run()
     return 0

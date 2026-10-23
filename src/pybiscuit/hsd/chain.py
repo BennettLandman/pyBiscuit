@@ -124,11 +124,13 @@ def run_chain(
     stages: Sequence[int] = (1, 2, 3, 4),
     runner=None,
     guess_raw_icomesh: bool = False,
+    robust_aabb: bool = False,
 ) -> list[list[str]]:
     """Run the chain with the ported ``HSD`` (or ``runner(argv) -> int``); returns the argv lists run.
 
     ``guess_raw_icomesh`` adds the port-only flag that reproduces upstream master's call-1 initial guess (the
     macOS oracle's behaviour), which the image does not show (brief 22, Q17); see ``docs/ports/hsd.md`` H-3.
+    ``robust_aabb`` adds ``--robust-aabb`` (opt-in float64 AABB fallback, Q16).
     """
     if runner is None:
         from .cli import main as runner  # noqa: N813
@@ -138,6 +140,8 @@ def run_chain(
         a = argvs[i - 1] + (["--nThreads", str(n_threads)] if n_threads else [])
         if guess_raw_icomesh:
             a = a + ["--guess-raw-icomesh"]
+        if robust_aabb:
+            a = a + ["--robust-aabb"]
         rc = runner(a)
         if rc:
             raise RuntimeError(f"HSD call {i} for {paths.hemi} failed (exit {rc})")

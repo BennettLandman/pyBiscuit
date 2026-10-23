@@ -93,6 +93,7 @@ class HSD:
         ico_mesh=None,
         resampling=False,
         guess_unit_ico=True,
+        robust_aabb=False,
         verbose=True,
     ):
         self.verbose = verbose
@@ -114,6 +115,8 @@ class HSD:
         self.guess_active = bool(guess)
         self.guess_res = int(guess_res)
         self.guess_unit_ico = bool(guess_unit_ico)
+        self.robust_aabb = bool(robust_aabb)
+        self.robust_aabb_used = False
         self.degree_inc = 0
         self.realtime_coeff = bool(realtime_coeff)
         self.icosahedron = int(icosahedron_level)
@@ -314,6 +317,12 @@ class HSD:
             miss = np.flatnonzero(fid == -1)
             if miss.size:
                 f2, b2 = sub.tree.closest_face(self.samples[miss])
+                miss2 = np.flatnonzero(f2 < 0)
+                if miss2.size and self.robust_aabb:
+                    f64, b64 = sub.tree.closest_face_fallback64(self.samples[miss[miss2]])
+                    f2[miss2] = f64
+                    b2[miss2] = b64
+                    self.robust_aabb_used = True
                 if (f2 < 0).any():
                     raise RuntimeError(
                         f"Fatal error: Property - no closest triangle found in subject {s}"
