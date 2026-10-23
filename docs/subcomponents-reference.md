@@ -5,7 +5,7 @@ This document provides comprehensive documentation for each of the core sub-comp
 2. **Algorithm & Math**: How it is implemented clean-room without GPL or MATLAB dependencies.
 3. **CLI Usage & Flags**: Complete command line syntax, flags, and options.
 4. **Python API Usage**: Module paths, function signatures, and return values.
-5. **Concrete Example Invocations**: Executable examples using the provided sample dataset (`open-examples/0050952`).
+5. **Concrete Example Invocations**: Executable examples using the sample dataset (`open-examples/0050952`, obtained from [BennettLandman/pyBiscuit-examples](https://github.com/BennettLandman/pyBiscuit-examples)).
 
 ---
 

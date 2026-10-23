@@ -36,6 +36,16 @@ PyMaCRUISE run (inner/outer surfaces, level sets, SEG_refine, T1)
       8. QA report + viewer
 ```
 
+## Sample Data (`pyBiscuit-examples`)
+
+Sample inputs (FreeSurfer 7.4.1 derivatives) and legacy reference outputs for 3 validation subjects (`0050952`, `0050961`, `0050971`) are available in the [**pyBiscuit-examples**](https://github.com/BennettLandman/pyBiscuit-examples) repository:
+
+```bash
+git clone https://github.com/BennettLandman/pyBiscuit-examples.git open-examples
+```
+
+See [**docs/sample-data-walkthrough.md**](docs/sample-data-walkthrough.md) for a complete step-by-step tutorial.
+
 ## Repository map
 
 | Path | Purpose |

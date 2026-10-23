@@ -4,9 +4,24 @@ This guide provides concrete, step-by-step instructions to run pyBiscuit, reprod
 
 ---
 
-## 1. Provided Sample Datasets
+## 1. Obtaining the Sample Datasets (`pyBiscuit-examples`)
 
-The repository includes three real reference subjects from the ABIDE I (NYU) cohort, processed with FreeSurfer 7.4.1 and validated against real `biscuit_FC_v2.2.sif` outputs:
+Sample data for pyBiscuit is hosted in the companion repository **[`pyBiscuit-examples`](https://github.com/BennettLandman/pyBiscuit-examples)**:
+```
+https://github.com/BennettLandman/pyBiscuit-examples
+```
+
+To download the sample data, clone the repository into `open-examples/` (or update the submodule):
+
+```bash
+# Option A: Clone directly into open-examples/ (recommended for this walkthrough)
+git clone https://github.com/BennettLandman/pyBiscuit-examples.git open-examples
+
+# Option B: Initialize git submodule
+git submodule update --init --recursive tests/data/open-examples
+```
+
+The sample dataset contains three real reference subjects from the ABIDE I (NYU) cohort, processed with FreeSurfer 7.4.1 and validated against real `biscuit_FC_v2.2.sif` outputs:
 
 ```
 open-examples/

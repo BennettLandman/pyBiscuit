@@ -47,7 +47,12 @@ You can override the asset location at runtime by setting the `PYBISCUIT_ASSETS`
 
 ## 2. Quickstart with Provided Sample Data
 
-A step-by-step tutorial based on real provided sample subjects (`open-examples/0050952`, `0050961`, `0050971`) is available in:
+Sample datasets are hosted in the **[`pyBiscuit-examples`](https://github.com/BennettLandman/pyBiscuit-examples)** repository:
+```bash
+git clone https://github.com/BennettLandman/pyBiscuit-examples.git open-examples
+```
+
+A comprehensive, step-by-step tutorial based on real sample subjects (`open-examples/0050952`, `0050961`, `0050971`) is available in:
 **[docs/sample-data-walkthrough.md](sample-data-walkthrough.md)**
 
 Quick commands:
