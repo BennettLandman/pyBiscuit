@@ -14,7 +14,7 @@ import json
 
 from .model import Stage, StageContext
 
-__all__ = ["STAGES", "ingest_body"]
+__all__ = ["STAGES", "get_executable_stages", "ingest_body"]
 
 _HEMIS = ("lh", "rh")
 
@@ -117,3 +117,26 @@ STAGES: list[Stage] = [
         blocked="B12.3: report rendering is not implemented (visualization, brief 09)",
     ),
 ]
+
+
+def get_executable_stages() -> list[Stage]:
+    """Return the pipeline stages with execution bodies wired and unblocked."""
+    from dataclasses import replace
+
+    from . import bodies
+
+    body_map = {
+        "ingest": ingest_body,
+        "surfprep": bodies.surfprep_body,
+        "features": bodies.features_body,
+        "register": bodies.register_body,
+        "parc": bodies.parc_body,
+        "trace": bodies.trace_body,
+        "quant": bodies.quant_body,
+        "stats": bodies.stats_body,
+        "report": bodies.report_body,
+    }
+    return [
+        replace(s, body=body_map.get(s.name, s.body), blocked=None)
+        for s in STAGES
+    ]

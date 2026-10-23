@@ -261,7 +261,7 @@ def test_cli_flags_match_parse_args_h():
         if m:
             upstream.update(m.group(1).split(","))
     ours = {s for a in build_parser()._actions for s in a.option_strings if s != "-h" and s != "--help"}
-    ours -= {"--guess-raw-icomesh"}  # port-only switch for upstream's icomesh guess (brief 22, Q17)
+    ours -= {"--guess-raw-icomesh", "--robust-aabb"}  # port-only switches
     assert upstream == ours
 
 
