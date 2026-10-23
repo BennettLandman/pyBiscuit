@@ -31,6 +31,16 @@ def main(argv: list[str] | None = None) -> int:
         add_help=False,
     )
     argv = list(sys.argv[1:] if argv is None else argv)
+    _known = {
+        "info", "spherical-remesh", "trace", "hsd", "register", "fetch-assets",
+        "lgi", "outer-hull", "sulcal-depth", "lgi-pipeline", "sci", "klaplace",
+        "run", "view", "render", "report", "cohort",
+        "mesh-contour", "hemi-split", "mesh-property", "mesh-deform", "parc", "stats",
+    }
+    if argv and argv[0] not in _known and argv[0] not in ("-h", "--help", "-v", "--version"):
+        from .pipeline.cli import main as run_main
+
+        return run_main(argv)
     if argv and argv[0] == "fetch-assets":
         from .assets import fetch_assets_main
 

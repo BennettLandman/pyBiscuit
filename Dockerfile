@@ -23,7 +23,9 @@ WORKDIR /app
 COPY . /app
 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir .[parc,viz]
+    pip install --no-cache-dir .[parc,viz] && \
+    mkdir -p /opt/biscuit && \
+    ln -s /usr/local/bin/run_biscuit /opt/biscuit/run_biscuit
 
 ENTRYPOINT ["pybiscuit"]
 CMD ["--help"]

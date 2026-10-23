@@ -25,6 +25,8 @@ dev = ["pytest>=8,<9", "ruff", "build>=1.2,<2"]
 
 [project.scripts]
 pybiscuit = "pybiscuit.cli:main"
+run_biscuit = "pybiscuit.pipeline.cli:main"
+biscuit = "pybiscuit.pipeline.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

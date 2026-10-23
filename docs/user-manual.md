@@ -102,10 +102,38 @@ You can explicitly force an adapter using `--input-type pymacruise|macruise_v3|f
 ### Example Run
 ```bash
 pybiscuit run /data/subjects/sub-01 /data/derivatives/sub-01 \
-    --threads 8 \
-    --protocols braincolor dkt31 \
+    --thread 8 \
+    --parc "braincolor,dkt31" \
     --legacy
 ```
+
+### Legacy SIF & `run_biscuit` Drop-in Compatibility
+
+For backwards-compatibility with existing SLURM batch scripts, cluster pipelines, and Singularity wrapper workflows built for `biscuit_FC_v2.2.sif`:
+
+1. **Direct `run_biscuit` CLI command**:
+   pyBiscuit registers `run_biscuit` and `biscuit` as top-level console script aliases:
+   ```bash
+   run_biscuit --surf_recon freesurfer --reg mb101 /INPUTS /OUTPUTS
+   ```
+2. **Direct `pybiscuit` invocation without `run`**:
+   `pybiscuit` automatically detects legacy flags and routes directly to the pipeline runner:
+   ```bash
+   pybiscuit --surf_recon freesurfer --reg mb101 /INPUTS /OUTPUTS
+   ```
+3. **Apptainer / Singularity SIF drop-in execution**:
+   The `pybiscuit.sif` container image runscript executes `run_biscuit` syntax directly:
+   ```bash
+   singularity run --cleanenv \
+       -B /path/to/inputs:/INPUTS \
+       -B /path/to/outputs:/OUTPUTS \
+       pybiscuit.sif \
+       --surf_recon freesurfer \
+       --reg mb101 \
+       --thread 4 \
+       /INPUTS /OUTPUTS
+   ```
+   All original `run_biscuit` flags are accepted verbatim: `--reg`, `--surf_recon`, `--parc`, `--thread`, `--proj`, `--subj`, `--sess`, `--trace_r`, `--trace_delta`, `--curv_smooth`, `--lgi_kernel`, `--sci_kernel`.
 
 ---
 

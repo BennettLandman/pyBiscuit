@@ -123,3 +123,7 @@ def _run(args) -> int:
     state = run.execute(until=args.until)
     print(f"run {state['status']}: {Path(args.output) / 'run.json'}")
     return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

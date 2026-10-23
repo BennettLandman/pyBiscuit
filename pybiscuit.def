@@ -22,6 +22,8 @@ From: python:3.11-slim
 
     pip install --no-cache-dir --upgrade pip
     pip install --no-cache-dir pybiscuit[parc,viz]
+    mkdir -p /opt/biscuit
+    ln -s /usr/local/bin/run_biscuit /opt/biscuit/run_biscuit
 
 %runscript
     exec pybiscuit "$@"
