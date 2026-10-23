@@ -24,6 +24,8 @@ __all__ = [
     "AssetEntry",
     "VerifyReport",
     "cache_dir",
+    "fetch_assets",
+    "fetch_assets_main",
     "load_registry",
     "sha256_file",
     "status_summary",
@@ -105,3 +107,92 @@ def status_summary() -> str:
         if (p := root.joinpath(*rel.split("/"))).is_file() and p.stat().st_size == e.size
     )
     return f"assets: {len(reg)} files registered, {present} present in cache ({root})"
+
+
+def fetch_assets(
+    target_dir: str | os.PathLike | None = None,
+    *,
+    from_dir: str | os.PathLike | None = None,
+    url: str | None = None,
+    verify_only: bool = False,
+    check_hashes: bool = True,
+) -> VerifyReport:
+    """Fetch and/or verify assets against the pinned asset registry."""
+    import shutil
+    import tarfile
+    import zipfile
+
+    target = Path(target_dir) if target_dir else cache_dir()
+    target.mkdir(parents=True, exist_ok=True)
+
+    if not verify_only:
+        reg = load_registry()
+        if from_dir:
+            src = Path(from_dir)
+            for rel in reg:
+                s_path = src.joinpath(*rel.split("/"))
+                d_path = target.joinpath(*rel.split("/"))
+                if s_path.is_file():
+                    d_path.parent.mkdir(parents=True, exist_ok=True)
+                    if not d_path.is_file() or d_path.stat().st_size != s_path.stat().st_size:
+                        shutil.copy2(s_path, d_path)
+        elif url:
+            import tempfile
+            import urllib.request
+
+            with tempfile.NamedTemporaryFile(suffix=".archive", delete=False) as tmp:
+                tmp_path = Path(tmp.name)
+            try:
+                urllib.request.urlretrieve(url, tmp_path)
+                if tarfile.is_tarfile(tmp_path):
+                    with tarfile.open(tmp_path, "r:*") as tf:
+                        if hasattr(tarfile, "data_filter"):
+                            tf.extractall(target, filter="data")
+                        else:
+                            tf.extractall(target)
+                elif zipfile.is_zipfile(tmp_path):
+                    with zipfile.ZipFile(tmp_path, "r") as zf:
+                        zf.extractall(target)
+                else:
+                    raise ValueError(f"Unsupported archive format from {url}")
+            finally:
+                tmp_path.unlink(missing_ok=True)
+
+    return verify(target, check_hashes=check_hashes)
+
+
+def fetch_assets_main(argv: list[str] | None = None) -> int:
+    """CLI entrypoint for pybiscuit fetch-assets."""
+    import argparse
+
+    p = argparse.ArgumentParser(
+        prog="pybiscuit fetch-assets",
+        description="Verify or populate pyBiscuit model and template assets (B13.1).",
+    )
+    p.add_argument("-t", "--target", "--out", help="Target directory (default: cache_dir)")
+    p.add_argument("--from-dir", help="Local directory containing extracted reference assets")
+    p.add_argument("--url", help="URL of assets archive to download")
+    p.add_argument("--verify-only", action="store_true", help="Only verify existing assets")
+    p.add_argument("--quick", action="store_true", help="Skip SHA-256 computation (size-only)")
+    args = p.parse_args(argv)
+
+    target = Path(args.target) if args.target else cache_dir()
+    rep = fetch_assets(
+        target,
+        from_dir=args.from_dir,
+        url=args.url,
+        verify_only=args.verify_only,
+        check_hashes=not args.quick,
+    )
+    reg = load_registry()
+    print(f"Target directory: {target}")
+    print(f"Registered files: {len(reg)}")
+    print(f"Verified OK:      {len(rep.ok)}")
+    if rep.missing:
+        print(f"Missing:          {len(rep.missing)}")
+    if rep.size_mismatch:
+        print(f"Size mismatch:    {len(rep.size_mismatch)}")
+    if rep.hash_mismatch:
+        print(f"Hash mismatch:    {len(rep.hash_mismatch)}")
+
+    return 0 if rep.passed else 1

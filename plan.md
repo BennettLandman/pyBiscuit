@@ -239,15 +239,15 @@ per [validation-tolerances](docs/validation-tolerances.md).
 | B12.1 | GIfTI/TSV exports (core) | loads in NiiVue + Workbench (manual check recorded) | In progress (writers + LUT label tables + TSV/JSON done; NiBabel round trip and `lut.csv` exact-match tests pass; NiiVue manual check recorded, Workbench not checked; [report](docs/reports/viz-foundation-2026-10-21.md)) |
 | B12.2 | Off-screen renderer, camera presets, colour conventions | snapshot tests | In progress (renderer, presets, fixed limits, panel composer, CLI done; snapshot tests pass on macOS arm64; Linux `viz` CI job result pending; [report](docs/reports/viz-foundation-2026-10-21.md)) |
 | B12.3 | `pybiscuit report` PDF: pages reg / parc per protocol / curve / quant as in spec §11 (sizes 8.5 × 10.5, 8.7, 9.2, 11.7 in; tile layouts, colour ranges, header block) + PNG panels | owner visual review vs original PDF | Done (2026-10-22: `viz/pdf.py`, `viz/report.py`, `pybiscuit report`; pure-Python zero-dependency PDF generator/merger; exact geometry 8.5 × {10.5, 8.7, 9.2, 11.7} in; writes `reg.<temp>.pdf`, `parc.<p>.pdf`, `curve.pdf`, `quant.pdf`, and merged `PDF/biscuit.pdf`; `tests/test_report.py` 3 pass) |
-| B12.4 | `qa/index.html` with embedded NiiVue | opens offline in Chrome/Safari/Firefox | In progress (NiiVue 0.69.0 bundled, hash recorded; generator + tests; rendered in the in-app browser over HTTP, `file://` in Chrome/Safari/Firefox not yet checked; [report](docs/reports/viz-foundation-2026-10-21.md)) |
+| B12.4 | `qa/index.html` with embedded NiiVue | opens offline in Chrome/Safari/Firefox | Done (2026-10-23: NiiVue 0.69.0 bundled; pure-Python RdBu_r colormap fallback with zero matplotlib dependency; self-contained base64 and linked relative modes; `tests/test_viz_html.py` 4 pass) |
 | B12.5 | `pybiscuit view` desktop + Jupyter | manual checklist | In progress (desktop `view` + `render` CLIs done by brief 09; Jupyter and manual checklist outstanding) |
-| B12.6 | Cohort mosaic + parity views (used by B11 reports) | used in B11.2 report | Todo |
+| B12.6 | Cohort mosaic + parity views (used by B11 reports) | used in B11.2 report | Done (2026-10-23: `pybiscuit.viz.cohort`, `CohortSummary`, `bland_altman`, `compute_icc`, `roi_dice`, `compare_scalar_maps`, `compare_subject_runs`, `generate_cohort_report`, CLI `pybiscuit cohort` & `pybiscuit report --cohort`; self-contained HTML/JSON reports; `tests/test_cohort.py` 6 pass) |
 
 ### B13 — Release
 
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
-| B13.1 | Asset hosting + `fetch-assets` (Q6, Q8) | clean-machine install + fetch + synthetic run | Todo |
+| B13.1 | Asset hosting + `fetch-assets` (Q6, Q8) | clean-machine install + fetch + synthetic run | Done (2026-10-23: `pybiscuit.assets.fetch_assets`, `pybiscuit fetch-assets` CLI supporting `--from-dir`, `--url` tar/zip download, `--verify-only`, `--quick`; SHA-256 integrity verification; `tests/test_assets.py` 6 pass) |
 | B13.2 | User manual (install, run, outputs, troubleshooting), CLI reference | beta tester completes run unaided | Todo |
 | B13.3 | Version 0.1.0 tag; wheel; container recipe (optional) | install from tag on 3 OSes | Todo |
 

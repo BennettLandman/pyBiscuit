@@ -25,7 +25,16 @@ def main(argv: list[str] | None = None) -> int:
         add_help=False,
     )
     sub.add_parser("register", help="BISCUIT's four-call HSD chain (brief 21)", add_help=False)
+    sub.add_parser(
+        "fetch-assets",
+        help="fetch or verify pyBiscuit model and template assets (B13.1)",
+        add_help=False,
+    )
     argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "fetch-assets":
+        from .assets import fetch_assets_main
+
+        return fetch_assets_main(argv[1:])
     if argv and argv[0] == "register":
         from .hsd.chain_cli import main as register_main
 
@@ -82,6 +91,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("view", help="desktop surface viewer (needs pybiscuit[viz])", add_help=False)
     sub.add_parser("render", help="render PNG panels (needs pybiscuit[viz])", add_help=False)
     sub.add_parser("report", help="QA PDF report generator (spec §11)", add_help=False)
+    sub.add_parser("cohort", help="cohort summary and parity report (B12.6)", add_help=False)
     if argv and argv[0] in ("view", "render"):
         from .viz.cli import main as viz_main
 
@@ -90,6 +100,10 @@ def main(argv: list[str] | None = None) -> int:
         from .viz.report import report_main
 
         return report_main(argv[1:])
+    if argv and argv[0] == "cohort":
+        from .viz.cohort import cohort_main
+
+        return cohort_main(argv[1:])
     # --- end viz ---
     # --- surfprep (brief 12): mesh-contour, hemi-split; implementation in pybiscuit.surfprep.cli
     sub.add_parser("mesh-contour", help="MeshContour stand-in (cutting plane)", add_help=False)

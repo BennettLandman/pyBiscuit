@@ -524,7 +524,30 @@ def report_main(argv: list[str] | None = None) -> int:
     p.add_argument("--session", default="Session", help="Session name (default: Session)")
     p.add_argument("--version", default="2.2 (CBT_v1.3)", help="Pipeline version string")
     p.add_argument("--date", default=None, help="Report date (default: today)")
+    p.add_argument(
+        "--cohort",
+        nargs="+",
+        default=None,
+        help="Cohort run directories to aggregate into cohort report (B12.6)",
+    )
+    p.add_argument(
+        "--ref-cohort",
+        nargs="+",
+        default=None,
+        help="Reference run directories for paired parity comparison (B12.6)",
+    )
     args = p.parse_args(argv)
+
+    if args.cohort:
+        from .cohort import generate_cohort_report
+
+        generate_cohort_report(
+            args.cohort,
+            args.out,
+            ref_dirs=args.ref_cohort,
+            protocols=tuple(args.protocols),
+        )
+        return 0
 
     generate_report_pdfs(
         args.out,

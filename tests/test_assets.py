@@ -64,3 +64,30 @@ def test_registry_matches_reference():
     rep = assets.verify(OPT)
     assert rep.passed, (rep.missing, rep.size_mismatch, rep.hash_mismatch)
     assert len(rep.ok) == len(reg)
+
+
+def test_fetch_assets_from_dir(tmp_path):
+    reg = assets.load_registry()
+    src = tmp_path / "src"
+    dst = tmp_path / "dst"
+    # Create one valid asset in src
+    smallest = sorted(reg.values(), key=lambda e: e.size)[0]
+    # To get matching hash, create content if we know it or test copy logic
+    p = src.joinpath(*smallest.path.split("/"))
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_bytes(b"0" * smallest.size)
+
+    # Fetch from src
+    rep = assets.fetch_assets(dst, from_dir=src, verify_only=False, check_hashes=False)
+    dst_file = dst.joinpath(*smallest.path.split("/"))
+    assert dst_file.is_file()
+    assert dst_file.stat().st_size == smallest.size
+    assert smallest.path not in rep.size_mismatch
+
+
+def test_fetch_assets_cli(tmp_path):
+    from pybiscuit.cli import main as biscuit_main
+
+    # Test verify-only on empty directory -> exits with code 1 because assets are missing
+    ret = biscuit_main(["fetch-assets", "-t", str(tmp_path), "--verify-only"])
+    assert ret == 1

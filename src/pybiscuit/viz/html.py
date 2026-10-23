@@ -39,17 +39,52 @@ _NV_BUILTIN = {"viridis"}
 
 
 def _sampled_colormap(name: str, n: int = 32) -> dict:
-    import matplotlib
+    try:
+        import matplotlib
 
-    cm = matplotlib.colormaps[name]
-    rgba = [cm(i / (n - 1)) for i in range(n)]
-    return {
-        "R": [round(c[0] * 255) for c in rgba],
-        "G": [round(c[1] * 255) for c in rgba],
-        "B": [round(c[2] * 255) for c in rgba],
-        "A": [255] * n,
-        "I": [round(i * 255 / (n - 1)) for i in range(n)],
-    }
+        cm = matplotlib.colormaps[name]
+        rgba = [cm(i / (n - 1)) for i in range(n)]
+        return {
+            "R": [round(c[0] * 255) for c in rgba],
+            "G": [round(c[1] * 255) for c in rgba],
+            "B": [round(c[2] * 255) for c in rgba],
+            "A": [255] * n,
+            "I": [round(i * 255 / (n - 1)) for i in range(n)],
+        }
+    except (ImportError, KeyError):
+        if name in ("RdBu_r", "RdBu"):
+            # Diverging red-blue (ColorBrewer 11-class reversed)
+            nodes_hex = [
+                "#053061",
+                "#2166ac",
+                "#4393c3",
+                "#92c5de",
+                "#d1e5f0",
+                "#f7f7f7",
+                "#fddbc7",
+                "#f4a582",
+                "#d6604d",
+                "#b2182b",
+                "#67001f",
+            ]
+            if name == "RdBu":
+                nodes_hex = nodes_hex[::-1]
+            nodes_rgb = [(int(h[1:3], 16), int(h[3:5], 16), int(h[5:7], 16)) for h in nodes_hex]
+            import numpy as np
+
+            x_nodes = np.linspace(0, 1, len(nodes_hex))
+            x_eval = np.linspace(0, 1, n)
+            r = np.interp(x_eval, x_nodes, [c[0] for c in nodes_rgb])
+            g = np.interp(x_eval, x_nodes, [c[1] for c in nodes_rgb])
+            b = np.interp(x_eval, x_nodes, [c[2] for c in nodes_rgb])
+            return {
+                "R": [int(round(v)) for v in r],
+                "G": [int(round(v)) for v in g],
+                "B": [int(round(v)) for v in b],
+                "A": [255] * n,
+                "I": [round(i * 255 / (n - 1)) for i in range(n)],
+            }
+        raise
 
 
 @dataclass

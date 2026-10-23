@@ -9,11 +9,8 @@ import numpy as np
 import pytest
 
 from fixtures import icosphere
-
-pytest.importorskip("matplotlib")
-
-from pybiscuit.io import read_protocol_table, write_func_gii, write_label_gii, write_surf_gii  # noqa: E402
-from pybiscuit.viz import html as H  # noqa: E402
+from pybiscuit.io import read_protocol_table, write_func_gii, write_label_gii, write_surf_gii
+from pybiscuit.viz import html as H
 
 
 @pytest.fixture
