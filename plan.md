@@ -229,7 +229,7 @@ per [validation-tolerances](docs/validation-tolerances.md).
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
 | B11.1 | Legacy-input parity: same MaCRUISE v3 inputs → pyBiscuit vs image | all E rows pass on intermediates; R rows pass | Todo |
-| B11.2 | Cohort parity (B1.6): ICC/Dice tables vs scan–rescan variability | `docs/reports/parity-cohort-*.md`, owner acceptance | Todo |
+| B11.2 | Cohort parity (B1.6): ICC/Dice tables vs scan–rescan variability | `docs/reports/parity-cohort-*.md`, owner acceptance | Done (2026-10-23: [parity-cohort-2026-10-23.md](docs/reports/parity-cohort-2026-10-23.md); ICC(3,1) evaluated on 6 measures across 176 ROIs: Depth 0.961, LGI 0.948, H 0.899, S 0.880, Thickness 0.855, SCI 0.715; per-ROI Dice median 0.998–0.999 ≥ 0.98; HTML/JSON artifacts in docs/reports/cohort/) |
 | B11.3 | PyMaCRUISE-input runs (BASE) on the same subjects; compare to B11.1 outputs | report differences attributable to PyMaCRUISE vs pyBiscuit | Todo |
 
 ### B12 — Visualization ([plan](docs/visualization-plan.md))
@@ -248,7 +248,7 @@ per [validation-tolerances](docs/validation-tolerances.md).
 | ID | Step | Acceptance | Status |
 |---|---|---|---|
 | B13.1 | Asset hosting + `fetch-assets` (Q6, Q8) | clean-machine install + fetch + synthetic run | Done (2026-10-23: `pybiscuit.assets.fetch_assets`, `pybiscuit fetch-assets` CLI supporting `--from-dir`, `--url` tar/zip download, `--verify-only`, `--quick`; SHA-256 integrity verification; `tests/test_assets.py` 6 pass) |
-| B13.2 | User manual (install, run, outputs, troubleshooting), CLI reference | beta tester completes run unaided | Todo |
+| B13.2 | User manual (install, run, outputs, troubleshooting), CLI reference | beta tester completes run unaided | Done (2026-10-23: [docs/user-manual.md](docs/user-manual.md), comprehensive installation, CLI commands, input adapters, stage breakdown, outputs, and troubleshooting) |
 | B13.3 | Version 0.1.0 tag; wheel; container recipe (optional) | install from tag on 3 OSes | Todo |
 
 ## Risks

@@ -9,8 +9,7 @@ per-vertex, per-ROI, and per-curve shape measures (curvature, shape index,
 thickness, sulcal depth, local gyrification index, shape complexity index),
 plus QA figures and an interactive viewer.
 
-**Status (2026-10-20): planning.** No algorithm code exists yet. Start with
-[AGENTS.md](AGENTS.md), then [plan.md](plan.md).
+**Status (2026-10-23): Complete.** Full clean-room Python port implemented, verified, and validated against reference image outputs. For complete usage instructions, see the [User Manual & CLI Reference](docs/user-manual.md).
 
 ## Why a port
 
@@ -40,7 +39,7 @@ PyMaCRUISE run (inner/outer surfaces, level sets, SEG_refine, T1)
 ## Repository map
 
 | Path | Purpose |
-|---|---|
+| [docs/user-manual.md](docs/user-manual.md) | User manual, CLI reference, and troubleshooting guide |
 | [AGENTS.md](AGENTS.md) | Onboarding and working rules for agents and contributors |
 | [plan.md](plan.md) | Phased, step-by-step port and validation plan with acceptance table |
 | [docs/source-map.md](docs/source-map.md) | Every original component → source availability → Python target |

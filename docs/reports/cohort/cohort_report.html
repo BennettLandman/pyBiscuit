@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<title>pyBiscuit Cohort &amp; Parity Report</title>
+<style>
+body { font-family: -apple-system, sans-serif; margin: 30px; background: #fafafa; }
+h1, h2, h3 { color: #111; margin-bottom: 8px; }
+table { border-collapse: collapse; width: 100%; margin-bottom: 24px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 4px; }
+th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #e1e4e8; font-size: 14px; }
+th { background: #f6f8fa; font-weight: 600; color: #24292e; }
+tr:hover { background: #f9f9f9; }
+.badge-ok { background: #28a745; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+.badge-warn { background: #ffc107; color: #212529; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+.card { background: #fff; padding: 20px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; }
+</style>
+</head>
+<body>
+<h1>pyBiscuit Cohort &amp; Parity Report</h1>
+<p><strong>Cohort Size:</strong> 3 subjects (3 complete, 0 incomplete)</p>
+<div class='card'>
+<h2>Subjects Overview</h2>
+<table>
+<tr><th>Subject ID</th><th>Status</th><th>Missing Items</th></tr>
+<tr><td><strong>0050952</strong></td><td><span class='badge-ok'>OK</span></td><td>None</td></tr>
+<tr><td><strong>0050961</strong></td><td><span class='badge-ok'>OK</span></td><td>None</td></tr>
+<tr><td><strong>0050971</strong></td><td><span class='badge-ok'>OK</span></td><td>None</td></tr>
+</table></div>
+<div class='card'>
+<h2>Parity Comparison vs Reference</h2>
+<h3>Subject: 0050952</h3>
+<h4>Parcellation Agreement (Dice & Accuracy)</h4>
+<table><tr><th>Protocol / Hemisphere</th><th>Accuracy</th><th>Median Dice</th><th>Min Dice</th></tr>
+<tr><td>braincolor_lh</td><td>1.0000</td><td>1.0000</td><td>1.0000</td></tr>
+<tr><td>braincolor_rh</td><td>1.0000</td><td>1.0000</td><td>1.0000</td></tr>
+<tr><td>dkt31_lh</td><td>1.0000</td><td>1.0000</td><td>1.0000</td></tr>
+<tr><td>dkt31_rh</td><td>1.0000</td><td>1.0000</td><td>1.0000</td></tr>
+</table>
+<h4>Per-Vertex Scalar Map Agreement</h4>
+<table><tr><th>Measure File</th><th>Pearson r</th><th>MAE</th><th>Max Abs Diff</th><th>Bland-Altman Bias</th><th>95% LOA</th></tr>
+<tr><td>lh.mid.H.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.mid.H.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.mid.S.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.mid.S.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.gray.SD.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.gray.SD.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.thickness.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.thickness.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.gray.LGI.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.gray.LGI.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.mid.SCI.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.mid.SCI.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+</table>
+<h3>Subject: 0050961</h3>
+<h4>Parcellation Agreement (Dice & Accuracy)</h4>
+<table><tr><th>Protocol / Hemisphere</th><th>Accuracy</th><th>Median Dice</th><th>Min Dice</th></tr>
+<tr><td>braincolor_lh</td><td>1.0000</td><td>1.0000</td><td>1.0000</td></tr>
+<tr><td>braincolor_rh</td><td>1.0000</td><td>1.0000</td><td>1.0000</td></tr>
+<tr><td>dkt31_lh</td><td>1.0000</td><td>1.0000</td><td>1.0000</td></tr>
+<tr><td>dkt31_rh</td><td>1.0000</td><td>1.0000</td><td>1.0000</td></tr>
+</table>
+<h4>Per-Vertex Scalar Map Agreement</h4>
+<table><tr><th>Measure File</th><th>Pearson r</th><th>MAE</th><th>Max Abs Diff</th><th>Bland-Altman Bias</th><th>95% LOA</th></tr>
+<tr><td>lh.mid.H.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.mid.H.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.mid.S.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.mid.S.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.gray.SD.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.gray.SD.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.thickness.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.thickness.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.gray.LGI.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.gray.LGI.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.mid.SCI.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.mid.SCI.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+</table>
+<h3>Subject: 0050971</h3>
+<h4>Parcellation Agreement (Dice & Accuracy)</h4>
+<table><tr><th>Protocol / Hemisphere</th><th>Accuracy</th><th>Median Dice</th><th>Min Dice</th></tr>
+<tr><td>braincolor_lh</td><td>1.0000</td><td>1.0000</td><td>1.0000</td></tr>
+<tr><td>braincolor_rh</td><td>1.0000</td><td>1.0000</td><td>1.0000</td></tr>
+<tr><td>dkt31_lh</td><td>1.0000</td><td>1.0000</td><td>1.0000</td></tr>
+<tr><td>dkt31_rh</td><td>1.0000</td><td>1.0000</td><td>1.0000</td></tr>
+</table>
+<h4>Per-Vertex Scalar Map Agreement</h4>
+<table><tr><th>Measure File</th><th>Pearson r</th><th>MAE</th><th>Max Abs Diff</th><th>Bland-Altman Bias</th><th>95% LOA</th></tr>
+<tr><td>lh.mid.H.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.mid.H.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.mid.S.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.mid.S.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.gray.SD.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.gray.SD.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.thickness.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.thickness.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.gray.LGI.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.gray.LGI.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>lh.mid.SCI.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+<tr><td>rh.mid.SCI.txt</td><td>1.000000</td><td>0.00000</td><td>0.00000</td><td>0.00000</td><td>[0.0000, 0.0000]</td></tr>
+</table>
+</div>
+<div class='card'>
+<h2>Outlier Flags (|z| &ge; 3.0)</h2>
+<p>No outliers detected across protocols.</p>
+</div>
+</body>
+</html>
