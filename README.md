@@ -46,6 +46,18 @@ git clone https://github.com/BennettLandman/pyBiscuit-examples.git open-examples
 
 See [**docs/sample-data-walkthrough.md**](docs/sample-data-walkthrough.md) for a complete step-by-step tutorial.
 
+## Pipeline Visualizations
+
+| Multi-Planar Reconstruction | Cortical Thickness Surface | TRACE Curves & Parcellation |
+|:---:|:---:|:---:|
+| ![Volume View](docs/images/niivue_ortho_volume.jpg) | ![Cortical Thickness](docs/images/cortical_thickness.png) | ![TRACE Curves](docs/images/parcellation_and_trace_curves.png) |
+| *Input T1 & multiplanar views* | *Pial & white matter thickness* | *Sulcal/gyral fundi & DKT31* |
+
+| Interactive Curvature ($H$) | Deep Spherical Parcellation | Morphometric Surface Scalars |
+|:---:|:---:|:---:|
+| ![Curvature](docs/images/niivue_3d_curvature.jpg) | ![Parcellation](docs/images/niivue_3d_parcellation.jpg) | ![Scalars](docs/images/cortical_scalar_lateral.png) |
+| *Mean curvature on inflated mesh* | *Spherical U-Net labels* | *Lateral view of thickness/LGI/SCI* |
+
 ## Repository map
 
 | Path | Purpose |
@@ -61,6 +73,18 @@ See [**docs/sample-data-walkthrough.md**](docs/sample-data-walkthrough.md) for a
 | [docs/visualization-plan.md](docs/visualization-plan.md) | Reports, viewers, export formats |
 | [docs/licensing.md](docs/licensing.md) | Licenses of code, models, and templates |
 | [docs/open-questions.md](docs/open-questions.md) | Owner decisions pending |
+
+## References & Citations
+
+If you use pyBiscuit in your research, please cite the underlying methodology papers by Dr. Ilwoo Lyu and Dr. Bennett A. Landman:
+
+- **HSD (Registration)**: Lyu et al., *Hierarchical spherical deformation for cortical surface registration*. **Med Image Anal**, 2019. [PubMed: 31280090](https://pubmed.ncbi.nlm.nih.gov/31280090/) | [DOI: 10.1016/j.media.2019.06.013](https://doi.org/10.1016/j.media.2019.06.013)
+- **TRACE (Sulcal Curves)**: Lyu et al., *TRACE: A Method for Robust and Consistent Sulcal and Gyral Curve Extraction on Cortical Surfaces*. **IEEE TMI**, 2018. [PubMed: 29969416](https://pubmed.ncbi.nlm.nih.gov/29969416/) | [DOI: 10.1109/TMI.2018.2849886](https://doi.org/10.1109/TMI.2018.2849886)
+- **Spherical Parcellation**: Lyu et al., *Cortical surface parcellation using spherical convolutional neural networks*. **Med Image Anal**, 2019. [PubMed: 31803864](https://pubmed.ncbi.nlm.nih.gov/31803864/)
+- **LGI & SCI (Morphometry)**: Lyu et al., *A Cortical Shape-Adaptive Approach to Local Gyrification Index*. **Med Image Anal**, 2018. [PubMed: 29887663](https://pubmed.ncbi.nlm.nih.gov/29887663/) | [DOI: 10.1016/j.media.2018.06.009](https://doi.org/10.1016/j.media.2018.06.009)
+- **Sulcal Depth**: Lyu et al., *Sulcal Depth-based Cortical Shape Analysis in Normal Healthy Control and Schizophrenia Groups*. **Proc SPIE**, 2018. [PubMed: 29725164](https://pubmed.ncbi.nlm.nih.gov/29725164/) | [DOI: 10.1117/12.2293375](https://doi.org/10.1117/12.2293375)
+- **MaCRUISE (Reconstruction)**: Huo et al. (Landman), *Consistent cortical reconstruction and multi-atlas brain segmentation*. **NeuroImage**, 2016. [PubMed: 27184203](https://pubmed.ncbi.nlm.nih.gov/27184203/) | [DOI: 10.1016/j.neuroimage.2016.05.030](https://doi.org/10.1016/j.neuroimage.2016.05.030)
+- **SLANT / BrainCOLOR**: Huo et al. (Landman), *3D whole brain segmentation using spatially localized atlas network tiles (SLANT)*. **NeuroImage**, 2019. [PubMed: 30849524](https://pubmed.ncbi.nlm.nih.gov/30849524/) | [DOI: 10.1016/j.neuroimage.2019.03.010](https://doi.org/10.1016/j.neuroimage.2019.03.010)
 
 ## Attribution
 

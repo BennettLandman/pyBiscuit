@@ -409,3 +409,37 @@ vi = collect_inputs(gii_files, title="Subject 0050952 QA")
 write_viewer("/tmp/viewer_demo.html", vi, embed=True)
 ```
 Open `/tmp/viewer_demo.html` in any browser to rotate, zoom, and inspect meshes, overlays, and labels in real-time.
+
+---
+
+## 11. Primary Literature & PubMed Citations
+
+When referencing individual sub-components in academic publications, please cite the corresponding methodology papers:
+
+- **Surface Preparation & MaCRUISE (`surfprep`)**:
+  Huo, Y., Plassard, C. A., Carass, A., Resnick, S. M., Pham, D. L., Prince, J. L., & Landman, B. A. (2016). *Consistent cortical reconstruction and multi-atlas brain segmentation*. **NeuroImage**, 138, 197–210.
+  [PubMed: 27184203](https://pubmed.ncbi.nlm.nih.gov/27184203/) | [DOI: 10.1016/j.neuroimage.2016.05.030](https://doi.org/10.1016/j.neuroimage.2016.05.030)
+
+- **Harmonic Spherical Deformation (`hsd`)**:
+  Lyu, I., Kang, H., Woodward, N. D., Styner, M. A., & Landman, B. A. (2019). *Hierarchical spherical deformation for cortical surface registration*. **Medical Image Analysis**, 57, 72–88.
+  [PubMed: 31280090](https://pubmed.ncbi.nlm.nih.gov/31280090/) | [DOI: 10.1016/j.media.2019.06.013](https://doi.org/10.1016/j.media.2019.06.013)
+
+- **TRACE Curve Extraction (`trace`)**:
+  Lyu, I., Kim, S. H., Woodward, N. D., Styner, M. A., & Landman, B. A. (2018). *TRACE: A Method for Robust and Consistent Sulcal and Gyral Curve Extraction on Cortical Surfaces*. **IEEE Transactions on Medical Imaging**, 37(11), 2488–2498.
+  [PubMed: 29969416](https://pubmed.ncbi.nlm.nih.gov/29969416/) | [DOI: 10.1109/TMI.2018.2849886](https://doi.org/10.1109/TMI.2018.2849886)
+
+- **Cortical Parcellation (`parc`)**:
+  Lyu, I., Kang, H., Woodward, N. D., & Landman, B. A. (2019). *Cortical surface parcellation using spherical convolutional neural networks*. **Medical Image Analysis**.
+  [PubMed: 31803864](https://pubmed.ncbi.nlm.nih.gov/31803864/)
+
+- **Local Gyrification Index & Shape Complexity (`quant` / `lgi`, `sci`)**:
+  Lyu, I., Kim, S. H., Girault, J. B., Mostapha, M., Park, S. C., Nir, T. M., Jahanshad, N., Thompson, P. M., Piven, J., Hazlett, H. C., & Styner, M. A. (2018). *A Cortical Shape-Adaptive Approach to Local Gyrification Index*. **Medical Image Analysis**, 48, 244–258.
+  [PubMed: 29887663](https://pubmed.ncbi.nlm.nih.gov/29887663/) | [DOI: 10.1016/j.media.2018.06.009](https://doi.org/10.1016/j.media.2018.06.009)
+
+- **Sulcal Depth (`quant` / `sulcal-depth`)**:
+  Lyu, I., Kang, H., Woodward, N. D., & Landman, B. A. (2018). *Sulcal Depth-based Cortical Shape Analysis in Normal Healthy Control and Schizophrenia Groups*. **Proceedings of SPIE**, 10574, 105740U.
+  [PubMed: 29725164](https://pubmed.ncbi.nlm.nih.gov/29725164/) | [DOI: 10.1117/12.2293375](https://doi.org/10.1117/12.2293375)
+
+- **Multi-Atlas Segmentation & BrainCOLOR Protocol**:
+  Huo, Y., Xu, Z., Xiong, Y., Aboud, K., Parvathaneni, P., Bao, S., Bermudez, C., Resnick, S. M., Cutting, L. E., & Landman, B. A. (2019). *3D whole brain segmentation using spatially localized atlas network tiles (SLANT)*. **NeuroImage**, 194, 105–119.
+  [PubMed: 30849524](https://pubmed.ncbi.nlm.nih.gov/30849524/) | [DOI: 10.1016/j.neuroimage.2019.03.010](https://doi.org/10.1016/j.neuroimage.2019.03.010)
