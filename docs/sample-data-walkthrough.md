@@ -125,7 +125,7 @@ pybiscuit klaplace \
   -o /tmp/lh.laplace_thickness.txt
 ```
 
-![Laplace PDE Streamlines](images/klaplace_streamlines.svg)
+![Laplace PDE Streamlines](images/klaplace_streamlines.png)
 *Figure: Laplace PDE equipotentials ($\Phi \in [0, 1]$) and orthogonal streamline trajectories through gray matter.*
 
 ![Cortical Thickness Surface](images/cortical_thickness.png)
@@ -163,7 +163,7 @@ pybiscuit lgi \
   -o /tmp/lh.gray.LGI.txt
 ```
 
-![LGI and Geodesic Sulcal Depth Principle](images/lgi_and_sulcal_depth.svg)
+![LGI and Geodesic Sulcal Depth Principle](images/lgi_and_sulcal_depth.png)
 *Figure: Geometric formulation of Local Gyrification Index ($\text{LGI} = A_{\text{pial}} / A_{\text{hull}}$) and Geodesic Sulcal Depth from the outer cerebral hull.*
 
 #### F. Deep Spherical Parcellation (`pybiscuit parc`)

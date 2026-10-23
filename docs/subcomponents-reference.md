@@ -46,7 +46,7 @@ Replaces `run_postproc_macruise_pipeline.m`, `hemi_separation.m`, and FreeSurfer
 
 ### Input / Output Illustration
 
-![Surface Preparation and Hemisphere Separation](images/surfprep_hemisplit.svg)
+![Surface Preparation and Hemisphere Separation](images/surfprep_hemisplit.png)
 
 | Stage | Input Artifacts | Output Artifacts | Description |
 |---|---|---|---|
@@ -344,9 +344,9 @@ pybiscuit trace \
 
 ### Input / Output Illustration
 
-![Local Gyrification and Sulcal Depth Principles](images/lgi_and_sulcal_depth.svg)
+![Local Gyrification and Sulcal Depth Principles](images/lgi_and_sulcal_depth.png)
 
-![Laplace PDE Streamlines](images/klaplace_streamlines.svg)
+![Laplace PDE Streamlines](images/klaplace_streamlines.png)
 
 | Measure | Primary Inputs | Math Formulation | Output File | Units |
 |---|---|---|---|---|
