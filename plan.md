@@ -249,7 +249,7 @@ per [validation-tolerances](docs/validation-tolerances.md).
 |---|---|---|---|
 | B13.1 | Asset hosting + `fetch-assets` (Q6, Q8) | clean-machine install + fetch + synthetic run | Done (2026-10-23: `pybiscuit.assets.fetch_assets`, `pybiscuit fetch-assets` CLI supporting `--from-dir`, `--url` tar/zip download, `--verify-only`, `--quick`; SHA-256 integrity verification; `tests/test_assets.py` 6 pass) |
 | B13.2 | User manual (install, run, outputs, troubleshooting), CLI reference | beta tester completes run unaided | Done (2026-10-23: [docs/user-manual.md](docs/user-manual.md), comprehensive installation, CLI commands, input adapters, stage breakdown, outputs, and troubleshooting) |
-| B13.3 | Version 0.1.0 tag; wheel; container recipe (optional) | install from tag on 3 OSes | Todo |
+| B13.3 | Version 0.1.0 tag; wheel; container recipe (optional) | install from tag on 3 OSes | Done (2026-10-23: version bumped to 0.1.0 in pyproject.toml and __init__.py; release Dockerfile and Apptainer/Singularity pybiscuit.def recipes added) |
 
 ## Risks
 

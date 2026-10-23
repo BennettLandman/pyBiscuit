@@ -1,0 +1,27 @@
+Bootstrap: docker
+From: python:3.11-slim
+
+%labels
+    Maintainer Bennett Landman <bennett.landman@vanderbilt.edu>
+    Version 0.1.0
+    Description pyBiscuit: Python port of BISCUIT cortical surface morphometry pipeline
+
+%environment
+    export DEBIAN_FRONTEND=noninteractive
+    export PYTHONUNBUFFERED=1
+    export PYBISCUIT_ASSETS=/opt/biscuit/assets
+    export LC_ALL=C.UTF-8
+
+%post
+    apt-get update && apt-get install -y --no-install-recommends \
+        libgl1-mesa-glx \
+        libglib2.0-0 \
+        libgomp1 \
+        ca-certificates
+    rm -rf /var/lib/apt/lists/*
+
+    pip install --no-cache-dir --upgrade pip
+    pip install --no-cache-dir pybiscuit[parc,viz]
+
+%runscript
+    exec pybiscuit "$@"
