@@ -44,15 +44,18 @@ def main(argv: list[str] | None = None) -> int:
         ("outer-hull", "cerebral outer hull of a surface (port of OuterHull; provisional)"),
         ("sulcal-depth", "sulcal depth of a pial surface (port of sulcal_depth.m; provisional)"),
         ("lgi-pipeline", "BISCUIT's TRACE + LGI phases on <h>.gray.vtk / <h>.white.vtk (brief 20)"),
+        ("sci", "shape complexity index (port of ShapeComplexityIndex; spec §9.4)"),
     ):
         sub.add_parser(name, help=text, add_help=False)
-    if argv and argv[0] in ("lgi", "outer-hull", "sulcal-depth", "lgi-pipeline"):
+    if argv and argv[0] in ("lgi", "outer-hull", "sulcal-depth", "lgi-pipeline", "sci"):
         if argv[0] == "lgi":
             from .quant.lgi_cli import main as quant_main
         elif argv[0] == "sulcal-depth":
             from .quant.sulcal_depth_cli import main as quant_main
         elif argv[0] == "lgi-pipeline":
             from .quant.lgi_pipeline_cli import main as quant_main
+        elif argv[0] == "sci":
+            from .quant.sci_cli import main as quant_main
         else:
             from .quant.hull_cli import main as quant_main
 

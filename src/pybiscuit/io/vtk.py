@@ -7,6 +7,7 @@ and are written back when set.
 
 from __future__ import annotations
 
+import gzip
 import re
 from pathlib import Path
 
@@ -83,9 +84,12 @@ class _Reader:
 
 
 def read_vtk(path) -> Mesh:
-    """Read a legacy VTK POLYDATA triangle mesh (ASCII or binary)."""
+    """Read a legacy VTK POLYDATA triangle mesh (ASCII or binary, optionally gzip-compressed)."""
     path = Path(path)
-    r = _Reader(path.read_bytes(), path)
+    data = path.read_bytes()
+    if data[:2] == b"\x1f\x8b":
+        data = gzip.decompress(data)
+    r = _Reader(data, path)
     version = r.line()
     if not version.startswith("# vtk DataFile"):
         raise r.err("not a legacy VTK file (missing '# vtk DataFile' header)")
