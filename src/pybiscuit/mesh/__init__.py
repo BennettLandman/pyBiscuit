@@ -1,6 +1,6 @@
 """pybiscuit.mesh"""
 
-from . import curvature, geometry, sphere_map  # noqa: F401
+from . import curvature, deform, geometry, property, sphere_map  # noqa: F401
 from .model import Mesh
 from .topology import (
     boundary_edges,
@@ -23,7 +23,9 @@ from .topology import (
 
 __all__ = [
     "curvature",
+    "deform",
     "geometry",
+    "property",
     "sphere_map",
     "Mesh",
     "boundary_edges",
