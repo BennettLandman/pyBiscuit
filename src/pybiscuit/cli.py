@@ -81,10 +81,15 @@ def main(argv: list[str] | None = None) -> int:
     # --- viz (brief 09): view/render; implementation lives in pybiscuit.viz.cli ---
     sub.add_parser("view", help="desktop surface viewer (needs pybiscuit[viz])", add_help=False)
     sub.add_parser("render", help="render PNG panels (needs pybiscuit[viz])", add_help=False)
+    sub.add_parser("report", help="QA PDF report generator (spec §11)", add_help=False)
     if argv and argv[0] in ("view", "render"):
         from .viz.cli import main as viz_main
 
         return viz_main(argv)
+    if argv and argv[0] == "report":
+        from .viz.report import report_main
+
+        return report_main(argv[1:])
     # --- end viz ---
     # --- surfprep (brief 12): mesh-contour, hemi-split; implementation in pybiscuit.surfprep.cli
     sub.add_parser("mesh-contour", help="MeshContour stand-in (cutting plane)", add_help=False)
