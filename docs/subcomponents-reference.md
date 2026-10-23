@@ -44,6 +44,17 @@ Replaces `run_postproc_macruise_pipeline.m`, `hemi_separation.m`, and FreeSurfer
   - `inflate_surface`: Produces `smoothwm` (3-pass smoothing), `inflated` (outward metric expansion), and signed sulcal depth (`sulc`).
   - `map_to_sphere`: Distortion-minimizing spherical conformal relaxation onto a 100 mm radius sphere.
 
+### Input / Output Illustration
+
+![Surface Preparation and Hemisphere Separation](images/surfprep_hemisplit.svg)
+
+| Stage | Input Artifacts | Output Artifacts | Description |
+|---|---|---|---|
+| **Hemisphere Cut** | Bilateral mesh (`*.vtk`) | `lh.orig.vtk`, `rh.orig.vtk` | Minimal cut-contour plane separation |
+| **Medial Closure** | Boundary open cut seam | Genus-0 closed mesh | 2D Delaunay triangulation + harmonic interior coordinates |
+| **Inflation & Sphere** | `lh.white.vtk`, `lh.pial.vtk` | `lh.inflated.vtk`, `lh.sphere.vtk` | Outward metric expansion & conformal spherical projection |
+| **Volume Synthesis** | `T1.nii.gz`, `SEG_refine.nii.gz` | `aseg.mgz`, `wm.mgz`, `brain.mgz` | Synthetic FreeSurfer-compatible volume representations |
+
 ### CLI Examples
 ```bash
 # Hemisphere separation on a bilateral surface
@@ -90,6 +101,17 @@ pybiscuit mesh-property <input.vtk> [options]
 | `--normbefore` / `--normafter` | Z-score normalize scalar values before or after smoothing |
 | `--invert` | Invert scalar signs (multiply by $-1$) |
 | `-q`, `--quiet` | Suppress console logging |
+
+### Input / Output Illustration
+
+![Mean Curvature on Cortical Surface](images/niivue_3d_curvature.jpg)
+
+| Property | Input Surface | Output Metric | Typical Range | Meaning |
+|---|---|---|---|---|
+| **Mean Curvature ($H$)** | `lh.mid.vtk` | `<prefix>.H.txt` | $[-1.5, +1.5]\text{ mm}^{-1}$ | Sulcal fundi ($H > 0$), gyral crests ($H < 0$) |
+| **Shape Index ($S$)** | `lh.mid.vtk` | `<prefix>.S.txt` | $[-1.0, +1.0]$ | Spherical cup ($-1$), saddle ($0$), cap ($+1$) |
+| **Gaussian Curvature ($K$)** | `lh.mid.vtk` | `<prefix>.K.txt` | $[-2.0, +2.0]\text{ mm}^{-2}$ | Intrinsic local Gaussian curvature |
+| **Vertex Area** | `lh.mid.vtk` | `<prefix>.VertArea.txt` | $[0.1, 2.5]\text{ mm}^2$ | Barycentric voronoi dual cell surface area |
 
 ### Example on Sample Data
 ```bash
@@ -149,6 +171,14 @@ pybiscuit spherical-remesh -p <input_sphere.vtk> -s <target_mesh.vtk> -r <coeff.
 | `--deg N` | Spherical harmonics degree expansion (default: 10) |
 | `-d`, `--outputProperty` | Resample per-vertex scalar file instead of surface geometry |
 
+### Input / Output Illustration
+
+![Uniform Icosphere Target](images/icosphere_mesh.png)
+
+| Input Mesh / Property | Target Reference | Algorithm | Output Artifact |
+|---|---|---|---|
+| Native subject sphere (`lh.sphere.vtk`, $N \approx 137\text{k}$) | Standard icosahedron (`sphere_327680.vtk`, $V=163,842$) | Spherical Harmonic Resampling & Barycentric Interpolation | Resampled aligned surface (`lh.mid.reg.vtk`) or scalar map (`lh.mid.reg.H.txt`) |
+
 ### Example on Sample Data
 ```bash
 # Resample subject mid-surface onto template sphere using image registration coefficients:
@@ -186,6 +216,14 @@ pybiscuit register -s <sphere.vtk> -t <template_dir> -o <out_dir> -h <lh|rh> [op
 | `--route` | Registration route: `macruise` or `fs` (FreeSurfer) |
 | `--nThreads N` | Parallel CPU threads for Numba/OpenMP kernels |
 
+### Input / Output Illustration
+
+![HSD Template Target](images/hsd_template_sphere.png)
+
+| Input Geometry / Features | Template Target | Optimization Formulation | Output Artifacts |
+|---|---|---|---|
+| Native spherical mesh (`lh.sphere.vtk`) + Sulcal depth (`lh.sulc`) | Multi-subject template (`lh.atlas.sphere.vtk`, e.g. MB101) | Multi-resolution Spherical Harmonics ($L \le 8$) Energy Minimization | Deformation coefficients (`lh.coeff.txt`) and registered sphere (`lh.sphere.reg.vtk`) |
+
 ### Example on Sample Data
 ```bash
 pybiscuit register \
@@ -210,6 +248,16 @@ Replaces `parc.m`, `gcut.m`, and `roi_correction.m`. Takes multi-scale cortical 
 3. **Probability Fusion**: Softmax probability averaging on native spherical coordinates.
 4. **Graph Cut**: Licence-clean Boykov-Veksler-Zabih (BVZ 2001) $\alpha$-expansion using Numba-compiled Dinic max-flow.
 5. **ROI Island Cleanup**: Eliminates disjoint spurious fragments and enforces contiguous cortical regions.
+
+### Input / Output Illustration
+
+![Deep Cortical Parcellation](images/niivue_3d_parcellation.jpg)
+
+| Stage | Input Artifacts | Output Artifacts | Characteristics |
+|---|---|---|---|
+| **Features** | `curv`, `sulc`, `iH` | Normalized spherical feature matrix | Soft-clamped in $[-4, +4]$ |
+| **Inference** | Feature tensor on `ico5` | Multi-class softmax logits | 65 classes (DKT31) or 111 classes (BrainCOLOR) |
+| **Graph Cut & Cleanup** | Logits + Surface adjacency | `<hemi>.parc.<protocol>.txt` / `label.gii` | Globally regularized, contiguous anatomical regions |
 
 ### CLI Syntax
 ```bash
@@ -265,6 +313,15 @@ pybiscuit trace -i <surface.vtk> -o <output_prefix> [options]
 | `--epRad R` | End point search radius in mm |
 | `--bary` | Emit barycentric coordinate representations (`.bary`) |
 
+### Input / Output Illustration
+
+![TRACE Curves Over Parcellated Cortex](images/parcellation_and_trace_curves.png)
+
+| Extraction | Target Surface | Method | Output Files |
+|---|---|---|---|
+| **Sulcal Fundi** | `lh.gray.vtk` (pial) | Geodesic depth minima tracking | `lh.gray.scurve` (3D points), `lh.gray.scurve.bary` (face index + barycentric weights) |
+| **Gyral Crests** | `lh.white.vtk` (white) | Geodesic height maxima ridge walking | `lh.white.gcurve` (3D points), `lh.white.gcurve.bary` |
+
 ### Example on Sample Data
 ```bash
 # 1. Sulcal fundi on pial surface
@@ -284,6 +341,20 @@ pybiscuit trace \
 ---
 
 ## 8. Cortical Morphometry Quantification (`pybiscuit.quant`)
+
+### Input / Output Illustration
+
+![Local Gyrification and Sulcal Depth Principles](images/lgi_and_sulcal_depth.svg)
+
+![Laplace PDE Streamlines](images/klaplace_streamlines.svg)
+
+| Measure | Primary Inputs | Math Formulation | Output File | Units |
+|---|---|---|---|---|
+| **Outer Hull** | `lh.gray.vtk` (pial) | 3D closing + dilation + marching cubes | `lh.hull.vtk` | 3D mesh ($V \approx 137\text{k}$) |
+| **klaplace** | `lh.white.vtk`, `lh.pial.vtk`, `SEG_refine.nii.gz` | Laplace PDE $\nabla^2 \Phi = 0$ + RK4 streamline integration | `lh.laplace_thickness.txt` | $\text{mm}$ (cortical thickness) |
+| **LGI** | `lh.pial.vtk`, `lh.hull.vtk` | Geodesic disc intersection $\frac{A_{\text{pial}}}{A_{\text{hull}}}$ | `lh.gray.LGI.txt` | Ratio ($\ge 1.0$, typically 2–6) |
+| **SCI** | `lh.mid.vtk` | Multi-scale Earth Mover's Distance simplex cost | `lh.mid.SCI.txt` | Dimensionless index $[0, 1]$ |
+| **Sulcal Depth** | `lh.pial.vtk`, `lh.hull.vtk` | Geodesic propagation from hull contact boundary | `lh.gray.SD.txt` | $\text{mm}$ (distance along cortex) |
 
 ### A. Outer Cerebral Hull (`pybiscuit outer-hull`)
 *Port of `OuterHull`*. Generates a smooth, enveloping outer cerebral hull mesh around the pial surface by voxelizing the mesh, applying morphological 3D closing and dilation, extracting an isosurface, and registering it via iterative closest points (ICP).
@@ -349,6 +420,12 @@ Replaces `surf_quant_stat_pipeline.m`. Aggregates all six cortical measures ($H,
 - Resamples native subject scalar maps through registered spheres onto the standard `sphere_327680` template.
 - Writes identical CSV tables (`stats.dkt31.csv`, `stats.braincolor.csv`) and template maps (`stat/*.reg.*`).
 
+### Input / Output Illustration
+
+| Input Data | Processing | Output Structure | Key Columns |
+|---|---|---|---|
+| Parcellation labels (`roi/*.txt`) + 6 scalar metrics (`quant/*.txt`) + TRACE curves (`curve/*.bary`) | Voronoi area-weighted integration & sample standard deviation | 28-column CSV (`stats.<protocol>.csv`) | `[ROI_ID, Area, Mean_H, Std_H, Mean_S, Std_S, Mean_SD, Std_SD, Mean_CT, Std_CT, Mean_SCI, Std_SCI, Mean_LGI, Std_LGI, ...]` |
+
 ### CLI Syntax
 ```bash
 python -m pybiscuit.stats.cli <subject_or_run_dir> [options]
@@ -367,6 +444,16 @@ python -m pybiscuit.stats.cli \
 ---
 
 ## 10. Visualization, QA Reports & Cohort Parity (`pybiscuit.viz`)
+
+### Input / Output Illustration
+
+![Cortical Morphometric Overlays](images/cortical_scalar_lateral.png)
+
+| Tool | Inputs | Generation Method | Final Deliverable |
+|---|---|---|---|
+| **QA PDF Report** | Native meshes, labels, curves, and metrics | Multi-page report geometry with vector graphics | `PDF/biscuit.pdf` (4 pages matching legacy layout) |
+| **Cohort Parity** | Multi-subject run directories | Bland-Altman agreement, intra-class correlation (ICC 3,1) | `cohort_report.html`, `cohort_summary.json` |
+| **3D WebGL Viewer** | Surface GIfTIs (`*.surf.gii`) + Overlays (`*.func.gii`, `*.label.gii`) | Embedded base64 NiiVue engine (zero web server) | `qa/index_embedded.html` (single offline file) |
 
 ### A. QA Multi-Page PDF Generator (`pybiscuit report`)
 Creates a merged `PDF/biscuit.pdf` with exact page heights:

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" width="100%" height="100%">
+  <defs>
+    <linearGradient id="gmGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fdf0ed"/>
+      <stop offset="100%" stop-color="#e8f4fd"/>
+    </linearGradient>
+    <marker id="streamArrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0070f3"/>
+    </marker>
+  </defs>
+
+  <rect width="800" height="320" fill="#ffffff" rx="8"/>
+
+  <!-- Title -->
+  <text x="400" y="32" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="bold" fill="#1b1f24" text-anchor="middle">Laplace PDE Equipotentials &amp; Orthogonal Streamlines (klaplace)</text>
+
+  <!-- Cortical Cross-Section -->
+  <g transform="translate(60, 50)">
+    <!-- Gray Matter Domain -->
+    <path d="M 50 190 C 120 190 160 110 240 110 C 320 110 360 210 440 210 C 520 210 560 130 630 130 L 630 50 C 560 50 520 130 440 130 C 360 130 320 30 240 30 C 160 30 120 110 50 110 Z" fill="url(#gmGrad)" stroke="none"/>
+
+    <!-- Equipotential Phi = 0.75 -->
+    <path d="M 50 130 C 120 130 160 50 240 50 C 320 50 360 150 440 150 C 520 150 560 70 630 70" fill="none" stroke="#f6c3b7" stroke-width="1.5" stroke-dasharray="4,3"/>
+    
+    <!-- Equipotential Phi = 0.50 (Mid-Surface) -->
+    <path d="M 50 150 C 120 150 160 70 240 70 C 320 70 360 170 440 170 C 520 170 560 90 630 90" fill="none" stroke="#e05638" stroke-width="2"/>
+
+    <!-- Equipotential Phi = 0.25 -->
+    <path d="M 50 170 C 120 170 160 90 240 90 C 320 90 360 190 440 190 C 520 190 560 110 630 110" fill="none" stroke="#9ec5fe" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+    <!-- Pial Surface (Phi = 1.0) -->
+    <path d="M 50 110 C 120 110 160 30 240 30 C 320 30 360 130 440 130 C 520 130 560 50 630 50" fill="none" stroke="#d03010" stroke-width="3"/>
+
+    <!-- White Surface (Phi = 0.0) -->
+    <path d="M 50 190 C 120 190 160 110 240 110 C 320 110 360 210 440 210 C 520 210 560 130 630 130" fill="none" stroke="#0056b3" stroke-width="3"/>
+
+    <!-- Streamlines (Trajectories orthogonal to equipotentials) -->
+    <path d="M 120 180 L 120 120" stroke="#0070f3" stroke-width="2" marker-end="url(#streamArrow)"/>
+    <path d="M 240 110 L 240 30" stroke="#0070f3" stroke-width="2" marker-end="url(#streamArrow)"/>
+    <path d="M 360 185 L 360 145" stroke="#0070f3" stroke-width="2" marker-end="url(#streamArrow)"/>
+    <path d="M 440 210 L 440 130" stroke="#0070f3" stroke-width="2" marker-end="url(#streamArrow)"/>
+    <path d="M 560 145 L 560 65" stroke="#0070f3" stroke-width="2" marker-end="url(#streamArrow)"/>
+
+    <!-- Boundary Annotations -->
+    <text x="640" y="55" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold" fill="#d03010">Pial Surface (Φ = 1.0)</text>
+    <text x="640" y="95" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#e05638">Mid-Surface (Φ = 0.5)</text>
+    <text x="640" y="135" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold" fill="#0056b3">White Surface (Φ = 0.0)</text>
+  </g>
+
+  <!-- Math Note -->
+  <text x="400" y="285" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#495057" text-anchor="middle">Laplace PDE: ∇²Φ = 0  |  Thickness L = ∫ ||∇Φ / ||∇Φ|| || dt along streamline</text>
+</svg>
