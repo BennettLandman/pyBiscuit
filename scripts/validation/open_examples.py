@@ -53,7 +53,7 @@ OPEN = Path.home() / "dev" / "biscuit" / "open-examples"
 REF = Path.home() / "dev" / "biscuit" / "reference" / "sif_FC_v2.2" / "root" / "opt" / "biscuit"
 TEMPLATE = "mb101"
 SUBJECTS = ("0050952", "0050961", "0050971")
-STAGES = ("input", "reg", "remesh", "trace", "sd", "lgi")
+STAGES = ("input", "reg", "remesh", "trace", "sd", "lgi", "guess")
 UNI = REF / "sphere" / "sphere_327680.vtk"
 
 # E-class bounds of docs/validation-tolerances.md (never loosened here)
@@ -194,11 +194,14 @@ def deform_native(ctx, coeff, out):
 
 
 def reg_energy(ctx, coeff, tag):
-    """The PDF's E1: template ``curv.mean`` against ``res.curv`` seen through the registered uniform sphere."""
+    """The PDF's E1 (``surf_reg_fs2.m``): template ``curv.mean`` against ``res.curv`` seen through the registered
+    uniform sphere (both remeshes ``--deg 10``).  The image's PDF prints 1.970 -> 0.755 (lh) and 1.696 -> 0.739
+    (rh) for 0050952, which this reproduces."""
     d, h = ctx["work"], ctx["hemi"]
     s = d / f"{tag}.{h}.res.sphere.reg.vtk"
     remesh_run(UNI, coeff=coeff, deform=s, deg=10, quiet=True)
-    remesh_run(s, ref=UNI, property=[ctx["job"] / f"{h}.res.curv.txt"], output_property=d / f"{tag}.{h}.reg", quiet=True)
+    remesh_run(s, ref=UNI, property=[ctx["job"] / f"{h}.res.curv.txt"], output_property=d / f"{tag}.{h}.reg",
+               deg=10, quiet=True)  # fmt: skip  (surf_reg_fs2.m: --deg 10)
     tm = read_txt(REF / "reg" / TEMPLATE / f"{h}.curv.mean.txt")
     return energy(tm, read_txt(d / f"{tag}.{h}.reg.curv.txt"))
 
@@ -299,6 +302,30 @@ def stage_reg(ctx):
                          "coeff": port["coeff_max_abs"] <= q15["coeff_abs"],
                          "energy": port["E1_rel_diff_vs_image"] <= q15["energy_rel"]},
     }  # fmt: skip
+    return m
+
+
+def stage_guess(ctx):
+    """Call-1 variant (Q17): the same chain with call 1 run ``--noguess`` (calls 2-4 unchanged) against the image;
+    compare with ``reg``'s default (unit-mesh guess) and ``port_raw_icomesh_guess``."""
+    from pybiscuit.hsd.chain import chain_argv
+    from pybiscuit.hsd.cli import main as hsd_main
+
+    h, src, threads = ctx["hemi"], ctx["src"], ctx["threads"]
+    res_features(ctx)
+    img_sphere = read_vtk(src / "reg" / f"{h}.sphere.reg.vtk").vertices
+    img_coeff = src / "reg" / f"{h}.coeff.txt"
+    m = {"E1_image": reg_energy(ctx, img_coeff, "image")}
+    for name, extra in (("noguess_call1", ["--noguess"]),):
+        d = chain_dir(ctx, f"guess-{name}")
+        paths = ChainPaths(h, d, REF / "reg" / TEMPLATE, REF / "sphere")
+        t = time.time()
+        for i, argv in enumerate(chain_argv(paths, route="fs")):
+            a = argv + ["--nThreads", str(threads)] + (extra if i == 0 else [])
+            quiet(hsd_main, a)
+        v = deform_native(ctx, paths.coeff, ctx["work"] / f"guess-{name}.{h}.sphere.reg.vtk")
+        m[name] = {"sphere": ang_stats(v, img_sphere), "E1": reg_energy(ctx, paths.coeff, f"guess-{name}"),
+                   "seconds": time.time() - t}  # fmt: skip
     return m
 
 
@@ -424,7 +451,7 @@ def stage_lgi(ctx):
 
 
 # ------------------------------------------------------------------ driver
-STAGE_FN = {"input": stage_input, "reg": stage_reg, "remesh": stage_remesh, "trace": stage_trace,
+STAGE_FN = {"input": stage_input, "reg": stage_reg, "guess": stage_guess, "remesh": stage_remesh, "trace": stage_trace,
             "sd": stage_sd, "lgi": stage_lgi}  # fmt: skip
 
 

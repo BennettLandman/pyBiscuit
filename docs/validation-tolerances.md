@@ -23,6 +23,10 @@ binary (in the image) and to pyBiscuit.
 Deviations caused by tie-breaking or iteration order must be explained in the
 component's port note; they can pass with owner sign-off.
 
+- **Chaotic stages (adopted 2026-10-22, Q14 / Q15):**
+  - **LGI (Q14):** When the reference wavefront cutoff is sensitive to 1-ulp coordinate/geodesic differences at cortex scale, LGI is evaluated on the distributional criterion: vertex Pearson $r \ge 0.9999$, p99 relative diff $\le 10^{-3}$, and per-ROI mean relative diff $\le 10^{-3}$.
+  - **Oracle-spread rule (Q15, HSD & LGI):** Where a 1-ulp input perturbation moves the reference or port trajectory beyond the static E-class bound, a call or chain passes if it sits within $\max(\text{policy bound},\; 1.5 \times \text{measured 1-ulp spread})$, with the perturbation ensemble recorded alongside the metrics. Stable calls remain held to the static E-class bounds above.
+
 **R — replacement, downstream agreement.** The FreeSurfer stage replacements
 (pial, inflation, sphere, sulc) cannot be exact. Judge them by what BISCUIT
 reports downstream, on the same MaCRUISE inputs:
