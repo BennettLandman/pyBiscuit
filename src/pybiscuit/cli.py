@@ -87,6 +87,26 @@ def main(argv: list[str] | None = None) -> int:
             return surfprep_cli.mesh_contour_main(argv[1:])
         return surfprep_cli.hemi_split_main(argv[1:])
     # --- end surfprep ---
+    # --- mesh (brief 13): mesh-property, mesh-deform ---
+    sub.add_parser(
+        "mesh-property",
+        help="port of MeshProperty (same flags as the original binary; see its --help)",
+        add_help=False,
+    )
+    sub.add_parser(
+        "mesh-deform",
+        help="port of MeshDeform (same flags as the original binary; see its --help)",
+        add_help=False,
+    )
+    if argv and argv[0] == "mesh-property":
+        from .mesh.property import main as prop_main
+
+        return prop_main(argv[1:])
+    if argv and argv[0] == "mesh-deform":
+        from .mesh.deform import main as deform_main
+
+        return deform_main(argv[1:])
+    # --- end mesh ---
     args = p.parse_args(argv)
     if args.cmd == "info":
         return _info()
