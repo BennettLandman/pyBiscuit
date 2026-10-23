@@ -75,13 +75,29 @@ Verify that pyBiscuit detects the FreeSurfer input layout, finds all required su
 pybiscuit run <PATH>/open-examples/0050952 /tmp/run_0050952 --dry-run
 ```
 
+![Input Anatomical MRI and Ortho Views](images/niivue_ortho_volume.jpg)
+*Figure: Input T1-weighted MRI volume and reconstructed multiplanar orthogonal views in subject space.*
+
 ---
 
 ### Step 2: Run Individual Morphometric Analysis on Sample Meshes
 
 You can execute pyBiscuit's standalone tools directly on sample surfaces:
 
-#### A. Sulcal & Gyral Curve Extraction (TRACE)
+#### A. Curvature & Shape Properties (`pybiscuit mesh-property`)
+Compute mean curvature ($H$), Shape Index ($S$), and vertex areas on the mid-cortical surface:
+```bash
+pybiscuit mesh-property \
+  <PATH>/open-examples/0050952/surf/lh.mid.vtk \
+  -m -s -v \
+  --surfsmoothing 2 --tensorsmoothing 2
+```
+*Outputs:* `<PATH>/open-examples/0050952/surf/lh.mid.H.txt`, `lh.mid.S.txt`, `lh.mid.VertArea.txt`.
+
+![Mean Curvature on Inflated Cortex](images/niivue_3d_curvature.jpg)
+*Figure: Mean curvature ($H$) mapped onto inflated cortical surface (red: sulcal fundi, blue: gyral crests).*
+
+#### B. Sulcal & Gyral Curve Extraction (TRACE)
 Extract sulcal fundic curves from the pial surface and gyral crown curves from the white surface:
 ```bash
 # Sulcal curves on pial mesh (lh.gray.vtk)
@@ -96,7 +112,26 @@ pybiscuit trace \
 ```
 *Outputs:* `/tmp/lh.gray.scurve`, `/tmp/lh.gray.scurve.bary`, `/tmp/lh.white.gcurve`, `/tmp/lh.white.gcurve.bary`.
 
-#### B. Shape Complexity Index (SCI)
+![TRACE Curves on Parcellated Cortex](images/parcellation_and_trace_curves.png)
+*Figure: Extracted TRACE sulcal fundic curves (red polylines) and gyral crests (green polylines) overlaid on cortical regions.*
+
+#### C. Laplace PDE Streamline Thickness (`pybiscuit klaplace`)
+Solve the 3D Laplace Dirichlet problem ($\nabla^2 \Phi = 0$) across gray matter to integrate orthogonal streamlines:
+```bash
+pybiscuit klaplace \
+  --white <PATH>/open-examples/0050952/surf/lh.white.vtk \
+  --pial <PATH>/open-examples/0050952/surf/lh.pial.vtk \
+  --seg <PATH>/open-examples/0050952/mri/SEG_refine.nii.gz \
+  -o /tmp/lh.laplace_thickness.txt
+```
+
+![Laplace PDE Streamlines](images/klaplace_streamlines.svg)
+*Figure: Laplace PDE equipotentials ($\Phi \in [0, 1]$) and orthogonal streamline trajectories through gray matter.*
+
+![Cortical Thickness Surface](images/cortical_thickness.png)
+*Figure: Reconstructed continuous cortical thickness field mapped across the cortical mantle.*
+
+#### D. Shape Complexity Index (SCI)
 Calculate multi-scale Earth Mover's Distance shape complexity on the mid-cortical surface:
 ```bash
 pybiscuit sci \
@@ -105,13 +140,44 @@ pybiscuit sci \
   -k 3.0 -s 5
 ```
 
-#### C. Sulcal Depth (SD)
-Compute geodesic sulcal depth through the 3D morphological hull:
+![Shape Complexity Index Map](images/cortical_scalar_dorsal.png)
+*Figure: Shape Complexity Index (SCI) dorsal surface map showing structural folding intricacy.*
+
+#### E. Geodesic Sulcal Depth & Local Gyrification Index (LGI)
+Generate outer cerebral hull and evaluate gyrification ratios and sulcal depth:
 ```bash
+# 1. Compute outer hull
+pybiscuit outer-hull \
+  <PATH>/open-examples/0050952/surf/lh.gray.vtk \
+  -o /tmp/lh.hull.vtk
+
+# 2. Geodesic sulcal depth
 pybiscuit sulcal-depth \
   <PATH>/open-examples/0050952/surf/lh.gray.vtk \
   -o /tmp/lh.gray.SD.txt
+
+# 3. Local Gyrification Index (LGI)
+pybiscuit lgi \
+  <PATH>/open-examples/0050952/surf/lh.gray.vtk \
+  /tmp/lh.hull.vtk \
+  -o /tmp/lh.gray.LGI.txt
 ```
+
+![LGI and Geodesic Sulcal Depth Principle](images/lgi_and_sulcal_depth.svg)
+*Figure: Geometric formulation of Local Gyrification Index ($\text{LGI} = A_{\text{pial}} / A_{\text{hull}}$) and Geodesic Sulcal Depth from the outer cerebral hull.*
+
+#### F. Deep Spherical Parcellation (`pybiscuit parc`)
+Regularize spherical U-Net multi-class logits with Boykov-Veksler-Zabih graph-cut $\alpha$-expansion:
+```bash
+pybiscuit parc graphcut \
+  <PATH>/open-examples/0050952/surf/lh.sphere.vtk \
+  <PATH>/open-examples/0050952/label/lh.braincolor.probabilities.npy \
+  -o /tmp/lh.braincolor.annot.txt \
+  --smoothness 0.25
+```
+
+![Deep Spherical Parcellation](images/niivue_3d_parcellation.jpg)
+*Figure: Parcellated anatomical regions (BrainCOLOR / DKT31) following spherical U-Net inference and topological graph cut.*
 
 ---
 
@@ -124,6 +190,9 @@ pyBiscuit provides a browser-based, zero-dependency 3D cortical viewer powered b
 # Open the self-contained offline viewer for subject 0050952:
 open <PATH>/open-examples/0050952/qa/index_embedded.html
 ```
+
+![3D WebGL Viewer](images/niivue_3d_curvature.jpg)
+*Figure: Live offline 3D WebGL NiiVue cortical surface visualizer running directly in browser from `file://`.*
 
 **Viewer Controls:**
 - **Rotate**: Left-click + drag.
@@ -147,6 +216,9 @@ pybiscuit report \
 # Open the generated report:
 open /tmp/report_demo/PDF/biscuit.pdf
 ```
+
+![Cortical Morphometric Overlays](images/cortical_scalar_lateral.png)
+*Figure: Lateral morphometric scalar panels embedded in the multi-page QA PDF report.*
 
 ---
 
