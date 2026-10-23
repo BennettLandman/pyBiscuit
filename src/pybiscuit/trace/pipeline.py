@@ -37,23 +37,27 @@ def curve_argv(
     trace_r: float = DEFAULT_R,
     trace_delta: float = DEFAULT_DELTA,
     n_threads: int = 1,
+    uninit_current: str = "continue",
 ) -> list[str]:
     """Argument vector (without the program name) of one BISCUIT ``CurveExtraction`` call.
 
-    ``kind``: ``"sulcus"`` (pial surface) or ``"gyrus"`` (white surface).
+    ``kind``: ``"sulcus"`` (pial surface) or ``"gyrus"`` (white surface).  ``uninit_current="exit"``
+    adds the port-only ``--uninit-current exit`` (the clang oracle's single ``refineCurves`` pass);
+    the default is the image's behaviour and adds nothing.
     """
     if kind not in ("sulcus", "gyrus"):
         raise ValueError("kind must be 'sulcus' or 'gyrus'")
     r, d = num2str(trace_r), num2str(trace_delta)
-    return [
+    argv = [
         f"--{kind}", "-i", str(surface), "-o", str(prefix), "--nThreads", str(n_threads),
         "--epRad", r, "--nhDist", r, "--lsTh", d, "--bary", "--noVtk",
     ]  # fmt: skip
+    return argv + (["--uninit-current", uninit_current] if uninit_current != "continue" else [])
 
 
 def curve_calls(
     surf_dir, out_dir, *, hemis=("lh", "rh"), trace_r=DEFAULT_R, trace_delta=DEFAULT_DELTA,
-    n_threads: int = 1,
+    n_threads: int = 1, uninit_current: str = "continue",
 ) -> list[tuple[list[str], tuple[Path, Path]]]:  # fmt: skip
     """The calls of ``curve_extract_pipeline.m`` in order, with the two files each one produces.
 
@@ -67,7 +71,7 @@ def curve_calls(
             prefix = out_dir / f"{h}.{stem}"
             argv = curve_argv(
                 kind, surf_dir / f"{h}.{stem}.vtk", prefix, trace_r=trace_r,
-                trace_delta=trace_delta, n_threads=n_threads,
+                trace_delta=trace_delta, n_threads=n_threads, uninit_current=uninit_current,
             )  # fmt: skip
             calls.append((argv, (Path(f"{prefix}.{ext}"), Path(f"{prefix}.{ext}.bary"))))
     return calls
@@ -75,14 +79,14 @@ def curve_calls(
 
 def curve_extract_pipeline(
     surf_dir, out_dir, *, hemis=("lh", "rh"), trace_r=DEFAULT_R, trace_delta=DEFAULT_DELTA,
-    n_threads: int = 1, force: bool = False,
+    n_threads: int = 1, force: bool = False, uninit_current: str = "continue",
 ) -> list[Path]:  # fmt: skip
     """Run BISCUIT's four (or two) TRACE calls with the ported tool; returns the ``.bary`` paths."""
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     made = []
     for argv, (curve, bary) in curve_calls(
         surf_dir, out_dir, hemis=hemis, trace_r=trace_r, trace_delta=trace_delta,
-        n_threads=n_threads,
+        n_threads=n_threads, uninit_current=uninit_current,
     ):  # fmt: skip
         if force or not (curve.exists() and bary.exists()):
             if trace_main(argv) != 0:

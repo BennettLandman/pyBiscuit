@@ -40,7 +40,7 @@ class TraceResult:
 def extract_curves(
     vertices, faces, *, sulcus=True, gyrus=False, sulcal_seed=-0.05, gyral_seed=0.03,
     ep_rad=4.0, nh_dist=4.0, ls_threshold=2.5, prune=5.0, smooth_iter=0, smooth_tensor_iter=3,
-    simplification=False, input_points=None, verbose=False,
+    simplification=False, input_points=None, verbose=False, uninit_current="continue",
 ) -> TraceResult:  # fmt: skip
     """Run TRACE on a surface.  ``input_points`` maps ``"sulcal"`` / ``"gyral"`` to boolean masks
     that replace the point detection (``--inputPoints``)."""
@@ -71,7 +71,10 @@ def extract_curves(
         else:
             mask = np.asarray(input_points[name], dtype=bool)
         res.points[name] = mask
-        cv = Curves(v, f, mask, fields.direction, gyral=gyral, solver=solver, verbose=verbose)
+        cv = Curves(
+            v, f, mask, fields.direction, gyral=gyral, solver=solver, verbose=verbose,
+            uninit_current=uninit_current,
+        )  # fmt: skip
         cv.set_threshold(nh_dist, nh_dist, ep_rad, prune)
         cv.run()
         if simplification:
@@ -178,6 +181,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-s", "--smoothIter", type=int, default=0)
     p.add_argument("--smoothTensorIter", type=int, default=3)
     p.add_argument("--nThreads", type=int, default=0, help="accepted for compatibility; ignored")
+    p.add_argument(
+        "--uninit-current", choices=["continue", "exit"], default="continue",
+        help="port-only: GyralCurve::refineCurves reads an uninitialised int; continue = >= 2 passes "
+        "(the image), exit = one pass (the clang oracle)",
+    )  # fmt: skip
     return p
 
 
@@ -200,6 +208,7 @@ def main(argv=None) -> int:
         gyral_seed=a.gyralSeed, ep_rad=a.epRad, nh_dist=a.nhDist, ls_threshold=a.lsTh,
         prune=a.prune, smooth_iter=a.smoothIter, smooth_tensor_iter=a.smoothTensorIter,
         simplification=a.simplification, input_points=ip, verbose=True,
+        uninit_current=a.uninit_current,
     )  # fmt: skip
     for name, ext in (("sulcal", "scurve"), ("gyral", "gcurve")):
         if name not in res.curves:

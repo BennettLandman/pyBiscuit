@@ -69,7 +69,7 @@ def chain(tmp_path_factory):
     w = tmp_path_factory.mktemp("chain")
     for f in ("lh.gray.vtk", "lh.white.vtk"):
         shutil.copy(G / f, w / f)
-    curve_extract_pipeline(w, w / "curve", hemis=("lh",))
+    curve_extract_pipeline(w, w / "curve", hemis=("lh",), uninit_current="exit")
     run = lgi_pipeline(
         w / "lh.gray.vtk", w / "curve/lh.gray.scurve.bary", w / "curve/lh.white.gcurve.bary", w,
         outer=read_vtk(G / "lh.gray.hull.corr.vtk"),
@@ -142,7 +142,7 @@ def test_curves_unchanged_by_six_decimal_vtk_rounding(tmp_path):
             text[k] = " ".join(f"{float(x):.6f}" for x in text[k].split())
         (tmp_path / f).write_text("\n".join(text) + "\n")
     assert surf.n_vertices == n
-    curve_extract_pipeline(tmp_path, tmp_path / "curve", hemis=("lh",))
+    curve_extract_pipeline(tmp_path, tmp_path / "curve", hemis=("lh",), uninit_current="exit")
     for name in CURVES:
         assert (tmp_path / "curve" / name).read_bytes() == (G / name).read_bytes(), name
 

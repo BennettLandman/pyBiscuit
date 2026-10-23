@@ -18,8 +18,9 @@ default argument                        sulcal             gyral
 ``previous = current`` (undefined behaviour upstream).  The clang-built oracle behaves as if the
 loop test were already satisfied (one pass: verified on a folded sphere, where a second pass flips
 the direction of some curves); a compiler that yields an arbitrary stack value would run at least
-two passes.  Default ``uninit_current="exit"`` follows the oracle; the image's compiler is unknown
-(open question).  Unreached upstream code (``curve``, ``extendCurves``,
+two passes.  Default ``uninit_current="continue"`` follows the **image**: on the three open examples
+(brief 22) the gyral curve and bary files are byte-identical with it, and differ (reversed curves) with
+``"exit"``, which follows the clang oracle.  Unreached upstream code (``curve``, ``extendCurves``,
 ``grouping`` defaults, ``joinCurves(float)``) is not ported.
 
 State is kept as arrays (one slot per detected point, in vertex order); curve lists are a doubly
@@ -344,7 +345,7 @@ class Curves:
     """One ``SulcalCurve`` / ``GyralCurve`` object over the detected point vertices."""
 
     def __init__(self, vertices, faces, point_mask, direction, *, gyral: bool, solver=None,
-                 verbose: bool = False, uninit_current: str = "exit"):  # fmt: skip
+                 verbose: bool = False, uninit_current: str = "continue"):  # fmt: skip
         if uninit_current not in ("exit", "continue"):
             raise ValueError("uninit_current must be 'exit' or 'continue'")
         self.uninit_current = uninit_current

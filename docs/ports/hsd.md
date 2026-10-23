@@ -110,8 +110,15 @@ Consequences found by replaying it (tests: `tests/test_hsd_chain.py`; report: [h
   vectors, so **every** query misses (642 of 642 in the fixture) and the template mean map used by the guess is 0 everywhere.
   The cost is then the plain sum of squared subject features, and the guess picks an arbitrary rigid rotation
   (degree-0 coefficients 16.3 / -2.2 / 2.2 in the fixture, whatever the true alignment). It runs in call 1 only: calls 2-4 read
-  non-zero `-c` coefficients and skip it. Port and oracle agree on the result (golden `guess_icomesh`). Whether the **image**
-  behaves the same needs one run (Q1).
+  non-zero `-c` coefficients and skip it. Port and oracle agree on the result (golden `guess_icomesh`).
+  **Image evidence (brief 22, 2026-10-22): the image does not behave like this.** On the three open examples the
+  upstream behaviour sends the native FreeSurfer sphere on a ~135 degree rotation in call 1 and the whole chain ends
+  in a poor basin (E1 1.72 vs the image's 0.757, deformed sphere 113 degrees median from the image's); with call 1's
+  guess skipped, or with the guess's mean map queried on the unit-radius icosahedron, the whole chain reproduces the
+  image's registered sphere to a median of 0.14-0.17 degrees (inside the port's own 1-ulp spread). The default is
+  therefore `guess_unit_ico=True` (CLI `--guess-raw-icomesh` restores upstream's raw radius-100 query; the oracle
+  comparisons and the golden test use it). Which of the two the image really does (unit query, or no effective guess,
+  e.g. a different `AABB_Sphere` build or the UB at `HSD.cpp:316`) is not decidable from the outputs (Q17).
 * **New oracle finding (UB, `HSD.cpp:316`)**: `const float *p = V.unit().fv();` in the `--icomesh` branch reads the stack slot of a
   destroyed temporary (`unit()` returns by value). With Apple clang -O2 every icomesh sample is garbage and HSD dies with
   "no closest triangle found"; the original `hsd-nofma` build cannot run any `--icomesh` call. The goldens come from

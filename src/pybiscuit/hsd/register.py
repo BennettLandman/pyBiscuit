@@ -92,6 +92,7 @@ class HSD:
         guess_res=3,
         ico_mesh=None,
         resampling=False,
+        guess_unit_ico=True,
         verbose=True,
     ):
         self.verbose = verbose
@@ -112,6 +113,7 @@ class HSD:
         self.guess = bool(guess)
         self.guess_active = bool(guess)
         self.guess_res = int(guess_res)
+        self.guess_unit_ico = bool(guess_unit_ico)
         self.degree_inc = 0
         self.realtime_coeff = bool(realtime_coeff)
         self.icosahedron = int(icosahedron_level)

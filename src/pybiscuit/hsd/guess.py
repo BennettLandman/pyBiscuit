@@ -56,7 +56,14 @@ def guess_init_coeff(h) -> None:
         cand = np.where(
             (b0 > b1) & (b0 > b2), f[:, 0], np.where((b1 > b2) & (b1 > b0), f[:, 1], f[:, 2])
         ).astype(np.int64)
-        tree_ico = _stale_normals_tree(h.ico_v, h.ico_f, h.ico_v_raw)
+        if getattr(h, "guess_unit_ico", True):
+            # image behaviour (brief 22): query the mean map on the unit-radius icosahedron mesh
+            from .register import _unit as unit_rows
+
+            unit_v = unit_rows(h.ico_v)
+            tree_ico = _stale_normals_tree(unit_v, h.ico_f, unit_v)
+        else:  # upstream master: AABB on the raw (radius-100 for --icomesh) mesh, every query misses
+            tree_ico = _stale_normals_tree(h.ico_v, h.ico_f, h.ico_v_raw)
         fid, bary = tree_ico.closest_face(ps)
         mean = np.zeros((nprop, nq))
         for k in range(nprop):

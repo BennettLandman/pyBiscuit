@@ -57,8 +57,9 @@ last-ulp differences vs another libm are possible.
   order, the same order as the dense loop.
 * **Endpoint order** is `std::sort` of `curveElem` by position (x, then y, then z).
 * **`GyralCurve::refineCurves` reads an uninitialised `current`**; the clang oracle behaves as a single pass, a compiler producing an
-  arbitrary value gives >= 2 passes (the second pass reverses some curves). Default `uninit_current="exit"` matches the
-  oracle (verified: curves byte-identical); the image's compiler is unknown - **open question for the first Linux run**.
+  arbitrary value gives >= 2 passes (the second pass reverses some curves). **Resolved by the image (brief 22):** on the three open
+  examples the image's `.gcurve` and `.gcurve.bary` are byte-identical to the port's with `uninit_current="continue"` (>= 2 passes)
+  and differ in the direction of some curves with `"exit"`. Default is now `"continue"`; the oracle goldens use `--uninit-current exit`.
 * **`std::sort` tie order in the slicer.** Segments are sorted by start-edge id; when a plane passes (to float rounding) through
   a mesh vertex or contains an edge, several segments share an id and the order of equals is implementation-defined (libc++ vs
   libstdc++). A stable sort is used. Observed on the symmetric synthetic fixtures only (planes aligned with an icosphere axis):

@@ -50,8 +50,9 @@ def run(request):
     case = request.param
     m = trace_mesh(case)
     res = extract_curves(
-        m.vertices, m.faces, sulcus=True, gyrus=True, sulcal_seed=-0.01, gyral_seed=0.01
-    )
+        m.vertices, m.faces, sulcus=True, gyrus=True, sulcal_seed=-0.01, gyral_seed=0.01,
+        uninit_current="exit",  # the goldens are clang oracle runs; the image continues (brief 22)
+    )  # fmt: skip
     return case, m, res
 
 
@@ -94,7 +95,7 @@ def test_cli_writes_all_outputs(tmp_path):
     from fixtures.trace_cases import write_ascii_vtk
 
     write_ascii_vtk(tmp_path / "in.vtk", m.vertices, m.faces)
-    args = ["trace", "-i", str(tmp_path / "in.vtk"), "-o", str(tmp_path / "o"), *TRACE_ARGS, "--cart"]
+    args = ["trace", "-i", str(tmp_path / "in.vtk"), "-o", str(tmp_path / "o"), *TRACE_ARGS, "--cart", "--uninit-current", "exit"]
     assert cli_main(args) == 0
     for ext in ("scurve", "gcurve", "scurve.vtk", "gcurve.vtk", "scurve.cart", "gcurve.cart",
                 "scurve.bary", "gcurve.bary", "spoint", "gpoint"):  # fmt: skip
