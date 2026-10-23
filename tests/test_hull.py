@@ -101,3 +101,46 @@ def test_outer_hull_folded_sphere_smoother_than_surface():
     area_s = vertex_areas(m.vertices, m.faces).sum()
     area_h = vertex_areas(h.vertices, h.faces).sum()
     assert area_h < 1.5 * area_s and _volume(h.vertices, h.faces) > _volume(m.vertices, m.faces)
+
+
+@pytest.mark.reference
+def test_outer_hull_matches_image_golden_bumpy_ico5():
+    import gzip
+    import tempfile
+    from pathlib import Path
+
+    from scipy.spatial import cKDTree
+
+    from pybiscuit.io import read_vtk
+    from pybiscuit.mesh import Mesh
+    from pybiscuit.sphere.icosphere import icosphere
+
+    golden_dir = Path(__file__).parent / "data/golden-image/outer-hull/bumpy_ico5"
+    golden_path = golden_dir / "bumpy.hull.vtk.gz"
+    if not golden_path.is_file():
+        pytest.skip(f"Golden file not found: {golden_path}")
+
+    m = icosphere(5)
+    u = m.vertices / np.linalg.norm(m.vertices, axis=1, keepdims=True)
+    x, y, z = u.T
+    r = 50 * (1 + 0.10 * np.sin(5 * x + 1) * np.cos(4 * y) + 0.07 * np.sin(6 * z + x * 3))
+    bumpy = Mesh(u * r[:, None], m.faces)
+
+    with gzip.open(golden_path, "rb") as gz:
+        with tempfile.NamedTemporaryFile(suffix=".vtk") as tf:
+            tf.write(gz.read())
+            tf.flush()
+            golden_mesh = read_vtk(tf.name)
+
+    hull = outer_hull(bumpy)
+
+    # Golden vertices distance to port surface
+    tree_port = cKDTree(hull.vertices)
+    d_golden_to_port, _ = tree_port.query(golden_mesh.vertices)
+    p99_dist = float(np.percentile(d_golden_to_port, 99))
+    mean_dist = float(np.mean(d_golden_to_port))
+
+    # Acceptance policy: p99 <= 0.1 mm, mean <= 0.06 mm
+    assert mean_dist < 0.06, f"Mean distance {mean_dist:.4f} mm exceeds 0.06 mm"
+    assert p99_dist < 0.10, f"p99 distance {p99_dist:.4f} mm exceeds 0.10 mm"
+
