@@ -10,8 +10,12 @@ from pybiscuit.parc.pipeline import parcellate
 
 torch = pytest.importorskip("torch")
 pytest.importorskip("safetensors")
-
-EXAMPLES_DIR = Path("/Users/landmaba/dev/biscuit/open-examples/0050952")
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+EXAMPLES_DIR = (
+    _REPO_ROOT.parent / "open-examples" / "0050952"
+    if (_REPO_ROOT.parent / "open-examples" / "0050952").is_dir()
+    else _REPO_ROOT / "open-examples" / "0050952"
+)
 
 
 def _dice_coefficient(

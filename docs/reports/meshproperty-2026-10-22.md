@@ -67,7 +67,7 @@ and mid-surface vertex area (spec §5.5 T25) on the unsmoothed mid surface via:
 MeshProperty -i <h>.mid.vtk -o <tmp1>/<h>.mid -v
 ```
 
-Testing `quant_mid_features(mid, curv_smoothness=2)` against the container outputs in `/Users/landmaba/dev/biscuit/open-examples/{0050952,0050961,0050971}/quant/`:
+Testing `quant_mid_features(mid, curv_smoothness=2)` against the container outputs in `<PATH>/open-examples/{0050952,0050961,0050971}/quant/`:
 
 | Subject | Hemi | Vertices | `mid.H.txt` `max_abs` | `mid.H.txt` diff lines | `mid.S.txt` `max_abs` | `mid.S.txt` diff lines | `mid.area.txt` `max_abs` | `mid.area.txt` diff lines | Verdict |
 |---|---|---:|---:|---:|---:|---:|---:|---:|:---:|

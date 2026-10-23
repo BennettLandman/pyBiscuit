@@ -30,7 +30,7 @@ Each subject directory contains:
 
 Ensure your virtual environment is active:
 ```bash
-source /Users/landmaba/dev/biscuit/pyBiscuit/.venv/bin/activate
+source <PATH>/pyBiscuit/.venv/bin/activate
 export PYTHONPATH=src
 ```
 
@@ -38,7 +38,7 @@ export PYTHONPATH=src
 Verify that pyBiscuit detects the FreeSurfer input layout, finds all required surfaces and metrics, and plans the execution stages:
 
 ```bash
-pybiscuit run /Users/landmaba/dev/biscuit/open-examples/0050952 /tmp/run_0050952 --dry-run
+pybiscuit run <PATH>/open-examples/0050952 /tmp/run_0050952 --dry-run
 ```
 
 ---
@@ -52,12 +52,12 @@ Extract sulcal fundic curves from the pial surface and gyral crown curves from t
 ```bash
 # Sulcal curves on pial mesh (lh.gray.vtk)
 pybiscuit trace \
-  -i /Users/landmaba/dev/biscuit/open-examples/0050952/surf/lh.gray.vtk \
+  -i <PATH>/open-examples/0050952/surf/lh.gray.vtk \
   -o /tmp/lh.gray --sulcus --nhDist 20 --lsTh 0.5
 
 # Gyral curves on white mesh (lh.white.vtk)
 pybiscuit trace \
-  -i /Users/landmaba/dev/biscuit/open-examples/0050952/surf/lh.white.vtk \
+  -i <PATH>/open-examples/0050952/surf/lh.white.vtk \
   -o /tmp/lh.white --gyrus --nhDist 20 --lsTh 0.5
 ```
 *Outputs:* `/tmp/lh.gray.scurve`, `/tmp/lh.gray.scurve.bary`, `/tmp/lh.white.gcurve`, `/tmp/lh.white.gcurve.bary`.
@@ -66,7 +66,7 @@ pybiscuit trace \
 Calculate multi-scale Earth Mover's Distance shape complexity on the mid-cortical surface:
 ```bash
 pybiscuit sci \
-  -i /Users/landmaba/dev/biscuit/open-examples/0050952/surf/lh.mid.vtk \
+  -i <PATH>/open-examples/0050952/surf/lh.mid.vtk \
   -o /tmp/lh.mid.SCI.txt \
   -k 3.0 -s 5
 ```
@@ -75,7 +75,7 @@ pybiscuit sci \
 Compute geodesic sulcal depth through the 3D morphological hull:
 ```bash
 pybiscuit sulcal-depth \
-  /Users/landmaba/dev/biscuit/open-examples/0050952/surf/lh.gray.vtk \
+  <PATH>/open-examples/0050952/surf/lh.gray.vtk \
   -o /tmp/lh.gray.SD.txt
 ```
 
@@ -88,7 +88,7 @@ pyBiscuit provides a browser-based, zero-dependency 3D cortical viewer powered b
 
 ```bash
 # Open the self-contained offline viewer for subject 0050952:
-open /Users/landmaba/dev/biscuit/open-examples/0050952/qa/index_embedded.html
+open <PATH>/open-examples/0050952/qa/index_embedded.html
 ```
 
 **Viewer Controls:**
@@ -122,9 +122,9 @@ Aggregate statistics across all three sample subjects, evaluate inter-subject co
 
 ```bash
 pybiscuit cohort \
-  /Users/landmaba/dev/biscuit/open-examples/0050952 \
-  /Users/landmaba/dev/biscuit/open-examples/0050961 \
-  /Users/landmaba/dev/biscuit/open-examples/0050971 \
+  <PATH>/open-examples/0050952 \
+  <PATH>/open-examples/0050961 \
+  <PATH>/open-examples/0050971 \
   -o /tmp/cohort_report_demo \
   --protocols braincolor dkt31
 

@@ -10,7 +10,8 @@ from pybiscuit.parc.features import (
     normalize_parc_feature,
 )
 
-DEV_ROOT = Path("/Users/landmaba/dev/biscuit")
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+DEV_ROOT = _REPO_ROOT.parent if (_REPO_ROOT.parent / "reference").is_dir() else _REPO_ROOT
 ASSET_DIR = DEV_ROOT / "reference" / "sif_FC_v2.2" / "root" / "opt" / "biscuit" / "parc"
 
 

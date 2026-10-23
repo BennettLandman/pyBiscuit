@@ -9,8 +9,8 @@
   "parity": [
     {
       "subject": "0050952",
-      "run_dir": "/Users/landmaba/dev/biscuit/open-examples/0050952",
-      "ref_dir": "/Users/landmaba/dev/biscuit/open-examples/0050952",
+      "run_dir": "<PATH>/open-examples/0050952",
+      "ref_dir": "<PATH>/open-examples/0050952",
       "protocols": {
         "braincolor": {
           "shared_rois": 111,
@@ -436,8 +436,8 @@
     },
     {
       "subject": "0050961",
-      "run_dir": "/Users/landmaba/dev/biscuit/open-examples/0050961",
-      "ref_dir": "/Users/landmaba/dev/biscuit/open-examples/0050961",
+      "run_dir": "<PATH>/open-examples/0050961",
+      "ref_dir": "<PATH>/open-examples/0050961",
       "protocols": {
         "braincolor": {
           "shared_rois": 111,
@@ -863,8 +863,8 @@
     },
     {
       "subject": "0050971",
-      "run_dir": "/Users/landmaba/dev/biscuit/open-examples/0050971",
-      "ref_dir": "/Users/landmaba/dev/biscuit/open-examples/0050971",
+      "run_dir": "<PATH>/open-examples/0050971",
+      "ref_dir": "<PATH>/open-examples/0050971",
       "protocols": {
         "braincolor": {
           "shared_rois": 111,

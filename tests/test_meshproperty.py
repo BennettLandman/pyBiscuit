@@ -33,7 +33,11 @@ from pybiscuit.sphere.icosphere import icosphere
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 GOLDEN_DIR = REPO_ROOT / "tests" / "data" / "golden-image" / "meshproperty"
-OPEN_EX_0050952 = Path("/Users/landmaba/dev/biscuit/open-examples/0050952")
+OPEN_EX_0050952 = (
+    REPO_ROOT.parent / "open-examples" / "0050952"
+    if (REPO_ROOT.parent / "open-examples" / "0050952").is_dir()
+    else REPO_ROOT / "open-examples" / "0050952"
+)
 
 
 def _bumpy_vtk(tmp_path: Path, level: int = 4) -> Path:

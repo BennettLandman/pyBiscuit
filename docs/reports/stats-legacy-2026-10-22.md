@@ -1,6 +1,6 @@
 # Brief 18 (Part 1) Report: Summary Statistics (`B10.1`) & `legacy/` Output View (`B10.4`) — 2026-10-22
 
-Branch: `brief-18-stats` (worktree `/Users/landmaba/dev/biscuit/pyBiscuit-18-stats`).
+Branch: `brief-18-stats` (worktree `<PATH>/pyBiscuit-18-stats`).
 Port note: [`docs/ports/stats.md`](../ports/stats.md).
 
 ## 1. Deliverables Summary
