@@ -15,7 +15,8 @@ def run_cli(*args):
 
 def test_dry_run_synthetic_pymacruise(pym_run, tmp_path, capsys):  # noqa: F811
     out = tmp_path / "out"
-    assert run_cli(pym_run, out, "--dry-run", "--reg", "oasis45", "--trace_r", "5") == 0
+    cmd = ["--dry-run", "--blocked", "--reg", "oasis45", "--trace_r", "5"]
+    assert run_cli(pym_run, out, *cmd) == 0
     text = capsys.readouterr().out
     assert "reg_temp = oasis45" in text and "trace_r = 5" in text
     assert "adapter: pymacruise" in text and "surf_recon = macruise" in text
@@ -51,19 +52,28 @@ def test_conflicting_surf_recon(pym_run, tmp_path, capsys):  # noqa: F811
 
 def test_real_run_blocks_with_plan_row_then_resume(legacy_dir, tmp_path, capsys):  # noqa: F811
     out = tmp_path / "out"
-    assert run_cli(legacy_dir, out) == 3
+    assert run_cli(legacy_dir, out, "--blocked") == 3
     err = capsys.readouterr().err
     assert "stage 'surfprep' is blocked: B5" in err
     rj = json.loads((out / "run.json").read_text())
     assert rj["status"] == "blocked" and rj["stages"]["ingest"]["status"] == "complete"
-    assert run_cli(legacy_dir, out) == 2  # existing run needs --resume
+    assert run_cli(legacy_dir, out, "--blocked") == 2  # existing run needs --resume
     assert "Use --resume" in capsys.readouterr().err
-    assert run_cli(legacy_dir, out, "--resume") == 3
+    assert run_cli(legacy_dir, out, "--blocked", "--resume") == 3
     assert not (out / "stages/ingest/attempt-02").exists()
     # a changed ingest-relevant setting is refused
-    assert run_cli(legacy_dir, out, "--resume", "--surf_recon", "freesurfer") == 2
-    assert run_cli(legacy_dir, out, "--resume", "--until", "ingest") == 0
+    assert run_cli(legacy_dir, out, "--blocked", "--resume", "--surf_recon", "freesurfer") == 2
+    assert run_cli(legacy_dir, out, "--blocked", "--resume", "--until", "ingest") == 0
     assert "partial" in capsys.readouterr().out
+
+
+def test_real_run_executes_to_completion(pym_run, tmp_path):  # noqa: F811
+    out = tmp_path / "exec_out"
+    assert run_cli(pym_run, out) == 0
+    rj = json.loads((out / "run.json").read_text())
+    assert rj["status"] == "complete"
+    assert "report" in rj["stages"]
+    assert rj["stages"]["report"]["status"] == "complete"
 
 
 def test_unknown_input(tmp_path, capsys):

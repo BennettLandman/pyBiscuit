@@ -17,7 +17,7 @@ from ..config import CLI_FLAGS, ConfigError, load_config
 from .adapters import ADAPTERS, find_inputs
 from .model import PipelineError, ResumeError, StageBlocked
 from .runner import Run, format_plan
-from .stages import STAGES
+from .stages import STAGES, get_executable_stages
 
 EXIT_ERROR = 2
 EXIT_BLOCKED = 3
@@ -39,6 +39,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--allow-incomplete", action="store_true",
                    help="accept a PyMaCRUISE run whose status is not 'complete'")
     p.add_argument("--until", metavar="STAGE", help="stop after this stage")
+    p.add_argument("--legacy", action="store_true",
+                   help="populate legacy BISCUIT directory structure (surf/, reg/, roi/, etc.)")
+    p.add_argument("--blocked", action="store_true",
+                   help="use placeholder blocked stage graph (diagnostic)")
     p.add_argument("--config", metavar="BISCUIT.CONF", help="original biscuit.conf to read")
     p.add_argument("--toml", metavar="FILE", help="TOML configuration to read")
     g = p.add_argument_group("config overrides (names as in run_biscuit; beat --config/--toml)")
@@ -99,7 +103,8 @@ def _run(args) -> int:
             f"({findings.surf_recon} route)"
         )
     cfg = cfg.replace(surf_recon=findings.surf_recon)
-    run = Run(args.output, findings, cfg, STAGES, resume=args.resume)
+    stages = STAGES if getattr(args, "blocked", False) else get_executable_stages()
+    run = Run(args.output, findings, cfg, stages, resume=args.resume)
 
     if args.dry_run:
         print(f"pybiscuit {__version__} run --dry-run")
@@ -121,6 +126,18 @@ def _run(args) -> int:
         return 0
 
     state = run.execute(until=args.until)
+    want_legacy = getattr(args, "legacy", False) or cfg.get("legacy")
+    if want_legacy and state.get("status") in ("complete", "partial"):
+        try:
+            from .legacy import populate_legacy_tree
+            populate_legacy_tree(
+                args.output,
+                protocols=cfg["parc_protocol"],
+                reg_temp=cfg["reg_temp"],
+                route=findings.surf_recon,
+            )
+        except Exception as exc:
+            print(f"warning: legacy tree population failed: {exc}", file=sys.stderr)
     print(f"run {state['status']}: {Path(args.output) / 'run.json'}")
     return 0
 
