@@ -34,16 +34,28 @@ the orchestrator is encrypted MATLAB; its stage semantics wait on the orchestrat
 - `--resume`: refuses (before running anything) if input hashes differ from the recorded
   ones, a completed stage's signature differs, or a recorded output is missing/changed.
   It never recomputes silently. Without `--resume`, an existing `run.json` is an error.
-- Stage registry (`stages.py`): `ingest` (real: records the adapter findings) then
-  `surfprep` (macruise route only), `features`, `register`, `parc`, `trace`, `quant`,
-  `stats`, `report`. All raise `StageBlocked` naming the plan row(s), e.g.
-  `stage 'surfprep' is blocked: B5: not specified yet; waits on the orchestrator spec (brief 11, ...`.
-  Output file names declared there are placeholders following docs/io-contract.md; they
-  are not claimed to match BISCUIT's, and the stage input lists encode only what each
-  stage plausibly consumes. Both must be revisited against the brief 11 spec / B1.3.
-- No implemented component (SphericalRemesh, HSD, TRACE, the parcellation net) is wired as
-  a stage body: their inputs (native sphere, features, `sphere.reg`) are only defined by the
-  blocked `surfprep`/`features`, and the call sequence is the orchestrator's.
+- Stage registry (`stages.py`): `ingest` (records the adapter findings) then `surfprep`
+  (macruise route only), `features`, `register`, `parc`, `trace`, `quant`, `stats`, `report`.
+  `STAGES` keeps the blocked placeholders (`--blocked`, diagnostic); `get_executable_stages()`
+  attaches the bodies of `bodies.py` (stage version 2 since 2026-10-28).
+- Bodies (`bodies.py`, 2026-10-28) follow the orchestrator spec phase by phase and work in
+  BISCUIT's own file names inside each attempt directory (`<h>.white.vtk`, `<h>.res.H.txt`,
+  `<h>.coeff.txt`, `<h>.parc.<p>.txt`, `<h>.gray.scurve.bary`, `<h>.mid.H.txt`, …); a stage
+  copies what it needs from the latest attempt of an upstream stage by name and raises
+  `StageInputError` when a file is missing. They call the validated ports only:
+  `prepare_fs_subject` (FS route, spec §12) or `run_macruise_surfprep` + MeshProperty
+  features (spec §5.1), `SphericalRemesh` T18/T20/T22/T23, `run_chain` (T21), `parcellate`
+  (§6), `curve_extract_pipeline` (§8), `quant_mid_features`, `sulcal_depth`, `lgi_pipeline`
+  (klaplace correspondence), `shape_complexity_index` (§9), `run_stats_pipeline` (§10).
+- **No placeholder results.** The earlier bodies caught every exception and wrote
+  3-vertex meshes and zero maps, so a run reported `complete` whatever happened (several
+  calls had wrong argument names and never ran). Any failure now propagates: the runner
+  records it in `run.json` / `provenance.json` and `pybiscuit run` exits 1.
+- MaCRUISE route, open point: `parc.m` reads `<h>.inflated.H` (FreeSurfer's curvature of the
+  inflated surface); the body uses `iH` in its place until B5.6 defines that file.
+- `--legacy` assembles `<out>/legacy/` from the latest attempt of every stage plus the run
+  root (`pdf/`, `PDF/`) with `populate_legacy_tree`.
+- End-to-end evidence: [e2e-open-examples-2026-10-28](../reports/e2e-open-examples-2026-10-28.md).
 
 ## Adapters (`pipeline/adapters/`)
 | Adapter | Identifies products by | Checks |

@@ -67,13 +67,16 @@ def test_real_run_blocks_with_plan_row_then_resume(legacy_dir, tmp_path, capsys)
     assert "partial" in capsys.readouterr().out
 
 
-def test_real_run_executes_to_completion(pym_run, tmp_path):  # noqa: F811
+def test_unusable_run_fails_with_recorded_error(pym_run, tmp_path, capsys):  # noqa: F811
+    """The synthetic PyMaCRUISE fixture is not a brain: the run must fail, not fake results."""
     out = tmp_path / "exec_out"
-    assert run_cli(pym_run, out) == 0
+    assert run_cli(pym_run, out) == 1
+    assert "stage failed" in capsys.readouterr().err
     rj = json.loads((out / "run.json").read_text())
-    assert rj["status"] == "complete"
-    assert "report" in rj["stages"]
-    assert rj["stages"]["report"]["status"] == "complete"
+    assert rj["status"] == "failed"
+    failed = [s for s, r in rj["stages"].items() if r["status"] == "failed"]
+    assert len(failed) == 1 and rj["stages"][failed[0]]["error"]
+    assert rj["stages"].get("report", {}).get("status") != "complete"
 
 
 def test_unknown_input(tmp_path, capsys):

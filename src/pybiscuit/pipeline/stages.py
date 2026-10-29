@@ -73,7 +73,8 @@ STAGES: list[Stage] = [
     Stage(
         name="parc",
         plan_rows=("B7.1", "B7.2", "B7.3", "B7.4", "B7.5"),
-        inputs=("ingest:inputs.json", "register:lh.sphere.reg.surf.gii"),
+        inputs=("ingest:inputs.json", "features:lh.curv.func.gii",
+                "register:lh.sphere.reg.surf.gii"),
         params=("parc_protocol",),
         assets=("parc_models", "icospheres"),
         outputs=_per_hemi("braincolor.label.gii", "dkt31.label.gii"),
@@ -85,14 +86,15 @@ STAGES: list[Stage] = [
         plan_rows=("B8.1", "B8.2", "B8.3", "B8.4"),
         inputs=("ingest:inputs.json", "features:lh.curv.func.gii"),
         params=("trace_r", "trace_delta", "curv_smoothness"),
-        outputs=_per_hemi("scurve", "gcurve", "scurve.bary", "gcurve.bary"),
+        outputs=_per_hemi("gray.scurve", "white.gcurve", "gray.scurve.bary", "white.gcurve.bary"),
         blocked="B8: TRACE is ported (`pybiscuit trace`) but not wired in: its inputs and call "
         "arguments wait on the orchestrator spec (brief 11)",
     ),
     Stage(
         name="quant",
         plan_rows=("B9.1", "B9.2", "B9.4", "B9.5", "B9.6"),
-        inputs=("ingest:inputs.json", "features:lh.curv.func.gii", "surfprep:lh.pial.surf.gii"),
+        inputs=("ingest:inputs.json", "features:lh.curv.func.gii", "surfprep:lh.pial.surf.gii",
+                "trace:lh.gray.scurve.bary"),
         params=("curv_smoothness", "lgi_kernel_size", "lgi_anisotropy", "lgi_ref_area",
                 "sci_kernel_size", "sci_bins"),
         outputs=_per_hemi("lgi.func.gii", "sulcal_depth.func.gii", "sci.func.gii",
@@ -103,8 +105,8 @@ STAGES: list[Stage] = [
     Stage(
         name="stats",
         plan_rows=("B10.1",),
-        inputs=("ingest:inputs.json", "parc:lh.dkt31.label.gii", "trace:lh.scurve",
-                "quant:lh.lgi.func.gii"),
+        inputs=("ingest:inputs.json", "register:lh.sphere.reg.surf.gii", "parc:lh.dkt31.label.gii",
+                "trace:lh.gray.scurve.bary", "quant:lh.lgi.func.gii"),
         outputs=("roi.tsv", "curve.tsv", "cortex.tsv"),
         blocked="B10.1: statistics (surf_quant_stat_pipeline.m) are not ported yet "
         "(orchestrator spec, brief 11)",
@@ -137,6 +139,6 @@ def get_executable_stages() -> list[Stage]:
         "report": bodies.report_body,
     }
     return [
-        replace(s, body=body_map.get(s.name, s.body), blocked=None)
+        replace(s, body=body_map.get(s.name, s.body), blocked=None, version="2")
         for s in STAGES
     ]

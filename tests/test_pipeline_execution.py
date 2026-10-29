@@ -2,6 +2,8 @@
 
 import json
 
+import pytest
+
 from pybiscuit.config import load_config
 from pybiscuit.pipeline import (
     InputFindings,
@@ -25,20 +27,23 @@ def _make_findings(tmp_path):
     )
 
 
-def test_executable_stages_run_to_completion(tmp_path):
+def test_executable_stages_are_unblocked():
+    assert all(s.blocked is None and s.body is not None for s in get_executable_stages())
+
+
+def test_unusable_inputs_fail_loudly(tmp_path):
+    """Stage bodies never write placeholder results: junk inputs stop the run at surfprep."""
     findings = _make_findings(tmp_path)
     cfg = load_config(overrides={"surf_recon": "macruise"})
     out = tmp_path / "out"
 
-    stages = get_executable_stages()
-    # Confirm none of the executable stages are marked blocked
-    assert all(s.blocked is None for s in stages)
-
-    state = Run(out, findings, cfg, stages).execute()
-    assert state["status"] == "complete"
+    with pytest.raises(ValueError):  # the VTK reader rejects the junk inner surface
+        Run(out, findings, cfg, get_executable_stages()).execute()
 
     rj = json.loads((out / "run.json").read_text())
-    assert rj["status"] == "complete"
-    assert "report" in rj["stages"]
-    assert rj["stages"]["report"]["status"] == "complete"
-    assert (out / "stages/report/attempt-01/biscuit.pdf").is_file()
+    assert rj["status"] == "failed"
+    assert rj["stages"]["surfprep"]["status"] == "failed"
+    assert rj["stages"]["surfprep"]["error"]
+    assert not any(rj["stages"].get(s, {}).get("status") == "complete"
+                   for s in ("features", "register", "parc", "trace", "quant", "stats", "report"))
+    assert not (out / "stages/surfprep/attempt-01/lh.white.vtk").exists()

@@ -2,8 +2,8 @@
 
 Options named as in ``run_biscuit`` override the config (``--reg``, ``--parc``,
 ``--trace_r``, ...); ``--config`` reads an original ``biscuit.conf`` and
-``--toml`` a TOML file. Exit codes: 0 ok / dry-run printed, 2 unusable input or
-refused resume, 3 stage blocked.
+``--toml`` a TOML file. Exit codes: 0 ok / dry-run printed, 1 a stage failed (error in
+run.json), 2 unusable input or refused resume, 3 stage blocked.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ from .model import PipelineError, ResumeError, StageBlocked
 from .runner import Run, format_plan
 from .stages import STAGES, get_executable_stages
 
+EXIT_FAILED = 1
 EXIT_ERROR = 2
 EXIT_BLOCKED = 3
 
@@ -92,6 +93,10 @@ def main(argv: list[str] | None = None) -> int:
         kind = "resume refused" if isinstance(exc, ResumeError) else "error"
         print(f"pybiscuit run: {kind}: {exc}", file=sys.stderr)
         return EXIT_ERROR
+    except Exception as exc:  # a stage body failed; run.json and provenance.json record it
+        print(f"pybiscuit run: stage failed: {type(exc).__name__}: {exc}", file=sys.stderr)
+        print(f"see {Path(args.output) / 'run.json'}", file=sys.stderr)
+        return EXIT_FAILED
 
 
 def _run(args) -> int:
@@ -130,8 +135,15 @@ def _run(args) -> int:
     if want_legacy and state.get("status") in ("complete", "partial"):
         try:
             from .legacy import populate_legacy_tree
+            out = Path(args.output)
+            attempts = [
+                sorted(d.glob("attempt-*"))[-1]
+                for d in sorted((out / "stages").iterdir())
+                if d.is_dir() and any(d.glob("attempt-*"))
+            ]
             populate_legacy_tree(
-                args.output,
+                out / "legacy",
+                [*attempts, out],
                 protocols=cfg["parc_protocol"],
                 reg_temp=cfg["reg_temp"],
                 route=findings.surf_recon,

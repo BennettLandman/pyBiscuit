@@ -252,7 +252,7 @@ def parcellate(
         else:
             ico5 = icosphere(ico_level, scheme="ugscnn")
             ico5_vtk = tmppath / f"icosphere_{ico_level}.vtk"
-            write_vtk(ico5_vtk, ico5.vertices, ico5.faces)
+            write_vtk(ico5, ico5_vtk)
 
         # Prepare sphere_327680
         if sphere_template and Path(sphere_template).is_file():
@@ -262,7 +262,7 @@ def parcellate(
         else:
             ico7 = icosphere(7, scheme="biscuit")
             tmpl_sphere_path = tmppath / "sphere_327680.vtk"
-            write_vtk(tmpl_sphere_path, ico7.vertices, ico7.faces)
+            write_vtk(ico7, tmpl_sphere_path)
 
         # 3. Extract and normalise features
         h_norm, ih_norm, sulc_norm = extract_parc_features(
@@ -306,13 +306,11 @@ def parcellate(
 
         aligned_sphere_mesh = read_vtk(aligned_sphere_path)
 
-        # 5. Resample features onto icosphere_5 (T29)
-        # Resample features: iH, sulc, H
-        res_iH, res_sulc, res_H = remesh.resample(
-            ico5_mesh=ico5,
-            subj_sphere=aligned_sphere_mesh,
-            properties=[ih_norm, sulc_norm, h_norm],
-        )
+        # 5. T29: ``SphericalRemesh -r icosphere_5 -s <tmp>.sphere.vtk -p <tmp>.{iH,sulc,H}.txt``
+        # on the feature files as written (``%f``)
+        feats = [ih_feat_txt, sulc_feat_txt, h_feat_txt]
+        vals = [read_vertex_txt(f) for f in feats] if quantize else [ih_norm, sulc_norm, h_norm]
+        res_iH, res_sulc, res_H = remesh.resample(aligned_sphere_path, ico5_vtk, vals)
 
         if quantize:
             res_H = np.round(res_H, 6)
