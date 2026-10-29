@@ -5,12 +5,15 @@ All tests are ``reference``-marked and skip when ``~/dev/biscuit/open-examples``
 never in git.  The full per-stage comparison lives in ``scripts/validation/open_examples.py``.
 """
 
+import tempfile
 from pathlib import Path
 
 import pytest
 
-OPEN = Path.home() / "dev" / "biscuit" / "open-examples"
-SUBJECT = OPEN / "0050952"
+from _open_examples import open_examples_root, subject_dir
+
+OPEN = open_examples_root()
+SUBJECT = subject_dir(OPEN, "0050952", Path(tempfile.gettempdir()) / "pybiscuit-open-examples") if OPEN else Path("/nonexistent")
 
 pytestmark = pytest.mark.reference
 needs_data = pytest.mark.skipif(not SUBJECT.exists(), reason="open-examples not available")
