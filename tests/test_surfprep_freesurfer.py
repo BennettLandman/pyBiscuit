@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from _open_examples import open_examples_root, subject_dir
 from pybiscuit.io import read_vtk
 from pybiscuit.surfprep.freesurfer import (
     format_f,
@@ -15,7 +16,7 @@ from pybiscuit.surfprep.freesurfer import (
     vtk_text,
 )
 
-OPEN = Path.home() / "dev" / "biscuit" / "open-examples"
+OPEN = open_examples_root()
 SUBJECTS = ("0050952", "0050961", "0050971")
 
 
@@ -61,9 +62,9 @@ def _same(a: Path, b: Path) -> bool:
 @pytest.mark.parametrize("subject", SUBJECTS)
 def test_matches_image_inputs(subject, tmp_path):
     """Our VTKs, mask and thickness are byte-identical to the files the image wrote."""
-    src = OPEN / subject
-    if not src.exists():
+    if OPEN is None:
         pytest.skip("open-examples not available")
+    src = subject_dir(OPEN, subject, tmp_path / "data")
     prepare_fs_subject(src, tmp_path)
     for h in ("lh", "rh"):
         for name in ("white", "gray", "mid", "inflated", "sphere"):

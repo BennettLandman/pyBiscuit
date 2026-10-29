@@ -42,6 +42,8 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "src"))
+sys.path.insert(0, str(REPO / "tests"))
+from _open_examples import open_examples_root, subject_dir  # noqa: E402
 from pybiscuit.hsd.chain import ChainPaths, run_chain  # noqa: E402
 from pybiscuit.io import read_vtk  # noqa: E402
 from pybiscuit.mesh.geometry import vertex_areas  # noqa: E402
@@ -49,7 +51,6 @@ from pybiscuit.sphere.remesh import resample  # noqa: E402
 from pybiscuit.sphere.remesh import run as remesh_run  # noqa: E402
 from pybiscuit.surfprep.freesurfer import prepare_fs_subject  # noqa: E402
 
-OPEN = Path.home() / "dev" / "biscuit" / "open-examples"
 REF = Path.home() / "dev" / "biscuit" / "reference" / "sif_FC_v2.2" / "root" / "opt" / "biscuit"
 TEMPLATE = "mb101"
 SUBJECTS = ("0050952", "0050961", "0050971")
@@ -456,7 +457,7 @@ STAGE_FN = {"input": stage_input, "reg": stage_reg, "guess": stage_guess, "remes
 
 
 def run_subject(subj, args, work_root, report):
-    src = OPEN / subj
+    src = subject_dir(args.root_path, subj, work_root / "_data")
     mpath = report / f"metrics-{subj}.json"
     M = json.loads(mpath.read_text()) if mpath.exists() else {"subject": subj}
     M["template"], M["threads"] = TEMPLATE, args.threads
@@ -539,11 +540,15 @@ def main():
     p.add_argument("--stages", nargs="+", default=list(STAGES), choices=STAGES)
     p.add_argument("--threads", type=int, default=os.cpu_count() or 4)
     p.add_argument("--ens", type=int, default=3, help="number of 1-ulp HSD chain reruns per hemisphere (max 6)")
+    p.add_argument("--root", help="open-examples root (default: $PYBISCUIT_OPEN_EXAMPLES, tests/data/open-examples, ~/dev/biscuit/open-examples; *.gz copies are decompressed)")
     p.add_argument("--report", default=str(REPO / "docs" / "reports" / "open-examples-2026-10-22"))
     p.add_argument("--force", action="store_true", help="rerun stages that are already cached")
     p.add_argument("--summary-only", action="store_true")
     args = p.parse_args()
     report = Path(args.report)
+    args.root_path = open_examples_root(args.root)
+    if args.root_path is None and not args.summary_only:
+        sys.exit("no open-examples data found (use --root or $PYBISCUIT_OPEN_EXAMPLES)")
     report.mkdir(parents=True, exist_ok=True)
     if not args.summary_only:
         import numba

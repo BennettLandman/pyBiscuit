@@ -33,7 +33,7 @@ criterion) and Q15 (accept within `max(policy, 1.5 × spread)`) are applied **as
 *this* port: the image cannot be perturbed, so the spread is the port's own one-ulp sensitivity on the same subject (HSD: the chain rerun
 from inputs with one `res.H` value, one `res.sulc` value, or half of all values moved by one float32 ulp, 6 reruns per hemisphere; LGI:
 every pial coordinate moved by 0 or ±1 ulp, one rerun). Energies are the PDF's: `E = ‖z(template curv.mean) − z(res.curv through the
-registered sphere)‖² / 163842`, which reproduces the numbers the image printed (0050952: 1.970 → 0.755 lh, 1.696 → 0.739 rh).
+registered sphere)‖² / 163842`, whose E0 reproduces the PDF's (0050952: 1.970 lh, 1.696 rh); E1 of the image's own coefficients is 0.757 / 0.740 against the PDF's 0.755 / 0.739 (the PDF evaluates HSD's own `-o` sphere, which is not kept).
 
 | Stage | Subject | Hemi | Result | Rule | Verdict |
 |---|---|---|---|---|---|
@@ -168,3 +168,5 @@ OuterHull itself (hull area 61,474 mm² for 0050952 lh) has no image intermediat
   `tmp/` directories of the open examples are empty. One image rerun with `$TMP` kept would also give the OuterHull/klaplace intermediates for LGI.
 * SD residual (F3): MATLAB's `strel('ball')` decomposition and heights, if the owner can run one `getheight(strel('ball',15,15))`/`getnhood` in MATLAB or Octave.
 * `plan.md` status section not edited (rule of the parallel sessions).
+
+* Data location: scripts and reference tests find the subjects through `tests/_open_examples.py` (`--root`, `$PYBISCUIT_OPEN_EXAMPLES`, `tests/data/open-examples/`, `~/dev/biscuit/open-examples`; `*.gz` copies are decompressed into a cache). No subject data is committed.
