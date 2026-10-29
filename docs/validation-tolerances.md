@@ -15,7 +15,7 @@ binary (in the image) and to pyBiscuit.
 | Deformed sphere (HSD) | per-vertex angular distance | median ≤ 0.01°, p99 ≤ 0.1°; final energy within 0.1 % |
 | HSD SH coefficients | max abs diff | ≤ 1e-4 |
 | Curves (TRACE) | vertex-set Jaccard on `.scurve`/`.gcurve`; Hausdorff on `.bary` polylines | Jaccard ≥ 0.99, Hausdorff ≤ 0.5 mm |
-| Parcellation network output (pre graph cut) | per-class probability max abs diff; argmax agreement | ≤ 1e-4; ≥ 99.9 % vertices |
+| Parcellation network output (pre graph cut) | max abs diff relative to peak \|score\|; argmax agreement | ≤ 1e-4 relative; ≥ 99.9 % vertices |
 | Final labels (post graph cut + cleanup) | vertex agreement; per-ROI Dice | ≥ 99.5 %; every ROI Dice ≥ 0.98 |
 | Hull / klaplace correspondence | vertex distance | p99 ≤ 0.1 mm |
 | Stats tables | relative diff per cell | ≤ 1e-4 |

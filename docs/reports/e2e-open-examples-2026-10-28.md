@@ -79,8 +79,8 @@ rerun with `$TMP` kept).
 
 **F6 — PyTorch version.** With torch 2.15.0, 12 `tests/test_parc_reference.py` dkt31 cases fail their absolute 1e-4
 bound on raw network scores (max 4.4e-3 on scores of magnitude ~10², i.e. ~1e-5 relative); the same tests pass under
-torch 2.14.1. Labels are unaffected (F2 ran on 2.15.0). Owner decision: pin `torch<2.15` for the oracle tests, or make the
-bound relative.
+torch 2.14.1. Labels are unaffected (F2 ran on 2.15.0). Resolved 2026-10-29 (owner): the bound is now 1e-4 relative to the
+peak |score| (validation-tolerances.md); all 21 tests pass on 2.15.0.
 
 **F7 — not covered.** The MaCRUISE route (B11.1) still has no image reference; its surfprep (B5.4–B5.7) is draft. The
 report stage calls `generate_report_pdfs` without `tiles` (no surface renders) and was not compared with the image's
