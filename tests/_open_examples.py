@@ -29,7 +29,7 @@ def candidates() -> list[Path]:
 def open_examples_root(root=None) -> Path | None:
     """First existing candidate (or ``root`` if given and existing); ``None`` when there is none."""
     for p in [Path(root).expanduser()] if root else candidates():
-        if p.is_dir():
+        if p.is_dir() and any(c.is_dir() for c in p.iterdir()):  # an unpopulated submodule is empty
             return p
     return None
 
