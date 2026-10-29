@@ -18,7 +18,7 @@ call MATLAB library code whose source is not here. They were re-derived from the
 | `padarray(...,[20 20 20])`, `imfill(volume, 26, 'holes')` | `np.pad`, `binary_fill_holes` with a 26-neighbour structure | equal by definition |
 | `smooth3(volume,'gaussian',9,2)` | separable 3-D Gaussian (size 9, sigma 2) | float summation order only |
 | `imclose(volume, strel('ball',15,15))`, `imdilate(..., strel('ball',1,1))` | **exact** nonflat ellipsoid SE (height `H*sqrt(1-r^2/R^2)`) applied **per z-slice** | MATLAB's default `N = 8` approximates the ball by 8 line-shaped SEs; the decomposition is not reproducible without the toolbox source. Also assumes MATLAB pads the 2-D neighbourhood with singleton dimensions (slice-wise). Both unverified |
-| `isosurface(volume, 1)` | marching tetrahedra (Kuhn 6-tet decomposition), vertices shared, faces oriented outward | different triangulation and vertex order from MATLAB's marching cubes; the surface differs only through the piecewise-linear interpolation. Hull has ~2x the triangles |
+| `isosurface(volume, 1)` | classic marching cubes (Lorensen & Cline, Bourke's public-domain table, `quant/_mc_tables.py`), one vertex per cut voxel edge, faces oriented outward | vertex and face order may differ from MATLAB's; the triangulation is the same per cube (no ambiguity resolution in either). Until 2026-10-29 this was marching tetrahedra, whose extra diagonal cuts made the hull of a cortical surface ~18 % larger in area and LGI 5-7 % low (see below) |
 | axis swap, translate/scale to the mesh box, `[0.5 0 -0.5]`, `*1.02` | same arithmetic | the `*1.02` scales about the origin (as in the script), ICP then removes the resulting offset |
 | largest connected component via `dmperm` | largest component (`scipy.sparse.csgraph`) | `dmperm` returns the *first* block, not necessarily the largest; identical when the iso-surface is one piece (the usual case) |
 | `ICP_finite` (rigid, `fminlbfgs`, `knnsearch`) | `icp_finite`, `fminlbfgs`: BFGS (6 variables), forward differences with `gstep = initialStepLength/1e6`, Wolfe bracketing + sectioning, cubic interpolation, same stopping rules (`TolX = extent/1000`, `TolFun` 1e-6, `MaxFunEvals` 599); `cKDTree` for nearest neighbours | line-by-line port; nearest-neighbour ties and summation order can differ in the last bits |
@@ -46,3 +46,17 @@ questions the oracle would settle: `strel('ball')` decomposition, slice-wise app
 `hull._ball` (shared with sulcal depth) now excludes the rim of the structuring-element disc (`x^2 + y^2 < r^2`, centre kept):
 `strel('ball',1,1)` is then the centre pixel. Inferred from the image's `quant/<h>.gray.SD.txt` (bias +0.71 -> -0.04 mm), see
 [sulcal-depth.md](sulcal-depth.md); the same `strel` calls are in `OuterHull.m`, so the LGI hull follows. Not verified against MATLAB.
+
+## Image evidence: marching cubes (2026-10-29)
+
+The end-to-end run ([e2e report](../reports/e2e-open-examples-2026-10-28.md), F4) found LGI 4.7-7.1 % below the image in all
+six hemispheres. On 0050952 lh the marching-tetrahedra hull had area 61,474 mm^2, the marching-cubes hull of the same volume
+52,085 mm^2 (-15 %); with it LGI vs the image went from r 0.9856 / mean diff -0.225 to r 0.9992 / +0.025 (+0.6 %).
+`isosurface` reproduces scikit-image's `marching_cubes(method="lorensen")` vertex set and area exactly on an ellipsoid
+(checked once, scikit-image is not a dependency); `tests/test_hull.py::test_isosurface_is_marching_cubes` pins the
+one-voxel case. Sulcal depth does not use the iso-surface and is unchanged.
+
+Direct check against the image's own hull (`tests/data/golden-image/outer-hull/bumpy_ico5`): the port now gives 277,674
+vertices vs 277,680 and area 38,993 vs 39,120 mm^2 (-0.3 %), p99 nearest-vertex distance 0.0001 mm in both directions. The
+B9.2 acceptance test had measured only image -> port distance; the tetrahedra vertex set contains every marching-cubes vertex,
+so it passed. `test_outer_hull_vs_image_golden` now also checks port -> image distance, vertex count and area.

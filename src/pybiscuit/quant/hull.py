@@ -14,9 +14,9 @@ BISCUIT image, builds a smooth hull enveloping a cortical surface:
 Known deviations (``docs/ports/outer-hull.md``): MATLAB library routines have no source here, so
 ``strel('ball')`` is applied as the exact nonflat ellipsoid (MATLAB's default N=8 line
 decomposition approximates it), 2-D per z-slice (MATLAB pads a 2-D neighbourhood with singleton
-dimensions), and the iso-surface comes from marching tetrahedra, so hull vertex/face order and
-triangulation differ from MATLAB's marching cubes while the surface (to within the voxel sampling)
-is the same.  No oracle exists (no MATLAB; Octave is unavailable), so this row is provisional.
+dimensions).  The iso-surface is classic marching cubes (Lorensen & Cline table), as MATLAB's
+``isosurface``; vertex and face order may still differ from MATLAB's.  No oracle exists (no MATLAB;
+Octave is unavailable), so this row is provisional; the image's LGI maps are the indirect evidence.
 """
 
 from __future__ import annotations
@@ -31,6 +31,7 @@ from scipy.spatial import cKDTree
 
 from ..io import read_vtk, write_vtk
 from ..mesh import Mesh
+from . import _mc_tables
 from ._voxelise import voxelise
 
 __all__ = ["outer_hull", "icp_finite", "fminlbfgs", "write_hull"]
@@ -140,118 +141,51 @@ def _smooth3_gaussian(A, size, sigma):
 
 
 # --------------------------------------------------------------------------- #
-# iso-surface: marching tetrahedra (Kuhn 6-tet cube decomposition)
+# iso-surface: marching cubes (MATLAB ``isosurface``; Lorensen & Cline table)
 # --------------------------------------------------------------------------- #
-_TETS = np.array(
-    [[0, 1, 3, 7], [0, 1, 5, 7], [0, 2, 3, 7], [0, 2, 6, 7], [0, 4, 5, 7], [0, 4, 6, 7]],
-    dtype=np.int64,
-)
-_CORNER = np.array([[c & 1, (c >> 1) & 1, (c >> 2) & 1] for c in range(8)], dtype=np.int64)
+_CORNER = np.array(_mc_tables.CORNERS, dtype=np.int64)
+_EDGE = np.array(_mc_tables.EDGES, dtype=np.int64)
+_TRI = np.full((256, 16), -1, dtype=np.int64)
+for _i, _row in enumerate(_mc_tables.TRIANGLES):
+    _TRI[_i, : len(_row)] = _row
 
 
 @njit(cache=True, error_model="numpy")
-def _edge_pos(vol, iso, ni, nj, nk, a, b, out, o):
-    va = vol[a // (nj * nk), (a // nk) % nj, a % nk]
-    vb = vol[b // (nj * nk), (b // nk) % nj, b % nk]
-    t = (iso - va) / (vb - va)
-    out[o, 0] = a // (nj * nk) + t * (b // (nj * nk) - a // (nj * nk))
-    out[o, 1] = (a // nk) % nj + t * ((b // nk) % nj - (a // nk) % nj)
-    out[o, 2] = a % nk + t * (b % nk - a % nk)
-
-
-@njit(cache=True, error_model="numpy")
-def _mt(vol, iso, cubes, tets, corner):
+def _mc(vol, iso, cubes, tri_table, edge, corner):
     ni, nj, nk = vol.shape
     L = ni * nj * nk
-    tri = np.empty((cubes.shape[0] * 12, 3), dtype=np.int64)
+    tri = np.empty((cubes.shape[0] * 5, 3), dtype=np.int64)
     nt = 0
     lin = np.empty(8, dtype=np.int64)
-    val = np.empty(8)
-    pe = np.empty((3, 3))
     for c in range(cubes.shape[0]):
         i0, j0, k0 = cubes[c, 0], cubes[c, 1], cubes[c, 2]
+        case = 0
         for q in range(8):
             ii = i0 + corner[q, 0]
             jj = j0 + corner[q, 1]
             kk = k0 + corner[q, 2]
             lin[q] = (ii * nj + jj) * nk + kk
-            val[q] = vol[ii, jj, kk]
-        for t in range(6):
-            ins = np.empty(4, dtype=np.int64)
-            outs = np.empty(4, dtype=np.int64)
-            ni_, no_ = 0, 0
-            for q in range(4):
-                v = tets[t, q]
-                if val[v] >= iso:
-                    ins[ni_] = v
-                    ni_ += 1
-                else:
-                    outs[no_] = v
-                    no_ += 1
-            if ni_ == 0 or ni_ == 4:
-                continue
-            # edges as (inside vertex, outside vertex) pairs
-            if ni_ == 1 or ni_ == 3:
-                ntri = 1
-            else:
-                ntri = 2
-            for tt in range(ntri):
-                e = np.empty(
-                    (3, 2), dtype=np.int64
-                )  # (inside, outside) corner ids per triangle vertex
-                if ni_ == 1:
-                    for m in range(3):
-                        e[m, 0] = ins[0]
-                        e[m, 1] = outs[m]
-                elif ni_ == 3:
-                    for m in range(3):
-                        e[m, 0] = ins[m]
-                        e[m, 1] = outs[0]
-                else:
-                    a, b = ins[0], ins[1]
-                    cc, d = outs[0], outs[1]
-                    if tt == 0:  # (a-c, a-d, b-d)
-                        e[0, 0], e[0, 1] = a, cc
-                        e[1, 0], e[1, 1] = a, d
-                        e[2, 0], e[2, 1] = b, d
-                    else:  # (a-c, b-d, b-c)
-                        e[0, 0], e[0, 1] = a, cc
-                        e[1, 0], e[1, 1] = b, d
-                        e[2, 0], e[2, 1] = b, cc
-                # orient: normal from inside to outside
-                for m in range(3):
-                    _edge_pos(vol, iso, ni, nj, nk, lin[e[m, 0]], lin[e[m, 1]], pe, m)
-                ux, uy, uz = pe[1, 0] - pe[0, 0], pe[1, 1] - pe[0, 1], pe[1, 2] - pe[0, 2]
-                wx, wy, wz = pe[2, 0] - pe[0, 0], pe[2, 1] - pe[0, 1], pe[2, 2] - pe[0, 2]
-                nx_ = uy * wz - uz * wy
-                ny_ = uz * wx - ux * wz
-                nz_ = ux * wy - uy * wx
-                # inside -> outside direction of the tet
-                di = np.zeros(3)
-                do = np.zeros(3)
-                for q in range(ni_):
-                    for ax in range(3):
-                        di[ax] += corner[ins[q], ax] / ni_
-                for q in range(no_):
-                    for ax in range(3):
-                        do[ax] += corner[outs[q], ax] / no_
-                flip = nx_ * (do[0] - di[0]) + ny_ * (do[1] - di[1]) + nz_ * (do[2] - di[2]) < 0
-                order = (0, 2, 1) if flip else (0, 1, 2)
-                for m in range(3):
-                    s = order[m]
-                    la, lb = lin[e[s, 0]], lin[e[s, 1]]
-                    if la > lb:
-                        la, lb = lb, la
-                    tri[nt, m] = la * L + lb
-                nt += 1
+            if vol[ii, jj, kk] < iso:
+                case |= 1 << q
+        m = 0
+        while m < 16 and tri_table[case, m] >= 0:
+            # table winding: normals point from the >= iso side to the < iso side
+            for r in range(3):
+                e = tri_table[case, m + r]
+                la, lb = lin[edge[e, 0]], lin[edge[e, 1]]
+                if la > lb:
+                    la, lb = lb, la
+                tri[nt, r] = la * L + lb
+            nt += 1
+            m += 3
     return tri[:nt]
 
 
 def isosurface(vol, iso=ISO):
-    """Marching-tetrahedra iso-surface of ``vol`` (axis0, axis1, axis2 voxel coordinates, 0-based).
+    """Marching-cubes iso-surface of ``vol`` (axis0, axis1, axis2 voxel coordinates, 0-based).
 
     Returns ``(vertices float64 (V,3), faces int32 (F,3))``, faces oriented from the ``>= iso``
-    side to the ``< iso`` side, vertices shared between triangles.
+    side to the ``< iso`` side, vertices shared between triangles (one per cut voxel edge).
     """
     vol = np.ascontiguousarray(vol, dtype=np.float64)
     inside = (vol >= iso).astype(np.uint8)
@@ -265,7 +199,7 @@ def isosurface(vol, iso=ISO):
                     dz : vol.shape[2] - 1 + dz,
                 ]
     cubes = np.argwhere((s > 0) & (s < 8)).astype(np.int64)
-    tri = _mt(vol, iso, cubes, _TETS, _CORNER)
+    tri = _mc(vol, iso, cubes, _TRI, _EDGE, _CORNER)
     keys, inv = np.unique(tri.ravel(), return_inverse=True)
     L = vol.size
     a, b = keys // L, keys % L

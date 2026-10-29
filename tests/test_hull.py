@@ -55,6 +55,17 @@ def test_isosurface_closed_outward():
     assert abs(r.mean() - 6.0) < 0.6
 
 
+def test_isosurface_is_marching_cubes():
+    """One voxel: classic marching cubes gives the 8-triangle octahedron (MATLAB ``isosurface``);
+    marching tetrahedra would add diagonal-edge vertices."""
+    vol = np.zeros((3, 3, 3))
+    vol[1, 1, 1] = 255.0
+    v, f = isosurface(vol, 1.0)
+    assert v.shape == (6, 3) and f.shape == (8, 3)
+    assert np.allclose(np.sort(np.abs(v - 1).max(axis=1)), 254 / 255)
+    assert _volume(v, f) > 0
+
+
 def test_closing_fills_narrow_gap_per_slice():
     a = np.zeros((60, 60, 5))
     a[10:50, 10:50, :] = 255.0
@@ -143,4 +154,14 @@ def test_outer_hull_matches_image_golden_bumpy_ico5():
     # Acceptance policy: p99 <= 0.1 mm, mean <= 0.06 mm
     assert mean_dist < 0.06, f"Mean distance {mean_dist:.4f} mm exceeds 0.06 mm"
     assert p99_dist < 0.10, f"p99 distance {p99_dist:.4f} mm exceeds 0.10 mm"
+    # and the other way: a finer triangulation (marching tetrahedra, used until 2026-10-29) contains
+    # every marching-cubes vertex and passes the check above while its area is ~18 % too large
+    d_port_to_golden, _ = cKDTree(golden_mesh.vertices).query(hull.vertices)
+    assert float(np.percentile(d_port_to_golden, 99)) < 0.10
+    assert abs(hull.n_vertices - golden_mesh.n_vertices) <= 0.001 * golden_mesh.n_vertices
 
+    def area(m):
+        p = m.vertices[m.faces]
+        return 0.5 * np.linalg.norm(np.cross(p[:, 1] - p[:, 0], p[:, 2] - p[:, 0]), axis=1).sum()
+
+    assert abs(area(hull) / area(golden_mesh) - 1) < 0.01

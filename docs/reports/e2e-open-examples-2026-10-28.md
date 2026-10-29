@@ -30,16 +30,17 @@ inputs), so differences accumulate as they would for a user.
 
 ## Result
 
-All three runs complete (wall time 22, 13 and 16 min; quant ≈ 60 % of it, TRACE ≈ 20 %).
+All three runs complete (wall time 22, 13 and 16 min; quant ≈ 60 % of it, TRACE ≈ 20 %). Table and metrics JSON are from
+the rerun of 2026-10-29 with the marching-cubes hull (F4); every other column is unchanged from the first run.
 
 | Subject | Hemi | surf/ mask curve/ identical | sphere.reg median / p99 ° | parc agreement bc / dkt | mid H,S,area,thickness identical | SD r / bias mm | LGI r / bias | SCI r |
 |---|---|---|---|---|---|---|---|---|
-| 0050952 | lh | yes | 0.164 / 0.671 | 0.9794 / 0.982 | yes | 0.9997 / -0.0392 | 0.9856 / -0.225 | 0.9956 |
-| 0050952 | rh | yes | 0.11 / 0.843 | 0.9951 / 0.9996 | yes | 0.99978 / -0.0425 | 0.9922 / -0.24 | 0.9957 |
-| 0050961 | lh | yes | 0.278 / 1.56 | 0.9846 / 0.9976 | yes | 0.99968 / -0.0188 | 0.9913 / -0.192 | 0.9962 |
-| 0050961 | rh | yes | 0.297 / 2.85 | 0.9512 / 0.9857 | yes | 0.99974 / -0.0265 | 0.9929 / -0.255 | 0.9961 |
-| 0050971 | lh | yes | 0.104 / 0.59 | 0.9996 / 0.9995 | yes | 0.99978 / -0.025 | 0.9941 / -0.187 | 0.9958 |
-| 0050971 | rh | yes | 0.198 / 0.727 | 0.9998 / 0.9997 | yes | 0.99978 / -0.0212 | 0.9838 / -0.245 | 0.9958 |
+| 0050952 | lh | yes | 0.164 / 0.671 | 0.9794 / 0.982 | yes | 0.9997 / -0.0392 | 0.9991 / 0.0249 | 0.9956 |
+| 0050952 | rh | yes | 0.11 / 0.843 | 0.9951 / 0.9996 | yes | 0.99978 / -0.0425 | 0.9957 / 0.0133 | 0.9957 |
+| 0050961 | lh | yes | 0.278 / 1.56 | 0.9846 / 0.9976 | yes | 0.99968 / -0.0188 | 0.9994 / -0.0245 | 0.9962 |
+| 0050961 | rh | yes | 0.297 / 2.85 | 0.9512 / 0.9857 | yes | 0.99974 / -0.0265 | 0.9984 / -0.0021 | 0.9961 |
+| 0050971 | lh | yes | 0.104 / 0.59 | 0.9996 / 0.9995 | yes | 0.99978 / -0.025 | 0.9991 / -0.0341 | 0.9958 |
+| 0050971 | rh | yes | 0.198 / 0.727 | 0.9998 / 0.9997 | yes | 0.99978 / -0.0212 | 0.9976 / 0.00382 | 0.9958 |
 
 ROI tables (`stat/stats.<p>.csv`, 111 braincolor / 65 dkt31 rows, ids identical, no NaN mismatches), worst subject:
 
@@ -48,7 +49,7 @@ ROI tables (`stat/stats.<p>.csv`, 111 braincolor / 65 dkt31 rows, ids identical,
 | Sulcal depth | 0.9995 / 0.8 % | 0.9998 / 0.4 % |
 | Thickness | 0.9976 / 0.3 % | 0.9991 / 0.07 % |
 | SCI | 0.9952 / 0.9 % | 0.9937 / 0.8 % |
-| LGI | 0.9903 / 5.1 % | 0.9925 / 5.2 % |
+| LGI | 0.9984 / 1.1 % | 0.9988 / 0.9 % |
 | Mean curvature | 0.9900 / 8.3 % | 0.9954 / 2.3 % |
 | Shape index | 0.9891 / 10.8 % | 0.9965 / 4.9 % |
 
@@ -69,11 +70,14 @@ now has real image evidence.
 the per-stage replay; the worst case is 0050961 rh (p99 2.85°, braincolor 95.1 %). Every registered-space map (`stat/*.reg.*`) inherits this (r 0.97–0.999), as do the ROI
 tables via the labels.
 
-**F4 — LGI is 4.7–7.1 % low everywhere.** With the klaplace port (B9.3) in the chain, LGI correlates at r 0.984–0.994
-(the earlier closest-point stand-in gave r ≈ 0.89) but its mean is consistently 5–7 % below the image's. Curves and pial
-are identical, Gyrification is oracle-validated (B9.4), so the bias sits in OuterHull or the klaplace correspondence
-(hull area or `--refHullArea` normalisation). Pinning it down needs the image's `tmp-lgi-*` intermediates (Q1, one image
-rerun with `$TMP` kept).
+**F4 — LGI: fixed by marching cubes in OuterHull (2026-10-29).** The first run gave LGI 4.7-7.1 % below the image in every
+hemisphere (r 0.984-0.994). Curves and pial were identical and Gyrification is oracle-validated (B9.4), so the hull was the
+suspect. `OuterHull` built its iso-surface with marching tetrahedra, whose extra diagonal cuts make a staircase hull
+~18 % larger in area than MATLAB's marching cubes (`isosurface`) on the same volume (0050952 lh: 61,474 vs 52,085 mm^2).
+With classic marching cubes ([outer-hull.md](../ports/outer-hull.md)) all six hemispheres give r 0.9957-0.9994 and mean
+differences of -0.85 to +0.61 % (p99 |diff| 3.5-9.5 % of the 1-99 % range); registered maps r 0.9955-0.9991; ROI LGI
+r >= 0.9984, median relative difference <= 1.1 %. What remains is within Q14's chaotic-row latitude (`strel('ball')`
+decomposition and klaplace details are still unverified without the image's `tmp-lgi-*` intermediates).
 
 **F5 — sulcal depth** keeps the known B9.5 residual (r ≥ 0.9997, bias −0.02 to −0.04 mm, max ≈ 1 chamfer step).
 

@@ -209,11 +209,11 @@
   },
   "lh.gray.LGI": {
    "byte_identical": false,
-   "pearson_r": 0.99408362952298,
-   "max_abs": 3.2226380000000017,
-   "p99_abs": 1.7055071799999924,
-   "mean_diff": -0.1874508523652706,
-   "p99_abs_over_range": 0.11417249378731183,
+   "pearson_r": 0.9990994696906625,
+   "max_abs": 1.525776999999998,
+   "p99_abs": 0.6543650599999998,
+   "mean_diff": -0.03412885824648405,
+   "p99_abs_over_range": 0.04380543900582362,
    "frac_exact_6dp": 7.74863430320406e-06
   },
   "lh.mid.SCI": {
@@ -272,12 +272,12 @@
   },
   "rh.gray.LGI": {
    "byte_identical": false,
-   "pearson_r": 0.9838474967468268,
-   "max_abs": 5.7598579999999995,
-   "p99_abs": 2.7267419999999998,
-   "mean_diff": -0.245456640056528,
-   "p99_abs_over_range": 0.2088005787240794,
-   "frac_exact_6dp": 1.5360865123923778e-05
+   "pearson_r": 0.9975819691652216,
+   "max_abs": 1.9402760000000008,
+   "p99_abs": 0.8912309999999994,
+   "mean_diff": 0.0038191308515295587,
+   "p99_abs_over_range": 0.06824611517218714,
+   "frac_exact_6dp": 4.608259537177134e-05
   },
   "rh.mid.SCI": {
    "byte_identical": false,
@@ -337,12 +337,12 @@
   },
   "lh.gray.reg.LGI": {
    "byte_identical": false,
-   "pearson_r": 0.9944174575331537,
-   "max_abs": 3.2014189999999996,
-   "p99_abs": 1.783564089999999,
-   "mean_diff": -0.18907802521941872,
-   "p99_abs_over_range": 0.10713634200792521,
-   "frac_exact_6dp": 0.0
+   "pearson_r": 0.9991071274778597,
+   "max_abs": 1.5247930000000007,
+   "p99_abs": 0.6706817499999999,
+   "mean_diff": -0.043284777383088585,
+   "p99_abs_over_range": 0.04028696795889954,
+   "frac_exact_6dp": 6.103441120103514e-06
   },
   "lh.reg.thickness": {
    "byte_identical": false,
@@ -400,12 +400,12 @@
   },
   "rh.gray.reg.LGI": {
    "byte_identical": false,
-   "pearson_r": 0.9840426527391024,
-   "max_abs": 5.690692999999998,
-   "p99_abs": 3.041269519999998,
-   "mean_diff": -0.2796768708694962,
-   "p99_abs_over_range": 0.21915766520782254,
-   "frac_exact_6dp": 6.103441120103514e-06
+   "pearson_r": 0.996634852713021,
+   "max_abs": 1.9953190000000003,
+   "p99_abs": 1.0129443799999995,
+   "mean_diff": 0.010945980450678093,
+   "p99_abs_over_range": 0.0729940322113199,
+   "frac_exact_6dp": 1.2206882240207028e-05
   },
   "rh.reg.thickness": {
    "byte_identical": false,
@@ -488,15 +488,15 @@
      "nan_mismatch": 0
     },
     "LGI": {
-     "pearson_r": 0.9939035712209692,
-     "rel_median": 0.03909447480525726,
-     "rel_max": 0.2033674170266432,
+     "pearson_r": 0.9989452861759258,
+     "rel_median": 0.005797160854702253,
+     "rel_max": 0.04998941561305877,
      "nan_mismatch": 0
     },
     "LGI_stdev": {
-     "pearson_r": 0.9728182650623897,
-     "rel_median": 0.06658129311420637,
-     "rel_max": 0.39563520883170605,
+     "pearson_r": 0.9975736923559891,
+     "rel_median": 0.013226731758544276,
+     "rel_max": 0.10854207296522438,
      "nan_mismatch": 0
     },
     "nVertices_curve": {
@@ -566,15 +566,15 @@
      "nan_mismatch": 0
     },
     "LGI_curve": {
-     "pearson_r": 0.9942103042701833,
-     "rel_median": 0.04418354700920635,
-     "rel_max": 0.20285717299092867,
+     "pearson_r": 0.9988387203117038,
+     "rel_median": 0.00687764685467497,
+     "rel_max": 0.07207750257920537,
      "nan_mismatch": 0
     },
     "LGI_stdev_curve": {
-     "pearson_r": 0.9724374193450194,
-     "rel_median": 0.06749952862209445,
-     "rel_max": 0.388717644446015,
+     "pearson_r": 0.9964742432896333,
+     "rel_median": 0.01650178948488817,
+     "rel_max": 0.20687862452796985,
      "nan_mismatch": 0
     }
    }
@@ -651,15 +651,15 @@
      "nan_mismatch": 0
     },
     "LGI": {
-     "pearson_r": 0.9924747349236571,
-     "rel_median": 0.04105544957665451,
-     "rel_max": 0.2123253188864913,
+     "pearson_r": 0.9991647300828148,
+     "rel_median": 0.0049070389984688274,
+     "rel_max": 0.0407737194088071,
      "nan_mismatch": 0
     },
     "LGI_stdev": {
-     "pearson_r": 0.9693710006364937,
-     "rel_median": 0.06581877740956527,
-     "rel_max": 0.41161145757604145,
+     "pearson_r": 0.9987166789037558,
+     "rel_median": 0.014192515483331617,
+     "rel_max": 0.06785928125127937,
      "nan_mismatch": 0
     },
     "nVertices_curve": {
@@ -729,15 +729,15 @@
      "nan_mismatch": 0
     },
     "LGI_curve": {
-     "pearson_r": 0.9947061584038089,
-     "rel_median": 0.04264620716439291,
-     "rel_max": 0.1576722488127637,
+     "pearson_r": 0.9990485810684243,
+     "rel_median": 0.005003952079110961,
+     "rel_max": 0.04258339827902971,
      "nan_mismatch": 0
     },
     "LGI_stdev_curve": {
-     "pearson_r": 0.9741480326450866,
-     "rel_median": 0.07098531011889787,
-     "rel_max": 0.39283750410043633,
+     "pearson_r": 0.9978581475744643,
+     "rel_median": 0.01756320646038739,
+     "rel_max": 0.10887406160756571,
      "nan_mismatch": 0
     }
    }
