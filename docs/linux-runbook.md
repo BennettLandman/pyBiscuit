@@ -5,6 +5,19 @@ The owner runs these on a Linux x86-64 host with Apptainer or Singularity
 back. Nothing here runs on macOS. Never commit or upload the image, the
 FreeSurfer licence, or subject-derived outputs.
 
+## Bundle for someone else to run (preferred, 2026-10-29)
+
+`scripts/reference/make_bundle.sh` (on the Mac, from a clean commit) writes
+`~/dev/biscuit/bundles/pybiscuit-image-jobs-<date>-<commit>.tar.gz`: a snapshot of this repository, the
+driver `run_jobs.sh`, and staged inputs (the MaCRUISE v3 sample and the 18 FreeSurfer files of each
+open-examples subject, `stage_freesurfer_input.sh`). The recipient needs only the image, a licence and
+Apptainer; the instructions are the bundle's `README.md` (source: `scripts/reference/bundle/README.md`).
+Jobs: `macruise-oasis45`, `macruise-mb101` (job 2 below), `fs-<subject>` (FreeSurfer-route reruns with
+intermediates: the image's own run-to-run spread for Q15, `tmp-lgi-*`, HSD intermediates), optional
+`goldens` (job 1), then `pack`, which writes one `.tar` to send back. Mock-tested in
+`tests/test_reference_harness.py`; not yet run on a real host. Results go to `~/dev/biscuit/image-runs/`,
+never into git.
+
 ## 0. One-time setup
 
 ```bash

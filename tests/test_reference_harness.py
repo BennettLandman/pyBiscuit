@@ -353,3 +353,107 @@ def test_workflow_is_dispatch_only():
     wf = yaml.safe_load(text)
     assert list(wf.get("on", wf.get(True))) == ["workflow_dispatch"]
     assert wf["permissions"] == {"contents": "read"}
+
+
+def _fake_bundle(mock, tmp_path):
+    """The bundle layout make_bundle.sh writes, with the repo in place of the snapshot."""
+    b = tmp_path / "bundle"
+    b.mkdir()
+    for f in ("run_jobs.sh", "README.md"):
+        (b / f).write_bytes((SCRIPTS / "bundle" / f).read_bytes())
+    (b / "run_jobs.sh").chmod(0o755)
+    (b / "pyBiscuit").symlink_to(REPO)
+    for d in ("inputs/macruise/sample", "inputs/freesurfer/0050952"):
+        (b / d).mkdir(parents=True)
+        (b / d / "lh.white.vtk").write_text("mesh\n")
+    lic = tmp_path / "license.txt"
+    lic.write_text("licence\n")
+    import hashlib
+
+    env = dict(
+        mock["env"],
+        SIF=str(mock["sif"]),
+        SIF_SHA256=hashlib.sha256(mock["sif"].read_bytes()).hexdigest(),
+        FS_LICENSE=str(lic),
+        RUNS=str(tmp_path / "runs"),
+        THREADS="2",
+        PYTHON=PY,
+    )
+    return b, env
+
+
+def test_bundle_driver_runs_jobs_skips_done_and_packs(mock, tmp_path):
+    import tarfile
+
+    b, env = _fake_bundle(mock, tmp_path)
+    r = sh([b / "run_jobs.sh", "--list"], env)
+    assert r.returncode == 0 and "macruise-oasis45" in r.stdout and "fs-0050971" in r.stdout
+    r = sh([b / "run_jobs.sh", "macruise-oasis45", "fs-0050952"], env)
+    assert r.returncode == 0, r.stdout + r.stderr
+    runs = tmp_path / "runs"
+    for job, recon, reg in (
+        ("macruise-oasis45", "macruise", "oasis45"),
+        ("fs-0050952", "freesurfer", "mb101"),
+    ):
+        run = json.loads((runs / f"{job}.harness" / "run.json").read_text())
+        assert (
+            run["exit"] == 0
+            and run["surf_recon"] == recon
+            and run["reg"] == reg
+            and run["thread"] == "2"
+        )
+        assert (runs / f"{job}.harness" / "orchestrator-trace.md").is_file()
+        assert (runs / job / ".tmp").is_dir()  # intermediates kept
+    r = sh([b / "run_jobs.sh", "macruise-oasis45", "pack"], env)
+    assert r.returncode == 0, r.stderr
+    status = (runs / "status.tsv").read_text()
+    assert "macruise-oasis45\tskipped (already done)" in status and "fs-0050952\texit 0" in status
+    (tar,) = runs.glob("pybiscuit-image-results-*.tar")
+    names = set(tarfile.open(tar).getnames())
+    assert {"status.tsv", "logs/fs-0050952.log", "macruise-oasis45.harness/run.json",
+            "fs-0050952.harness/fs-0050952.tar.gz", "fs-0050952.harness/trace.jsonl"} <= names  # fmt: skip
+
+
+def test_bundle_driver_refuses_without_licence_or_image(mock, tmp_path):
+    b, env = _fake_bundle(mock, tmp_path)
+    r = sh(
+        [b / "run_jobs.sh", "macruise-mb101"], {k: v for k, v in env.items() if k != "FS_LICENSE"}
+    )
+    assert r.returncode != 0 and "FS_LICENSE" in r.stderr
+    r = sh([b / "run_jobs.sh", "fs-0050952"], {k: v for k, v in env.items() if k != "SIF"})
+    assert r.returncode != 0 and "SIF" in r.stderr
+
+
+def test_make_bundle_stages_inputs_and_checksums(tmp_path):
+    mc = tmp_path / "macruise"
+    for f in ("Surfaces_FreeView/target_image_GMimg_innerSurf.asc", "Surfaces_MNI/target_image_GMimg_innerSurf.asc",
+              "Raw/T1.nii.gz", "SegRefine/SEG_refine.nii.gz"):  # fmt: skip
+        (mc / f).parent.mkdir(parents=True, exist_ok=True)
+        (mc / f).write_text(f)
+    fs = tmp_path / "fs" / "s1"
+    for h in ("lh", "rh"):
+        for f in ("white", "sphere", "inflated", "pial", "curv", "sulc", "inflated.H", "thickness"):
+            (fs / "surf").mkdir(parents=True, exist_ok=True)
+            (fs / "surf" / f"{h}.{f}").write_text(f)
+        (fs / "surf" / f"{h}.white.vtk").write_text("biscuit product, not staged")
+        (fs / "label").mkdir(exist_ok=True)
+        (fs / "label" / f"{h}.cortex.label").write_text("label")
+    out = tmp_path / "out"
+    r = sh([SCRIPTS / "make_bundle.sh", "--out", out, "--macruise", mc, "--freesurfer-root", fs.parent,
+            "--subjects", "s1", "--allow-dirty"], os.environ)  # fmt: skip
+    assert r.returncode == 0, r.stdout + r.stderr
+    (d,) = [p for p in out.iterdir() if p.is_dir()]
+    assert (out / f"{d.name}.tar.gz").is_file()
+    sums = dict(
+        line.split("  ", 1)[::-1] for line in (d / "BUNDLE.sha256").read_text().splitlines()
+    )
+    assert "run_jobs.sh" in sums and "pyBiscuit/scripts/reference/run_full.sh" in sums
+    assert (
+        "inputs/macruise/sample/T1.nii.gz" in sums
+        and "inputs/freesurfer/s1/surf/rh.inflated.H" in sums
+    )
+    assert (
+        len([k for k in sums if k.startswith("inputs/freesurfer/s1/") and "INPUTS" not in k]) == 18
+    )
+    assert not (d / "inputs/freesurfer/s1/surf/lh.white.vtk").exists()
+    assert os.access(d / "run_jobs.sh", os.X_OK)
