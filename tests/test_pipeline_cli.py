@@ -85,7 +85,8 @@ def test_unknown_input(tmp_path, capsys):
 def test_dry_run_reference_inputs(root, tmp_path, capsys):
     assert run_cli(root, tmp_path / "o", "--dry-run") == 0
     text = capsys.readouterr().out
-    assert "== stage plan ==" in text and text.count("BLOCKED") == 8
+    assert "== stage plan ==" in text and "BLOCKED" not in text
+    assert text.count("will run") == 9
     assert "ERROR" not in text
     for stage in ("ingest", "surfprep", "features", "register", "parc", "trace", "quant",
                   "stats", "report"):
