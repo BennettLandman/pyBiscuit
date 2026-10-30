@@ -60,3 +60,11 @@ Direct check against the image's own hull (`tests/data/golden-image/outer-hull/b
 vertices vs 277,680 and area 38,993 vs 39,120 mm^2 (-0.3 %), p99 nearest-vertex distance 0.0001 mm in both directions. The
 B9.2 acceptance test had measured only image -> port distance; the tetrahedra vertex set contains every marching-cubes vertex,
 so it passed. `test_outer_hull_vs_image_golden` now also checks port -> image distance, vertex count and area.
+
+## Cortex-scale image evidence (2026-10-30)
+
+The image's `tmp-lgi-*/<h>.gray.hull.vtk` for six open-examples hemispheres ([report](../reports/lgi-intermediates-2026-10-30.md)):
+vertex count within 0.2 %, area -0.3 to +0.03 %, median distance 0.003-0.03 mm, but ~6 % of vertices one voxel (0.58-0.66 mm)
+off in both directions, in small scattered patches. Including the closing ball's rim raises that to 7.3 %. Not resolved: the
+remaining suspects are MATLAB internals (`strel('ball')` decomposition, `smooth3`/VOXELISE rounding at the threshold). This is
+what remains in end-to-end LGI (klaplace and Gyrification match the image on its own intermediates).

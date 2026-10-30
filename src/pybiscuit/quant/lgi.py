@@ -410,7 +410,7 @@ def gyrification(
     input_map=None,
     corr=None,
     n_threads: int | None = None,
-    heap: str = "libcxx",
+    heap: str = "libstdcxx",
     libm: str = DEFAULT_LIBM,
 ) -> LgiResult:
     """Run the Gyrification pipeline (defaults = ``Gyrification`` CLI defaults).

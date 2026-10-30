@@ -209,12 +209,12 @@
   },
   "lh.gray.LGI": {
    "byte_identical": false,
-   "pearson_r": 0.9991478140602932,
-   "max_abs": 1.539294,
-   "p99_abs": 0.5596585799999997,
-   "mean_diff": 0.024948147847403093,
-   "p99_abs_over_range": 0.040546084801550954,
-   "frac_exact_6dp": 2.9182808407567104e-05
+   "pearson_r": 0.9992385682817128,
+   "max_abs": 1.5613789999999987,
+   "p99_abs": 0.5583654799999999,
+   "mean_diff": 0.024913164379464055,
+   "p99_abs_over_range": 0.0404524024313872,
+   "frac_exact_6dp": 4.3774212611350656e-05
   },
   "lh.mid.SCI": {
    "byte_identical": false,
@@ -272,12 +272,12 @@
   },
   "rh.gray.LGI": {
    "byte_identical": false,
-   "pearson_r": 0.9957314002680773,
-   "max_abs": 4.031015,
-   "p99_abs": 1.3241945999999991,
-   "mean_diff": 0.013332624399893153,
-   "p99_abs_over_range": 0.095087109223706,
-   "frac_exact_6dp": 7.21933047929135e-06
+   "pearson_r": 0.9956726140216293,
+   "max_abs": 4.027556000000001,
+   "p99_abs": 1.3339419599999967,
+   "mean_diff": 0.012342588086660842,
+   "p99_abs_over_range": 0.09578704281727492,
+   "frac_exact_6dp": 2.1657991437874052e-05
   },
   "rh.mid.SCI": {
    "byte_identical": false,
@@ -337,11 +337,11 @@
   },
   "lh.gray.reg.LGI": {
    "byte_identical": false,
-   "pearson_r": 0.998823937677563,
-   "max_abs": 1.6201380000000007,
-   "p99_abs": 0.6895191100000002,
-   "mean_diff": 0.028597827480133297,
-   "p99_abs_over_range": 0.048568074908240666,
+   "pearson_r": 0.9988925638433435,
+   "max_abs": 1.5429379999999995,
+   "p99_abs": 0.6849614599999999,
+   "mean_diff": 0.028552242666715497,
+   "p99_abs_over_range": 0.048247044956502914,
    "frac_exact_6dp": 6.103441120103514e-06
   },
   "lh.reg.thickness": {
@@ -400,11 +400,11 @@
   },
   "rh.gray.reg.LGI": {
    "byte_identical": false,
-   "pearson_r": 0.9954611092034478,
-   "max_abs": 3.9539029999999986,
-   "p99_abs": 1.5023787200000003,
-   "mean_diff": 0.02504765392878505,
-   "p99_abs_over_range": 0.09819680343399925,
+   "pearson_r": 0.995398815741237,
+   "max_abs": 3.955007,
+   "p99_abs": 1.5408512299999964,
+   "mean_diff": 0.025416888569475472,
+   "p99_abs_over_range": 0.10071140075343026,
    "frac_exact_6dp": 1.2206882240207028e-05
   },
   "rh.reg.thickness": {
@@ -488,15 +488,15 @@
      "nan_mismatch": 0
     },
     "LGI": {
-     "pearson_r": 0.9984233349214126,
-     "rel_median": 0.007951938388517488,
-     "rel_max": 0.1324079889262438,
+     "pearson_r": 0.9983679446386129,
+     "rel_median": 0.008477014097241617,
+     "rel_max": 0.13289030689197792,
      "nan_mismatch": 0
     },
     "LGI_stdev": {
-     "pearson_r": 0.9940782098101076,
-     "rel_median": 0.02065901463110251,
-     "rel_max": 0.24114822190538057,
+     "pearson_r": 0.9940092701402565,
+     "rel_median": 0.020014783222197283,
+     "rel_max": 0.2481649195067472,
      "nan_mismatch": 0
     },
     "nVertices_curve": {
@@ -566,15 +566,15 @@
      "nan_mismatch": 0
     },
     "LGI_curve": {
-     "pearson_r": 0.9983023753352603,
-     "rel_median": 0.009906043681541389,
-     "rel_max": 0.15269129884054092,
+     "pearson_r": 0.9983002597357483,
+     "rel_median": 0.009126176173121996,
+     "rel_max": 0.1526551604498847,
      "nan_mismatch": 0
     },
     "LGI_stdev_curve": {
-     "pearson_r": 0.9949411079160904,
-     "rel_median": 0.025121249965352237,
-     "rel_max": 0.2965310937476593,
+     "pearson_r": 0.9948175032877832,
+     "rel_median": 0.025006199360759294,
+     "rel_max": 0.2957845059924508,
      "nan_mismatch": 0
     }
    }
@@ -651,15 +651,15 @@
      "nan_mismatch": 0
     },
     "LGI": {
-     "pearson_r": 0.998827528995565,
-     "rel_median": 0.009014980666064341,
-     "rel_max": 0.09578995247242716,
+     "pearson_r": 0.9987063419447934,
+     "rel_median": 0.008712236767193194,
+     "rel_max": 0.09699892297359496,
      "nan_mismatch": 0
     },
     "LGI_stdev": {
-     "pearson_r": 0.9950799588136812,
-     "rel_median": 0.021557059040753702,
-     "rel_max": 0.16859206869228874,
+     "pearson_r": 0.9948968816542335,
+     "rel_median": 0.020436867427515312,
+     "rel_max": 0.17162037178936063,
      "nan_mismatch": 0
     },
     "nVertices_curve": {
@@ -729,15 +729,15 @@
      "nan_mismatch": 0
     },
     "LGI_curve": {
-     "pearson_r": 0.9986917134141962,
-     "rel_median": 0.012793890508756626,
-     "rel_max": 0.0846448943463274,
+     "pearson_r": 0.9985986913975928,
+     "rel_median": 0.011695161164449207,
+     "rel_max": 0.08600694269386475,
      "nan_mismatch": 0
     },
     "LGI_stdev_curve": {
-     "pearson_r": 0.9958566309159371,
-     "rel_median": 0.028254849582084858,
-     "rel_max": 0.13163115517463522,
+     "pearson_r": 0.9957965674967506,
+     "rel_median": 0.025465355478272368,
+     "rel_max": 0.13227455421685563,
      "nan_mismatch": 0
     }
    }

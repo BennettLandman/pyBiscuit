@@ -31,16 +31,17 @@ inputs), so differences accumulate as they would for a user.
 ## Result
 
 All three runs complete (wall time 22, 13 and 16 min; quant ≈ 60 % of it, TRACE ≈ 20 %). Table and metrics JSON are from
-the rerun of 2026-10-29 with the marching-cubes hull (F4); every other column is unchanged from the first run.
+the rerun of 2026-10-30 with the marching-cubes hull (F4) and the libstdc++ heap order in Gyrification
+([lgi-intermediates-2026-10-30](lgi-intermediates-2026-10-30.md)); every other column is unchanged from the first run.
 
 | Subject | Hemi | surf/ mask curve/ identical | sphere.reg median / p99 ° | parc agreement bc / dkt | mid H,S,area,thickness identical | SD r / bias mm | LGI r / bias | SCI r |
 |---|---|---|---|---|---|---|---|---|
-| 0050952 | lh | yes | 0.164 / 0.671 | 0.9794 / 0.982 | yes | 0.9997 / -0.0392 | 0.9991 / 0.0249 | 0.9956 |
-| 0050952 | rh | yes | 0.11 / 0.843 | 0.9951 / 0.9996 | yes | 0.99978 / -0.0425 | 0.9957 / 0.0133 | 0.9957 |
-| 0050961 | lh | yes | 0.278 / 1.56 | 0.9846 / 0.9976 | yes | 0.99968 / -0.0188 | 0.9994 / -0.0245 | 0.9962 |
-| 0050961 | rh | yes | 0.297 / 2.85 | 0.9512 / 0.9857 | yes | 0.99974 / -0.0265 | 0.9984 / -0.0021 | 0.9961 |
-| 0050971 | lh | yes | 0.104 / 0.59 | 0.9996 / 0.9995 | yes | 0.99978 / -0.025 | 0.9991 / -0.0341 | 0.9958 |
-| 0050971 | rh | yes | 0.198 / 0.727 | 0.9998 / 0.9997 | yes | 0.99978 / -0.0212 | 0.9976 / 0.00382 | 0.9958 |
+| 0050952 | lh | yes | 0.164 / 0.671 | 0.9794 / 0.982 | yes | 0.9997 / -0.0392 | 0.9992 / 0.0249 | 0.9956 |
+| 0050952 | rh | yes | 0.11 / 0.843 | 0.9951 / 0.9996 | yes | 0.99978 / -0.0425 | 0.9957 / 0.0123 | 0.9957 |
+| 0050961 | lh | yes | 0.278 / 1.56 | 0.9846 / 0.9976 | yes | 0.99968 / -0.0188 | 0.9995 / -0.0238 | 0.9962 |
+| 0050961 | rh | yes | 0.297 / 2.85 | 0.9512 / 0.9857 | yes | 0.99974 / -0.0265 | 0.9985 / -0.00159 | 0.9961 |
+| 0050971 | lh | yes | 0.104 / 0.59 | 0.9996 / 0.9995 | yes | 0.99978 / -0.025 | 0.9991 / -0.0338 | 0.9958 |
+| 0050971 | rh | yes | 0.198 / 0.727 | 0.9998 / 0.9997 | yes | 0.99978 / -0.0212 | 0.9975 / 0.00322 | 0.9958 |
 
 ROI tables (`stat/stats.<p>.csv`, 111 braincolor / 65 dkt31 rows, ids identical, no NaN mismatches), worst subject:
 
@@ -74,10 +75,11 @@ tables via the labels.
 hemisphere (r 0.984-0.994). Curves and pial were identical and Gyrification is oracle-validated (B9.4), so the hull was the
 suspect. `OuterHull` built its iso-surface with marching tetrahedra, whose extra diagonal cuts make a staircase hull
 ~18 % larger in area than MATLAB's marching cubes (`isosurface`) on the same volume (0050952 lh: 61,474 vs 52,085 mm^2).
-With classic marching cubes ([outer-hull.md](../ports/outer-hull.md)) all six hemispheres give r 0.9957-0.9994 and mean
-differences of -0.85 to +0.61 % (p99 |diff| 3.5-9.5 % of the 1-99 % range); registered maps r 0.9955-0.9991; ROI LGI
+With classic marching cubes ([outer-hull.md](../ports/outer-hull.md)) all six hemispheres give r 0.9957-0.9995 and mean
+differences of -0.84 to +0.61 % (p99 |diff| 3.5-9.5 % of the 1-99 % range); registered maps r 0.9955-0.9991; ROI LGI
 r >= 0.9984, median relative difference <= 1.1 %. What remains is within Q14's chaotic-row latitude (`strel('ball')`
-decomposition and klaplace details are still unverified without the image's `tmp-lgi-*` intermediates).
+decomposition). The image's `tmp-lgi-*` intermediates (2026-10-30) show klaplace and Gyrification exact on the image's own
+inputs and locate the residual in OuterHull's one-voxel noise ([lgi-intermediates-2026-10-30](lgi-intermediates-2026-10-30.md)).
 
 **F5 — sulcal depth** keeps the known B9.5 residual (r ≥ 0.9997, bias −0.02 to −0.04 mm, max ≈ 1 chamfer step).
 

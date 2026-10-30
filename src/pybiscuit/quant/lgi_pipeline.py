@@ -134,7 +134,7 @@ def lgi_pipeline(
     pial, scurve, gcurve, out_dir, *, hemi: str = "lh", kernel: float = DEFAULT_KERNEL,
     speed: float = DEFAULT_SPEED, ref_area: float = DEFAULT_REF_AREA, n_threads: int = 1,
     hull: Mesh | None = None, outer: Mesh | None = None, keep_tmp: bool = True,
-    heap: str = "libcxx", corr_method: str = "klaplace",
+    heap: str = "libstdcxx", corr_method: str = "klaplace",
 ) -> LgiRun:  # fmt: skip
     """One hemisphere of the ``lgi`` script.  ``pial``: VTK path; ``scurve`` / ``gcurve``: the
     ``.scurve.bary`` of the pial and ``.gcurve.bary`` of the white surface (TRACE products).

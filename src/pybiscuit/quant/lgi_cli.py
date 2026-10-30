@@ -38,7 +38,7 @@ def build_parser() -> argparse.ArgumentParser:
     a("--refCortexArea", type=float, default=0.0, help="expected reference cortex area")
     a("--refHullArea", type=float, default=77100.0, help="expected reference hull area")
     a("--nThreads", type=int, default=0, help="number of threads (default OMP_NUM_THREADS or 1)")
-    a("--heap", choices=["libcxx", "libstdcxx"], default="libcxx", help="std::heap tie order")
+    a("--heap", choices=["libcxx", "libstdcxx"], default="libstdcxx", help="std::heap tie order")
     a("--libm", choices=["fdlibm", "host"], default="fdlibm", help="acosf of the normal weights")
     return p
 

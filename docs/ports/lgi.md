@@ -40,13 +40,12 @@ named from the adjusted kernel area, `lgi.map.316.txt` when the hull area equals
 * **Fast marching details**: ring order from the lowest-index face, obtuse-angle unfolding (<= 50
   faces), "usable" neighbours need the *same front* as the dead vertex, `GW_INFINITE = 1e9`,
   `a /= x` is `a *= 1/x` and skipped when `x == 0`, `make_heap` after every improvement of an alive vertex.
-* **`std::heap` tie order.** Exact distance ties are broken by heap layout, so the libc++ algorithms
-  (oracle, macOS) are default and the libstdc++ ones (Linux image) are selectable with
-  `heap="libstdcxx"` / `--heap`. The libstdc++ variant could not be checked against a real Linux
-  binary (Q1); it is validated only as a correct heap (sorted pops) and by agreeing with libc++ on
-  tie-free inputs. On inputs with exact ties (e.g. the bare icosphere, mirror symmetric curves) the
-  nearest-source id of equidistant vertices, and through the tensor field the LGI of nearby
-  vertices, depend on the heap flavour; real cortical surfaces have no exact ties.
+* **`std::heap` tie order.** Exact distance ties are broken by heap layout. The default is the libstdc++ order
+  (`heap="libstdcxx"`, the Linux image); `heap="libcxx"` / `--heap libcxx` reproduces the macOS oracle build and is what the
+  oracle goldens need. Image evidence (2026-10-30, [report](../reports/lgi-intermediates-2026-10-30.md)): on the image's own
+  correspondence mesh, 93.9 % of 0050952 lh vertices equal the image's `%f` LGI with libstdc++ order against 13.4 % with
+  libc++; r 0.99998-0.999998 in six hemispheres. (Until then libc++ was the default and libstdc++ was checked only as a
+  correct heap.) Real cortical surfaces do have enough near-ties for the order to matter at the kernel-area cutoff.
 * **Kernel area bookkeeping**: the cumulative propagated area `A[i]` is recorded in the stop
   callback, which is skipped for the last popped vertex when the heap is empty. Upstream then
   reads a stale value from the previous front of that thread (uninitialised on the first); we keep a
@@ -78,7 +77,7 @@ Design: `libm=` (CLI `--libm`) selects the `acosf` used for the normal weights, 
   the C shim (9,006 inputs). No test asserts anything about the host libm.
 * `"host"`: whatever `acosf` the host's libm returns.
 
-**This choice is provisional.** The acceptance target is the Linux x86-64 image (Ubuntu 20.04, glibc
+**Confirmed 2026-10-30:** with the libstdc++ heap order, fdlibm gives 93.9 % exact vertices against the image's LGI and Apple's `acosf` 26.8 % ([report](../reports/lgi-intermediates-2026-10-30.md)), so the image's glibc `acosf` behaves like fdlibm. Earlier note: the acceptance target is the Linux x86-64 image (Ubuntu 20.04, glibc
 2.31 as far as known). Whether its `acosf` is the fdlibm algorithm (glibc's flt-32 `e_acosf.c` is
 derived from it) was not verified; the host libm of a current CI runner is not a proof either way
 (numpy's own float32 `arccos` is a different SIMD implementation and disagrees with fdlibm on ~1/3 of
