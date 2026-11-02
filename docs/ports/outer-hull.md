@@ -68,3 +68,11 @@ vertex count within 0.2 %, area -0.3 to +0.03 %, median distance 0.003-0.03 mm, 
 off in both directions, in small scattered patches. Including the closing ball's rim raises that to 7.3 %. Not resolved: the
 remaining suspects are MATLAB internals (`strel('ball')` decomposition, `smooth3`/VOXELISE rounding at the threshold). This is
 what remains in end-to-end LGI (klaplace and Gyrification match the image on its own intermediates).
+
+## Author confirmation (2026-11-02)
+
+Ilwoo Lyu confirmed the image's MATLAB code was compiled with R2012a and that LocalGyrificationIndex `matlab/OuterHull.m`
+is the source, so the `ICP_finite` branch ported here is the one the image runs. The image's `lgi` logs add no OuterHull
+detail beyond the step names ([report addendum](../reports/lgi-intermediates-2026-10-30.md)). Closing the one-voxel gap
+needs the per-step volumes (`VOXELISE`, `smooth3`, `imclose`, `imdilate`) from a MATLAB with the Image Processing Toolbox,
+ideally R2012a.

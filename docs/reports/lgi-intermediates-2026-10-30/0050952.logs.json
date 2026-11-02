@@ -1,0 +1,59 @@
+{
+ "subject": "0050952",
+ "hemispheres": {
+  "lh": {
+   "log": {
+    "dims": 128,
+    "max_area": 316.0,
+    "speed": 0.2,
+    "ref_hull_area": 77100.0,
+    "grid_spacing": 1.34005,
+    "seed_points": 137067,
+    "regions_corrected": 18028,
+    "adjusted_ratio": 0.693616
+   },
+   "flags_match_port_defaults": true,
+   "seed_points_match": true,
+   "grid_spacing": {
+    "image_hull": 1.3400494456291199,
+    "port_hull": 1.3400494456291199
+   },
+   "on_image_corr": {
+    "adjusted_ratio": 0.6936157649648431,
+    "regions_corrected": 18028
+   },
+   "port_chain": {
+    "adjusted_ratio": 0.6934385926539379,
+    "regions_corrected": 18086,
+    "ratio_rel": -0.00025577170374113667
+   }
+  },
+  "rh": {
+   "log": {
+    "dims": 128,
+    "max_area": 316.0,
+    "speed": 0.2,
+    "ref_hull_area": 77100.0,
+    "grid_spacing": 1.31113,
+    "seed_points": 138517,
+    "regions_corrected": 17934,
+    "adjusted_ratio": 0.688707
+   },
+   "flags_match_port_defaults": true,
+   "seed_points_match": true,
+   "grid_spacing": {
+    "image_hull": 1.3111257553100586,
+    "port_hull": 1.3111304640769958
+   },
+   "on_image_corr": {
+    "adjusted_ratio": 0.6887066496830638,
+    "regions_corrected": 17934
+   },
+   "port_chain": {
+    "adjusted_ratio": 0.689833501112256,
+    "regions_corrected": 17962,
+    "ratio_rel": 0.0016356754211239721
+   }
+  }
+ }
+}

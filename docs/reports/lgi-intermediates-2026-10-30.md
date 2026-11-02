@@ -58,6 +58,36 @@ Gyrification and klaplace exact, closing that gap needs MATLAB's morphology inte
 write its intermediate volume), not more porting of the C++ tools. Under Q14/Q15 this is the chaotic-row latitude: ROI LGI
 agrees at r ≥ 0.9984, median relative difference ≤ 1.1 % ([e2e report](e2e-open-examples-2026-10-28.md)).
 
+## Addendum 2026-11-02 — the image's `lgi` logs
+
+Ilwoo Lyu sent the stdout of the six `lgi` runs that produced these intermediates (`<s>_<h>.lgi.log`, kept in
+`~/dev/biscuit/image-runs/x/logs/`, not in git). They cover the LGI stage only (OuterHull, klaplace, Gyrification), not
+the whole pipeline, so they are not the command traces B1.1 asks for. He also confirmed that the image's MATLAB was
+compiled with R2012a and that `OuterHull.m` in LocalGyrificationIndex is the source, which is the file already ported.
+
+```bash
+python scripts/validation/lgi_logs_vs_image.py image-runs/x/logs image-runs/x/tmp-lgi/<s> open-examples/<s> e2e-heap/<s> \
+    --json docs/reports/lgi-intermediates-2026-10-30/<s>.logs.json
+```
+
+| Subject | Hemi | flags = port defaults | log: adjusted ratio / regions corrected | port on image corr | port chain | klaplace grid spacing: log / image hull / port hull |
+|---|---|---|---|---|---|---|
+| 0050952 | lh | yes | 0.693616 / 18028 | 0.693616 / 18028 | 0.693439 / 18086 (-0.03 %) | 1.34005 / 1.34005 / 1.34005 |
+| 0050952 | rh | yes | 0.688707 / 17934 | 0.688707 / 17934 | 0.689834 / 17962 (+0.16 %) | 1.31113 / 1.31113 / 1.31113 |
+| 0050961 | lh | yes | 0.552818 / 16681 | 0.552818 / 16681 | 0.554635 / 16740 (+0.33 %) | 1.21056 / 1.21056 / 1.21056 |
+| 0050961 | rh | yes | 0.544725 / 16358 | 0.544725 / 16358 | 0.545647 / 16382 (+0.17 %) | 1.2175 / 1.2175 / 1.21749 |
+| 0050971 | lh | yes | 0.646141 / 17477 | 0.646141 / 17477 | 0.648302 / 17704 (+0.33 %) | 1.35163 / 1.35163 / 1.35163 |
+| 0050971 | rh | yes | 0.658473 / 17688 | 0.658473 / 17688 | 0.658807 / 17862 (+0.05 %) | 1.3316 / 1.3316 / 1.3316 |
+
+**L5 — the logs agree with L1–L4.** The logged flags (`klaplace -thread 1 -dims 128`, `Gyrification -m 316 --speed 0.2
+--refHullArea 77100`) are the port's defaults; `# of seed points` equals the pial vertex count. On the image's correspondence
+mesh, the port's kernel-area step reproduces the logged `Adjusted ratio` to all six printed digits and the
+`outer hull regions corrected` count exactly. With the port's own hull, the ratio is −0.03 to +0.33 % off and the
+corrected-region count 0.1–1.3 % higher: OuterHull's one-voxel noise again (L3). klaplace's grid spacing (longest side
+of the hull's bounding box / 128) matches on both hulls (one 1e-5 difference, 0050961 rh). Nothing in the logs points at
+a new cause; the OuterHull gap still needs MATLAB's `strel('ball')`/`imclose`/`smooth3` internals (outer-hull.md).
+Metrics JSON: `lgi-intermediates-2026-10-30/<s>.logs.json`.
+
 ## Not received
 
 The bundle's other jobs (MaCRUISE route runs with intermediates, FreeSurfer-route reruns with command traces) were not part

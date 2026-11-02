@@ -98,3 +98,7 @@ See `docs/reports/lgi-hull-2026-10-20.md` for numbers.
 
 Oracle caveat: `Gyrification` reads VTK through MeshLib's `VtkIO`, which only reads ASCII files
 (a binary file makes the run hang), so fixtures are ASCII.
+
+Image logs (2026-11-02): on the image's correspondence mesh the port reproduces Gyrification's printed `Adjusted ratio`
+(6 digits) and `outer hull regions corrected` count in all six open-examples hemispheres
+([report addendum](../reports/lgi-intermediates-2026-10-30.md), `scripts/validation/lgi_logs_vs_image.py`).
