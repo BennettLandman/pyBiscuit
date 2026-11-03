@@ -3,7 +3,9 @@
 Branch `brief-22-fs-replay` (from `main` `a0cadbf`). Data: `~/dev/biscuit/open-examples/{0050952,0050961,0050971}` (ABIDE NYU, FreeSurfer
 7.4.1, then `biscuit_FC_v2.2.sif --surf_recon freesurfer`, template `mb101`, protocols `braincolor,dkt31`, run 2025-09-17; image
 SHA-256 `e70aea62…4329`). The subject data is not in git; input hashes of the key surfaces:
-[`open-examples-2026-10-22/input-hashes.sha256`](open-examples-2026-10-22/input-hashes.sha256). These are the project's first **image
+[`open-examples-2026-10-22/input-hashes.sha256`](open-examples-2026-10-22/input-hashes.sha256). Those hashes are of the files as
+they were run. The published pyBiscuit-examples copies have the FreeSurfer username and hostname blanked with same-length
+placeholders, which leaves the geometry unchanged; their hashes are in that repo's `MANIFEST.sha256`. These are the project's first **image
 evidence**; they outrank the macOS oracles (AGENTS.md). Everything below is 3 subjects × 2 hemispheres; metrics per subject:
 `open-examples-2026-10-22/metrics-<subject>.json`, table: [`summary.md`](open-examples-2026-10-22/summary.md), script
 `scripts/validation/open_examples.py` (`python scripts/validation/open_examples.py WORKDIR --threads 8 --ens 6`, ~1 h on 8 cores).
