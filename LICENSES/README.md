@@ -16,16 +16,21 @@ upstream clones). See `docs/licensing.md` for the full inventory.
 | MeshLib.txt | MeshLib | (c) 2009 Ilwoo Lyu | `repos/MeshLib/LICENSE` |
 | UGSCNN-MeshConv.txt | UGSCNN MeshConv | (c) 2018 Chiyu "Max" Jiang, UC Berkeley (MIT) | `github.com/maxjiang93/ugscnn` LICENSE at commit `64e27969c65b4807e41c1e275972dab8bb72c512` (default-branch HEAD, fetched 2026-10-20) |
 
+## Ported by permission (no upstream license file)
+
+- klaplace (Joohwi Lee, UNC) and ShapeComplexityIndex (Sun Hyung Kim, Martin
+  Styner, UNC): the authors approved release under Apache-2.0 (2026-11-03).
+  `transportSimplex.h` (MacDonald / Rubner) was not ported.
+- MeshProperty, MeshDeform, MeshContour (Ilwoo Lyu; closed binaries): approved
+  by the author (2026-11-03).
+- MeshLib geodesic (Peyre 2004): confirmed covered by MeshLib's MIT license
+  (2026-11-03; `MeshLib.txt`).
+
 ## Not included (license unclear or incompatible)
 
-- klaplace (no LICENSE file; bundles SimpleOpt, MIT) - unclear, ask upstream.
 - SurfRemesh (no LICENSE file) - not needed on the MaCRUISE route.
-- ShapeComplexityIndex (NIRALUser; no LICENSE file; transportSimplex.h
-  copyrights Darren MacDonald / Yossi Rubner) - unclear.
 - HSD `bobyqa.h` (Powell / Thiebaut) - accompanying license to be verified.
-- MeshLib geodesic (Peyre 2004) - terms to be confirmed.
 - GCMex / GCO - research-only terms; not redistributable.
-- MeshProperty, MeshDeform, MeshContour - closed binaries.
 - FreeSurfer - non-OSI license; clean-room replacements only.
 - Models/templates (parc `*.pth`, reg `mb101`/`oasis45`/`hcp1058`) - data
   terms unresolved; not in git.

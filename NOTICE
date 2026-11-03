@@ -10,3 +10,9 @@ and MeshLib (Copyright Ilwoo Lyu), UGSCNN MeshConv (Copyright Chiyu "Max"
 Jiang, University of California, Berkeley), NiiVue (Copyright Niivue) and
 fdlibm (Copyright Sun Microsystems, Inc.). Their license texts are in
 LICENSES/; see docs/licensing.md for the full inventory.
+
+Ported with the authors' permission to release under Apache-2.0:
+- klaplace, by Joohwi Lee (UNC Chapel Hill).
+- ShapeComplexityIndex, Copyright (C) 2015 Sun Hyung Kim and Martin Styner
+  (UNC Chapel Hill).
+- MeshProperty, MeshDeform and MeshContour, by Ilwoo Lyu.

@@ -71,13 +71,13 @@ so they can be neither redistributed nor translated.
 | Component | Terms | Status in pyBiscuit |
 |---|---|---|
 | HSD `bobyqa.h` (Powell, Thiébaut) | separate license, not verified | **Not ported.** Only the landmark pole search uses it, and the CLI never reaches that code ([ports/hsd.md](ports/hsd.md)). |
-| klaplace (Joohwi Lee, UNC) | no license file | **Ported from source; permission requested.** Do not publish `quant/klaplace.py` until the authors grant permission. |
-| ShapeComplexityIndex (Sun Hyung Kim, Martin Styner, UNC) | "Copyright (C) 2015", no license | **Ported from source; permission requested.** Same hold for `quant/sci.py`. The EMD is a closed-form 1D version; `transportSimplex.h` (MacDonald/Rubner) was not ported. |
-| MeshProperty, MeshDeform, MeshContour (Ilwoo Lyu) | closed binaries, no license | Ported from the binaries' observed behavior plus disassembly ([ports/meshproperty.md](ports/meshproperty.md)). They are thin wrappers over MeshLib (MIT). **Confirm with Ilwoo Lyu** (Q7). |
-| MeshLib geodesic `gw` (Gabriel Peyré, 2004) | inside the MIT MeshLib repo; the files carry no license header | Ported in `quant/_fastmarch.py` and `mesh/geodesic.py`. Treated as MeshLib MIT; confirm. |
+| klaplace (Joohwi Lee, UNC) | no license file | **Ported from source; authors approved release under Apache-2.0 (2026-11-03).** Credited in `NOTICE`. |
+| ShapeComplexityIndex (Sun Hyung Kim, Martin Styner, UNC) | "Copyright (C) 2015", no license | **Ported from source; authors approved release under Apache-2.0 (2026-11-03).** The EMD is a closed-form 1D version; `transportSimplex.h` (MacDonald/Rubner) was not ported. Credited in `NOTICE`. |
+| MeshProperty, MeshDeform, MeshContour (Ilwoo Lyu) | closed binaries, no license | Ported from the binaries' observed behavior plus disassembly ([ports/meshproperty.md](ports/meshproperty.md)). **Approved by Ilwoo Lyu (2026-11-03).** |
+| MeshLib geodesic `gw` (Gabriel Peyré, 2004) | inside the MIT MeshLib repo; the files carry no license header | Ported in `quant/_fastmarch.py` and `mesh/geodesic.py`. **Confirmed covered by MeshLib's MIT license (2026-11-03).** |
 | `VOXELISE.m` (Adam Aitkenhead) | inside the MIT LocalGyrificationIndex repo; MATLAB File Exchange code | Ported in `quant/_voxelise.py`. Confirm the File Exchange (BSD) terms and add the text to `LICENSES/`. |
 | SurfRemesh | no license file | Not ported (not used on the MaCRUISE route). |
 | Parcellation models, registration templates | dataset terms (HCP, OASIS, Mindboggle) | Not in git. Fetched on demand once redistribution is cleared ([licensing.md](licensing.md)). |
 
-Rows marked **permission requested** or **confirm** must be resolved before
+Rows marked **confirm** must be resolved before
 the repository is made public.

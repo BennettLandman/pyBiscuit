@@ -12,12 +12,12 @@ code (GCO/GCMex, FreeSurfer) was avoided: [clean-room.md](clean-room.md).
 | CMorph (`/opt/cmorph/LICENSE`, © 2018 Ilwoo Lyu) | MIT | yes | attribute |
 | HSD, CurveExtraction, LocalGyrificationIndex, SphericalRemesh, SphericalLabeling, MeshLib | MIT (© Ilwoo Lyu) | yes | attribute |
 | `HSD/src/bobyqa.h` | © Powell (Fortran), Thiébaut (C), Lyu (header); see its LICENSE | verify text | read accompanying license before porting |
-| MeshLib geodesic (`Geodesic/gw`) | © 2004 Gabriel Peyré | verify | confirm terms (Peyré's toolbox is typically BSD) |
-| klaplace | **no LICENSE file**; bundles SimpleOpt (MIT) | permission requested | ported (`quant/klaplace.py`); hold publication until upstream grants permission ([clean-room.md](clean-room.md)) |
+| MeshLib geodesic (`Geodesic/gw`) | © 2004 Gabriel Peyré; covered by MeshLib MIT (confirmed 2026-11-03) | yes | attribute |
+| klaplace | **no LICENSE file**; bundles SimpleOpt (MIT) | yes: authors approved Apache-2.0 (2026-11-03) | ported (`quant/klaplace.py`); credited in `NOTICE` |
 | SurfRemesh | **no LICENSE file** | unclear | not needed on MaCRUISE route |
-| ShapeComplexityIndex (NIRALUser) | **no LICENSE file**; `transportSimplex.h` © Darren MacDonald, parts © Yossi Rubner | permission requested | ported (`quant/sci.py`, closed-form 1D EMD; `transportSimplex.h` not ported); hold publication until upstream grants permission |
+| ShapeComplexityIndex (NIRALUser) | **no LICENSE file**; `transportSimplex.h` © Darren MacDonald, parts © Yossi Rubner | yes: authors approved Apache-2.0 (2026-11-03) | ported (`quant/sci.py`, closed-form 1D EMD; `transportSimplex.h` not ported); credited in `NOTICE` |
 | GCMex (Shai Bagon) / GCO (Boykov, Veksler, Kolmogorov) | research-only terms (GCO v3) | **no** for redistribution | implement alpha-expansion on PyMaxflow (GPL? — check) or own max-flow; verify licence first |
-| MeshProperty, MeshDeform, MeshContour | closed binaries (Lyu) | n/a | black-box re-implementation; ask for source |
+| MeshProperty, MeshDeform, MeshContour | closed binaries (Lyu) | yes: approved by Lyu (2026-11-03) | black-box + disassembly re-implementation |
 | FreeSurfer 6 binaries | FreeSurfer license (not OSI) | **no** | clean-room replacements; never read FS source |
 | UGSCNN MeshConv (`meshcnn/`) | from Jiang et al. (MIT) via SphericalLabeling | yes | attribute |
 | NiiVue 0.69.0 (`pybiscuit/viz/data/niivue.umd.js`, © 2021 Niivue) | BSD-2-Clause; UMD inlines MIT deps (fflate, gl-matrix, nifti-reader-js, zarrita, …) | yes | bundled in `[viz]` only; text in `LICENSES/NiiVue.txt`; version + SHA-256 in `viz/data/NIIVUE.json` |
