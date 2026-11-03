@@ -20,7 +20,7 @@ Both: SIF squashfs partition at byte offset 45056. Runtime environment:
 `FREESURFER_HOME=/opt/biscuit`, `OMP_NUM_THREADS=1`, Xvfb, TeX Live, Ghostscript.
 Production runs bind a FreeSurfer `license.txt` to `/opt/biscuit/license.txt`.
 
-The VUIIS doc (`vuiis-cci-info/available-pipelines/BISCUIT-curve_extract-surf.md`)
+The VUIIS pipeline documentation for BISCUIT
 describes v2.0.0 (`biscuit_FC_v2.0.simg`); our images are v2.2 — note the
 version gap when comparing to its example PDFs.
 

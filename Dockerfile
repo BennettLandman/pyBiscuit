@@ -5,7 +5,7 @@ LABEL org.opencontainers.image.title="pyBiscuit" \
       org.opencontainers.image.description="Python port of BISCUIT: cortical surface registration, parcellation, curves, and shape metrics" \
       org.opencontainers.image.version="0.1.0" \
       org.opencontainers.image.authors="Bennett Landman <bennett.landman@vanderbilt.edu>" \
-      org.opencontainers.image.licenses="MIT"
+      org.opencontainers.image.licenses="Apache-2.0"
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \

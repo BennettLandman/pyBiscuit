@@ -91,3 +91,9 @@ If you use pyBiscuit in your research, please cite the underlying methodology pa
 BISCUIT, HSD, TRACE/CurveExtraction, LocalGyrificationIndex, SphericalRemesh,
 SphericalLabeling, and MeshLib are © Ilwoo Lyu, MIT License. See
 [docs/licensing.md](docs/licensing.md) for all third-party components.
+
+## License
+
+pyBiscuit is licensed under the [Apache License 2.0](LICENSE); see also [NOTICE](NOTICE).
+Third-party license texts are in [LICENSES/](LICENSES/). How restricted code was avoided
+(clean-room graph cut, FreeSurfer replacements) is recorded in [docs/clean-room.md](docs/clean-room.md).

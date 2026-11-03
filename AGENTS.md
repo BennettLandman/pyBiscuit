@@ -12,11 +12,13 @@ PyMaCRUISE. Output reproduces BISCUIT's scientific products within the
 tolerances in [docs/validation-tolerances.md](docs/validation-tolerances.md),
 plus visualization ([docs/visualization-plan.md](docs/visualization-plan.md)).
 
-## Local layout (owner workstation)
+## Workspace layout
+
+Large inputs live in a sibling workspace outside git (by default `~/dev/biscuit/`):
 
 ```
 ~/dev/biscuit/
-├── pyBiscuit/                  ← this repository (BennettLandman/pyBiscuit, private)
+├── pyBiscuit/                  ← this repository (BennettLandman/pyBiscuit)
 ├── biscuit_FC_v2.2.sif         ← production image (BISCUIT 2.2 = CBT v1.3 + templates + models)
 ├── biscuit_cbt_v1.3.sif        ← base image (no reg/ or parc/ assets)
 ├── BISCUIT-master/             ← BISCUIT MATLAB source from Ilwoo Lyu (NOT in git)
@@ -34,7 +36,7 @@ Never commit SIF images, extracted binaries, model weights, templates, or
 subject data. `reference/` and large assets stay outside git; record hashes.
 
 **Exception: open-examples (owner-approved 2026-10-22).** The three ABIDE
-subjects live in the private repo
+subjects live in the separate repo
 [BennettLandman/pyBiscuit-examples](https://github.com/BennettLandman/pyBiscuit-examples),
 linked as the optional submodule `tests/data/open-examples` (gzip-compressed,
 with a SHA-256 manifest of the originals; 371 MB). It is opt-in:

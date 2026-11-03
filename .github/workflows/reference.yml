@@ -1,7 +1,7 @@
 name: Reference (image goldens)
 
 # MANUAL ONLY and NOT READY TO RUN until the owner answers open question Q1
-# (docs/open-questions.md): it needs the FC image as a release asset of this private repo and
+# (docs/open-questions.md): it needs the FC image as a release asset of this repository and
 # the FreeSurfer licence as a repository secret. Nothing here triggers automatically.
 # The image and the licence are never committed or published; goldens are uploaded as a
 # workflow artifact for the owner to review and commit by hand.

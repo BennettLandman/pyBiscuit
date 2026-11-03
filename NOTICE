@@ -1,0 +1,12 @@
+pyBiscuit
+Copyright 2026 pyBiscuit contributors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+It ports or derives from third-party software distributed under the MIT,
+BSD-2-Clause and other permissive licenses, including BISCUIT, CMorph, HSD,
+CurveExtraction, LocalGyrificationIndex, SphericalRemesh, SphericalLabeling
+and MeshLib (Copyright Ilwoo Lyu), UGSCNN MeshConv (Copyright Chiyu "Max"
+Jiang, University of California, Berkeley), NiiVue (Copyright Niivue) and
+fdlibm (Copyright Sun Microsystems, Inc.). Their license texts are in
+LICENSES/; see docs/licensing.md for the full inventory.

@@ -1,7 +1,8 @@
 # Licensing inventory
 
-pyBiscuit's own code: **MIT** (proposed, matching BISCUIT). Ported code keeps
-upstream copyright notices in file headers and in `LICENSES/`.
+pyBiscuit's own code: **Apache-2.0** (`LICENSE`, `NOTICE`). Ported code keeps
+upstream copyright notices in file headers and in `LICENSES/`. How restricted
+code (GCO/GCMex, FreeSurfer) was avoided: [clean-room.md](clean-room.md).
 
 ## Code
 
@@ -12,9 +13,9 @@ upstream copyright notices in file headers and in `LICENSES/`.
 | HSD, CurveExtraction, LocalGyrificationIndex, SphericalRemesh, SphericalLabeling, MeshLib | MIT (© Ilwoo Lyu) | yes | attribute |
 | `HSD/src/bobyqa.h` | © Powell (Fortran), Thiébaut (C), Lyu (header); see its LICENSE | verify text | read accompanying license before porting |
 | MeshLib geodesic (`Geodesic/gw`) | © 2004 Gabriel Peyré | verify | confirm terms (Peyré's toolbox is typically BSD) |
-| klaplace | **no LICENSE file**; bundles SimpleOpt (MIT) | unclear | ask Ilwoo Lyu / Joohwi Lee; else re-implement from paper |
+| klaplace | **no LICENSE file**; bundles SimpleOpt (MIT) | permission requested | ported (`quant/klaplace.py`); hold publication until upstream grants permission ([clean-room.md](clean-room.md)) |
 | SurfRemesh | **no LICENSE file** | unclear | not needed on MaCRUISE route |
-| ShapeComplexityIndex (NIRALUser) | **no LICENSE file**; `transportSimplex.h` © Darren MacDonald, parts © Yossi Rubner | unclear | ask NIRAL; EMD can be re-implemented independently |
+| ShapeComplexityIndex (NIRALUser) | **no LICENSE file**; `transportSimplex.h` © Darren MacDonald, parts © Yossi Rubner | permission requested | ported (`quant/sci.py`, closed-form 1D EMD; `transportSimplex.h` not ported); hold publication until upstream grants permission |
 | GCMex (Shai Bagon) / GCO (Boykov, Veksler, Kolmogorov) | research-only terms (GCO v3) | **no** for redistribution | implement alpha-expansion on PyMaxflow (GPL? — check) or own max-flow; verify licence first |
 | MeshProperty, MeshDeform, MeshContour | closed binaries (Lyu) | n/a | black-box re-implementation; ask for source |
 | FreeSurfer 6 binaries | FreeSurfer license (not OSI) | **no** | clean-room replacements; never read FS source |
@@ -31,7 +32,7 @@ upstream copyright notices in file headers and in `LICENSES/`.
 | `reg/oasis45` | OASIS | OASIS data-use terms |
 | `reg/hcp1058` | HCP | HCP Open Access Data Use Terms restrict redistribution of derived data; confirm |
 
-Default plan: host assets outside PyPI (GitHub Release on the private repo,
+Default plan: host assets outside PyPI (a GitHub Release,
 or Zenodo/HF once cleared), download on demand with SHA-256 pinning
 (`pybiscuit fetch-assets`). Owner to confirm what may be redistributed and
 where.

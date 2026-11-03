@@ -24,6 +24,6 @@ Full instructions: "How to run the image harness" in
 
 `reference.yml` has only a `workflow_dispatch` trigger and refuses to start unless the
 `confirm` input is `RUN`. It cannot run until the owner has (1) uploaded the image as a release
-asset of this private repository (owner decision: the image contains MCR and FreeSurfer
+asset of this repository (owner decision: the image contains MCR and FreeSurfer
 binaries) and (2) created the repository secret `FS_LICENSE` (only for full runs). Nothing in the
 workflow commits or pushes; goldens come back as a workflow artifact to review and commit by hand.
