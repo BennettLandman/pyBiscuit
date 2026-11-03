@@ -75,9 +75,9 @@ so they can be neither redistributed nor translated.
 | ShapeComplexityIndex (Sun Hyung Kim, Martin Styner, UNC) | "Copyright (C) 2015", no license | **Ported from source; authors approved release under Apache-2.0 (2026-11-03).** The EMD is a closed-form 1D version; `transportSimplex.h` (MacDonald/Rubner) was not ported. Credited in `NOTICE`. |
 | MeshProperty, MeshDeform, MeshContour (Ilwoo Lyu) | closed binaries, no license | Ported from the binaries' observed behavior plus disassembly ([ports/meshproperty.md](ports/meshproperty.md)). **Approved by Ilwoo Lyu (2026-11-03).** |
 | MeshLib geodesic `gw` (Gabriel Peyré, 2004) | inside the MIT MeshLib repo; the files carry no license header | Ported in `quant/_fastmarch.py` and `mesh/geodesic.py`. **Confirmed covered by MeshLib's MIT license (2026-11-03).** |
-| `VOXELISE.m` (Adam Aitkenhead) | inside the MIT LocalGyrificationIndex repo; MATLAB File Exchange code | Ported in `quant/_voxelise.py`. Confirm the File Exchange (BSD) terms and add the text to `LICENSES/`. |
+| `VOXELISE.m` (Adam Aitkenhead) | BSD-3-Clause, © 2013 Adam H. Aitkenhead (File Exchange 27390, v1.20.0) | Ported in `quant/_voxelise.py`, which keeps the notice in its header; text in `LICENSES/VOXELISE.txt`. **Resolved (2026-11-03).** |
 | SurfRemesh | no license file | Not ported (not used on the MaCRUISE route). |
 | Parcellation models, registration templates | dataset terms (HCP, OASIS, Mindboggle) | Not in git. Fetched on demand once redistribution is cleared ([licensing.md](licensing.md)). |
 
-Rows marked **confirm** must be resolved before
-the repository is made public.
+All code rows are resolved as of 2026-11-03. Redistribution of the models and
+templates is still open; they are not in git, so it does not block publishing the code.

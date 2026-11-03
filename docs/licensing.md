@@ -19,6 +19,7 @@ code (GCO/GCMex, FreeSurfer) was avoided: [clean-room.md](clean-room.md).
 | GCMex (Shai Bagon) / GCO (Boykov, Veksler, Kolmogorov) | research-only terms (GCO v3) | **no** for redistribution | implement alpha-expansion on PyMaxflow (GPL? — check) or own max-flow; verify licence first |
 | MeshProperty, MeshDeform, MeshContour | closed binaries (Lyu) | yes: approved by Lyu (2026-11-03) | black-box + disassembly re-implementation |
 | FreeSurfer 6 binaries | FreeSurfer license (not OSI) | **no** | clean-room replacements; never read FS source |
+| Mesh voxelisation `VOXELISE.m` (Aitkenhead; in LocalGyrificationIndex) | BSD-3-Clause (© 2013 Adam H. Aitkenhead) | yes | attribute; text in `LICENSES/VOXELISE.txt` |
 | UGSCNN MeshConv (`meshcnn/`) | from Jiang et al. (MIT) via SphericalLabeling | yes | attribute |
 | NiiVue 0.69.0 (`pybiscuit/viz/data/niivue.umd.js`, © 2021 Niivue) | BSD-2-Clause; UMD inlines MIT deps (fflate, gl-matrix, nifti-reader-js, zarrita, …) | yes | bundled in `[viz]` only; text in `LICENSES/NiiVue.txt`; version + SHA-256 in `viz/data/NIIVUE.json` |
 
