@@ -38,6 +38,7 @@ __all__ = [
     "convert_checkpoint",
     "load_legacy_state_dict",
     "load_safetensors",
+    "save_safetensors",
     "converted_registry",
 ]
 
@@ -222,7 +223,6 @@ def convert_checkpoint(
     file is opened for unpickling.  The output is deterministic (no torch version in the file).
     """
     import torch
-    from safetensors.torch import save_file
 
     from ..assets import load_registry
     from .unet import infer_architecture
@@ -247,21 +247,7 @@ def convert_checkpoint(
         "terms": "derived from third-party weights; redistribution permission unresolved "
         "(open-questions Q6/Q7); do not publish",
     }
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    tmp = dst.with_suffix(".tmp")
-    # one metadata entry: safetensors writes the metadata map in hash order, so several entries
-    # would make the file bytes (and its SHA-256) vary between runs
-    save_file(
-        {k: canon[k] for k in sorted(canon)},
-        str(tmp),
-        metadata={"pybiscuit": json.dumps(meta, sort_keys=True)},
-    )
-    tmp.replace(dst)
-    # read back and compare bit for bit with what was converted
-    back = load_safetensors(dst)[0]
-    for k, v in canon.items():
-        if not torch.equal(back[k], v):
-            raise RuntimeError(f"{dst}: round trip changed {k}")
+    save_safetensors(canon, dst, meta)
     return {
         "path": f"{_registry_key(src)[: -len('.pth')]}.safetensors",
         "size": dst.stat().st_size,
@@ -274,6 +260,34 @@ def convert_checkpoint(
         **report,
         "torch": torch.__version__,
     }
+
+
+def save_safetensors(tensors: Mapping, dst: str | Path, meta: dict) -> None:
+    """Write canonical float32 tensors + ``meta`` as a ``pybiscuit-parc-unet/1`` file.
+
+    Used by :func:`convert_checkpoint` and by the trainer (:mod:`pybiscuit.parc.train`).  The file
+    is written atomically and read back; any tensor that does not survive bit for bit raises.
+    """
+    import torch
+    from safetensors.torch import save_file
+
+    dst = Path(dst)
+    meta = {**meta, "format": FORMAT}
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dst.with_suffix(".tmp")
+    # one metadata entry: safetensors writes the metadata map in hash order, so several entries
+    # would make the file bytes (and its SHA-256) vary between runs
+    save_file(
+        {k: tensors[k].contiguous() for k in sorted(tensors)},
+        str(tmp),
+        metadata={"pybiscuit": json.dumps(meta, sort_keys=True)},
+    )
+    tmp.replace(dst)
+    # read back and compare bit for bit with what was written
+    back = load_safetensors(dst)[0]
+    for k, v in tensors.items():
+        if not torch.equal(back[k], v):
+            raise RuntimeError(f"{dst}: round trip changed {k}")
 
 
 def load_safetensors(path: str | Path, *, expected_sha256: str | None = None) -> tuple[dict, dict]:

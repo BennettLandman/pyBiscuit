@@ -36,6 +36,7 @@ def main(argv: list[str] | None = None) -> int:
         "lgi", "outer-hull", "sulcal-depth", "lgi-pipeline", "sci", "klaplace",
         "run", "view", "render", "report", "cohort",
         "mesh-contour", "hemi-split", "mesh-property", "mesh-deform", "parc", "stats",
+        "parc-train", "parc-gen-ico",
     }
     if argv and argv[0] not in _known and argv[0] not in ("-h", "--help", "-v", "--version"):
         from .pipeline.cli import main as run_main
@@ -155,6 +156,24 @@ def main(argv: list[str] | None = None) -> int:
         from .parc.cli import main as parc_main
 
         return parc_main(argv[1:])
+    sub.add_parser(
+        "parc-train",
+        help="train the parcellation U-Net (port of SphericalLabeling train.py; flags as upstream)",
+        add_help=False,
+    )
+    if argv and argv[0] == "parc-train":
+        from .parc.train import main as parc_train_main
+
+        return parc_train_main(argv[1:])
+    sub.add_parser(
+        "parc-gen-ico",
+        help="write icosphere_<level>.vtk meshes for training (port of gen_ico.py)",
+        add_help=False,
+    )
+    if argv and argv[0] == "parc-gen-ico":
+        from .parc.gen_ico import main as gen_ico_main
+
+        return gen_ico_main(argv[1:])
     # --- end parc ---
     # --- stats (brief 18): stats ---
     sub.add_parser(
