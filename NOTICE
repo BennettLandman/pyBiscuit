@@ -8,8 +8,9 @@ BSD-2-Clause and other permissive licenses, including BISCUIT, CMorph, HSD,
 CurveExtraction, LocalGyrificationIndex, SphericalRemesh, SphericalLabeling
 and MeshLib (Copyright Ilwoo Lyu), UGSCNN MeshConv (Copyright Chiyu "Max"
 Jiang, University of California, Berkeley), NiiVue (Copyright Niivue),
-Mesh voxelisation (Copyright 2013 Adam H. Aitkenhead) and fdlibm (Copyright
-Sun Microsystems, Inc.). Their license texts are in
+Mesh voxelisation (Copyright 2013 Adam H. Aitkenhead), fdlibm (Copyright
+Sun Microsystems, Inc.) and BOBYQA (Copyright 2009 M. J. D. Powell;
+modifications Copyright 2010 Massachusetts Institute of Technology; from NLopt). Their license texts are in
 LICENSES/; see docs/licensing.md for the full inventory.
 
 Ported with the authors' permission to release under Apache-2.0:

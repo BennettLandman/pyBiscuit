@@ -2,7 +2,10 @@
 """``pybiscuit hsd``: same flags as the upstream ``HSD`` binary (wrapper/PARSE_ARGS.h @ f169595).
 
 The image binary exposes exactly these flags (checked with ``strings``): the landmark/location
-options and the ``*Dir`` / ``--filter`` batch forms are commented out upstream.
+options and the ``*Dir`` / ``--filter`` batch forms are commented out upstream.  The landmark and
+location options and their ``--landmarkDir`` / ``--surfaceDir`` forms are offered here as opt-in
+extras (``UPSTREAM_DISABLED``), clearly not part of the original binary; without them the run is
+the image binary's.
 """
 
 from __future__ import annotations
@@ -13,6 +16,8 @@ import sys
 from pathlib import Path
 
 HSD_VERSION = "v1.3.9"
+#: upstream options commented out in wrapper/PARSE_ARGS.h (absent from the image binary), exposed opt-in
+UPSTREAM_DISABLED = ("-l", "--landmark", "--surface", "--weightMap", "--locationWeight", "--landmarkDir", "--surfaceDir")
 DESC = (
     f"Hierarchical Spherical Deformation for Cortical Surface Registration {HSD_VERSION}\n"
     "Author: Ilwoo Lyu (port: pybiscuit)\n"
@@ -53,6 +58,34 @@ def _file(s):
     return s
 
 
+def _dir(s):
+    if not Path(s).is_dir():
+        raise argparse.ArgumentTypeError(f"Directory does not exist: {s}")
+    return s
+
+
+def _list_dir(path: str, suffix: str) -> list[str]:
+    """``getListFile`` (main.cpp): entries ending in ``suffix``, ``path + "/" + name``, sorted."""
+    return sorted(path + "/" + f for f in os.listdir(path) if f.endswith(suffix))
+
+
+def _trim(lst: list[str], names: list[str]) -> list[str]:
+    """``getTrimmedList`` (main.cpp): keep entries containing one of the subject names."""
+    keys = [n[n.rfind("/") + 1 :] for n in names]
+    return sorted(e for e in lst if any(k in e for k in keys))
+
+
+def _subject_names(spheres: list[str]) -> list[str]:
+    """main.cpp: file name without directory and the last 4 characters, cut at the first '.'."""
+    out = []
+    for p in spheres:
+        pivot = p.rfind("/") + 1
+        name = p[pivot : len(p) - 4]
+        dot = name.find(".")
+        out.append(name if dot == -1 else name[:dot])
+    return out
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="pybiscuit hsd", description=DESC)
     p.add_argument("-s", "--sphere", nargs="+", required=True, type=_file, help="list of sphere files")
@@ -81,11 +114,28 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--fixedSubjects", nargs="+", type=_nonneg_int, default=[], help="indices of subjects not deformed")
     p.add_argument("--tmpVar", type=_file, default=None, help="prior of feature variance (pair-wise only)")
     p.add_argument("--nThreads", type=_nonneg_int, default=0, help="threads (0: OMP_NUM_THREADS or all cores)")
+    x = p.add_argument_group(
+        "upstream-disabled options (NOT in the original HSD binary)",
+        "Commented out in upstream wrapper/PARSE_ARGS.h and absent from the BISCUIT image; ported for "
+        "completeness, validated against an oracle built with them enabled (docs/ports/hsd.md).",
+    )
+    x.add_argument("-l", "--landmark", nargs="+", default=[], type=_file, help="list of landmark files (vertex indices), one per subject")
+    x.add_argument("--landmarkDir", type=_dir, default=None, help="directory of landmark files (*txt, matched to the sphere names)")
+    x.add_argument("--surface", nargs="+", default=[], type=_file, help="list of surface model files for location information")
+    x.add_argument("--surfaceDir", type=_dir, default=None, help="directory of surface model files (*vtk, sorted)")
+    x.add_argument("--weightMap", type=_nonneg_float, default=1.0, help="overall property weight (eta), used with landmarks [1]")
+    x.add_argument("--locationWeight", type=float, default=0.0, help="weighting factor of location information [0]")
     return p
 
 
 def main(argv=None) -> int:
     a = build_parser().parse_args(argv)
+    if a.surfaceDir and not a.surface:
+        a.surface = _list_dir(a.surfaceDir, "vtk")
+    if a.landmarkDir and not a.landmark:
+        a.landmark = _trim(_list_dir(a.landmarkDir, "txt"), _subject_names(a.sphere))
+    if not a.surface:
+        a.locationWeight = 0.0  # main.cpp: if (surf == NULL) weightLoc = 0;
     nsubj = len(a.sphere)
     nprop_total = len(a.property)
     n_out, n_oc, nfixed = len(a.output), len(a.outputcoeff), len(a.fixedSubjects)
@@ -105,6 +155,10 @@ def main(argv=None) -> int:
         fail = "Fatal error: # of coefficient files must equal # of subjects"
     elif (n_out and n_out != nsubj) or (n_oc and n_oc != nsubj):
         fail = "Fatal error: # of outputs must equal # of subjects"
+    elif a.landmark and len(a.landmark) != nsubj:
+        fail = "Fatal error: # of landmark files must equal # of subjects"
+    elif a.locationWeight > 0 and len(a.surface) != nsubj:
+        fail = "Fatal error: # of surface files must equal # of subjects"
     if fail:
         print(fail)
         return 1
@@ -125,6 +179,8 @@ def main(argv=None) -> int:
         realtime_coeff=a.writecoeff, tmp_variance=a.tmpVar, guess=not a.noguess,
         guess_res=a.gres, ico_mesh=a.icomesh, resampling=a.resample,
         guess_unit_ico=not a.guess_raw_icomesh, robust_aabb=a.robust_aabb,
+        landmarks=a.landmark or None, surfaces=a.surface if a.locationWeight > 0 else None,
+        weight_loc=a.locationWeight, weight_map=a.weightMap,
     )  # fmt: skip
     hsd.run()
     return 0

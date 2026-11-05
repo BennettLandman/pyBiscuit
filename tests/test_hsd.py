@@ -16,7 +16,7 @@ import numpy as np
 import pytest
 
 from fixtures.hsd_cases import EVAL_CASES, RUN_CASES, coeff_states, write_case
-from pybiscuit.hsd.cli import build_parser
+from pybiscuit.hsd.cli import UPSTREAM_DISABLED, build_parser
 from pybiscuit.hsd.cli import main as hsd_main
 from pybiscuit.hsd.icosahedron import icosahedron, icosahedron_counts
 from pybiscuit.hsd.register import HSD, _patch_cache
@@ -262,6 +262,7 @@ def test_cli_flags_match_parse_args_h():
             upstream.update(m.group(1).split(","))
     ours = {s for a in build_parser()._actions for s in a.option_strings if s != "-h" and s != "--help"}
     ours -= {"--guess-raw-icomesh", "--robust-aabb"}  # port-only switches
+    ours -= set(UPSTREAM_DISABLED)  # opt-in, not in the image binary (test_hsd_landmarks.py)
     assert upstream == ours
 
 

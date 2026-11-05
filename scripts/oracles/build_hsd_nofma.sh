@@ -18,7 +18,13 @@ CLI="$ORA/_deps/cli11-1.9.1"
 # `const float *p = V.unit().fv();` reads a destroyed temporary; clang -O2 reuses its stack slot, so every
 # icomesh sample becomes garbage and the run dies).  The patched build goes to hsd-icomesh-nofma and is
 # otherwise identical; the image's gcc build is assumed to keep the value (queue: Q1).
-if [ "${HSD_PATCH_ICOMESH:-0}" = 1 ]; then OUT="$ORA/hsd-icomesh-nofma"; else OUT="$ORA/hsd-nofma"; fi
+# HSD_PATCH_LANDMARKS=1: also apply patches/hsd-landmarks/PARSE_ARGS.h.patch, which uncomments the options
+# upstream disabled (-l/--landmark, --landmarkDir, --surface, --surfaceDir, --weightMap, --locationWeight) so the
+# landmark term, location features and BOBYQA pole search (src/bobyqa.h, compiled and run as a black box) can be
+# reached.  Output: hsd-lm-nofma (no other change; the icomesh fix is not applied).
+if [ "${HSD_PATCH_ICOMESH:-0}" = 1 ]; then OUT="$ORA/hsd-icomesh-nofma"
+elif [ "${HSD_PATCH_LANDMARKS:-0}" = 1 ]; then OUT="$ORA/hsd-lm-nofma"
+else OUT="$ORA/hsd-nofma"; fi
 [ "$(git -C "$ML" rev-parse --short HEAD)" = dcef807 ] || { echo "MeshLib pin mismatch" >&2; exit 1; }
 [ "$(git -C "$HSD" rev-parse --short HEAD)" = f169595 ] || { echo "HSD pin mismatch" >&2; exit 1; }
 [ -f "$CLI/CLI11.hpp" ] || { echo "missing $CLI/CLI11.hpp (run build_hsd.sh first)" >&2; exit 1; }
@@ -26,7 +32,14 @@ CXX=${CXX:-/usr/bin/clang++}
 export SDKROOT=${SDKROOT:-/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk}
 SHIM="$HERE/patches/hsd-shim"
 FLAGS="-std=c++11 -O2 -DNDEBUG -ffp-contract=off -w -include cstddef"
-INC="-I$SHIM -I$CLI -I$HSD/src -I$HSD/wrapper -I$ML/include -I$ML/include/Util"
+WRAP="$HSD/wrapper"
+if [ "${HSD_PATCH_LANDMARKS:-0}" = 1 ]; then
+  WRAP="$OUT/wrapper"
+  mkdir -p "$WRAP"
+  cp "$HSD/wrapper/main.cpp" "$HSD/wrapper/PARSE_ARGS.h" "$WRAP/"
+  patch -s -d "$OUT" -p1 < "$HERE/patches/hsd-landmarks/PARSE_ARGS.h.patch" || { echo "landmark patch did not apply" >&2; exit 1; }
+fi
+INC="-I$SHIM -I$CLI -I$HSD/src -I$WRAP -I$ML/include -I$ML/include/Util"
 mkdir -p "$OUT/bin" "$OUT/obj"
 HSD_SRC="$HSD/src/HSD.cpp"
 if [ "${HSD_PATCH_ICOMESH:-0}" = 1 ]; then
@@ -41,7 +54,7 @@ fi
   for f in Mesh MeshIO MNIObjIO VtkIO; do $CXX $FLAGS $INC -c "$ML/src/$f.cpp" -o "$OUT/obj/$f.o"; done
   for f in AABB_Sphere AABB Geom SphericalHarmonics SurfaceUtil; do $CXX $FLAGS $INC -c "$ML/src/Util/$f.cpp" -o "$OUT/obj/$f.o"; done
   $CXX $FLAGS $INC -D_USE_SYSV '-DHSD_VERSION="v1.3.9"' -c "$HSD_SRC" -o "$OUT/obj/HSD.o"
-  $CXX $FLAGS $INC -D_USE_SYSV '-DHSD_VERSION="v1.3.9"' -c "$HSD/wrapper/main.cpp" -o "$OUT/obj/main.o"
+  $CXX $FLAGS $INC -D_USE_SYSV '-DHSD_VERSION="v1.3.9"' -c "$WRAP/main.cpp" -o "$OUT/obj/main.o"
   $CXX $FLAGS $INC -D_USE_SYSV '-DHSD_VERSION="v1.3.9"' -c "$HERE/harness_hsd.cpp" -o "$OUT/obj/harness.o"
   LIBS="$OUT/obj/Mesh.o $OUT/obj/MeshIO.o $OUT/obj/MNIObjIO.o $OUT/obj/VtkIO.o $OUT/obj/AABB_Sphere.o $OUT/obj/AABB.o $OUT/obj/Geom.o $OUT/obj/SphericalHarmonics.o $OUT/obj/SurfaceUtil.o"
   $CXX $FLAGS -o "$OUT/bin/HSD" "$OUT/obj/HSD.o" "$OUT/obj/main.o" $LIBS -framework Accelerate

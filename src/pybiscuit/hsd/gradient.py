@@ -347,3 +347,96 @@ def solve_direction(H, G, lam, alpha):
         M[idx, idx] *= 1 + lam
     _, _, x, _ = lapack.dsysv(M, np.asarray(G, dtype=np.float64), lower=1)
     return x
+
+
+# --------------------------------------------------------------------------- #
+# landmarks (updateGradientLandmark, HSD.cpp 2079-2213; opt-in, unreachable from the image CLI)
+# --------------------------------------------------------------------------- #
+@njit(cache=True, error_model="numpy")
+def _landmark_rows(
+    lm_x, s, lm_Y, coeff, ncoeff, axis0, tan1, tan2, n0, n, fine, normalization, J2, J1, diag
+):
+    """Jacobian rows of the landmark term for subject ``s`` (one row per landmark).
+
+    ``x_bar`` is the double mean of all subjects' (fixed included) deformed landmarks,
+    normalised; ``x_hat . x_bar`` is a float32 dot (``Vector(double*)`` rounds to float);
+    ``delta`` sums all ``ncoeff`` terms, not only those up to ``m_degree_inc``.
+    """
+    size = n - n0
+    m = np.empty(9, np.float32)
+    A = np.empty(9, np.float32)
+    nsubj = lm_x.shape[0]
+    for i in range(lm_x.shape[1]):
+        b0 = 0.0
+        b1 = 0.0
+        b2 = 0.0
+        for j in range(nsubj):
+            b0 += D(lm_x[j, i, 0])
+            b1 += D(lm_x[j, i, 1])
+            b2 += D(lm_x[j, i, 2])
+        nrm = math.sqrt(b0 * b0 + b1 * b1 + b2 * b2)
+        b0 /= nrm
+        b1 /= nrm
+        b2 /= nrm
+        d0 = 0.0
+        d1 = 0.0
+        d2 = 0.0
+        for j in range(ncoeff):
+            y = lm_Y[i, j]
+            d0 += y * coeff[0, j]
+            d1 += y * coeff[1, j]
+            d2 += y * coeff[2, j]
+        zdx, zdy, zdz = _z_dot(d1, d2, axis0[0], axis0[1], axis0[2], tan1, tan2, m, A)
+        xhx, xhy, xhz = lm_x[s, i, 0], lm_x[s, i, 1], lm_x[s, i, 2]
+        xdx = D(dot3(xhx, xhy, xhz, F(b0), F(b1), F(b2)))
+        dxdg = 0.0
+        dxdu1 = 0.0
+        dxdu2 = 0.0
+        dEdx = 0.0
+        diag[i] = 0.0
+        if abs(xdx) < 1.0 - 1e-6:
+            dxdg, dxdu1, dxdu2 = _dxd(zdx, zdy, zdz, tan1, tan2, D(xhx), D(xhy), D(xhz), b0, b1, b2)
+            omx = 1.0 - xdx * xdx
+            dEdx = 2.0 * math.acos(xdx)
+            drdx = -1.0 / math.sqrt(omx)
+            dxdg *= drdx
+            dxdu1 *= drdx
+            dxdu2 *= drdx
+            if fine:
+                diag[i] = normalization
+        for j in range(n0, n):
+            J2[i, j - n0] = lm_Y[i, j] * dxdg * dEdx * normalization
+            J2[i, size + j - n0] = lm_Y[i, j] * dxdu1 * dEdx * normalization
+            J2[i, 2 * size + j - n0] = lm_Y[i, j] * dxdu2 * dEdx * normalization
+            if fine:
+                J1[i, j - n0] = lm_Y[i, j] * dxdg
+                J1[i, size + j - n0] = lm_Y[i, j] * dxdu1
+                J1[i, 2 * size + j - n0] = lm_Y[i, j] * dxdu2
+
+
+@njit(cache=True, error_model="numpy")
+def _add_rows_seq(J2, size, n0, n, grad):
+    """``gradient[c, j] += J2[i, c*size + j - n0]`` for i = 0, 1, ... (the C++ sequential loop)."""
+    for i in range(J2.shape[0]):
+        for j in range(n0, n):
+            for c in range(3):
+                grad[c, j] += J2[i, c * size + j - n0]
+
+
+def accumulate_landmarks(lm_x, s, lm_Y, coeff, deg_beg, deg_end, *, axis0, tan1, tan2, fine, grad):
+    """``updateGradientLandmark`` for subject ``s``: adds the landmark gradient to ``grad``
+    (the subject's (3, K) gradient, in landmark order) and returns ``H`` (fine levels) or None."""
+    n = (deg_end + 1) ** 2
+    n0 = deg_beg**2
+    size = n - n0
+    nsubj, nlm = lm_x.shape[0], lm_x.shape[1]
+    normalization = 1.0 / float((nsubj - 1) * nlm)
+    J2 = np.empty((nlm, 3 * size))
+    J1 = np.zeros((nlm, 3 * size)) if fine else np.empty((1, 1))
+    diag = np.empty(nlm)
+    _landmark_rows(lm_x, s, lm_Y, coeff, coeff.shape[1], axis0, tan1, tan2, n0, n, fine,
+                   normalization, J2, J1, diag)  # fmt: skip
+    _add_rows_seq(J2, size, n0, n, grad)
+    if fine:
+        return J1.T @ (diag[:, None] * J1)
+    return None

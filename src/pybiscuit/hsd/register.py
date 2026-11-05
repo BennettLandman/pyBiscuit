@@ -1,8 +1,9 @@
 # ruff: noqa: E501
 """HSD spherical registration: port of ``HSD`` (ilwoolyu/HSD @ f169595, ``src/HSD.cpp``).
 
-Property-only registration as reachable from the shipped CLI (no landmarks / location terms;
-see ``docs/ports/hsd.md``).  Method names follow the C++ (snake_case).  State is kept in NumPy
+Property registration as reachable from the shipped CLI, plus (opt-in) the landmark term, the
+location features and the BOBYQA pole search that upstream left unreachable from its CLI (see
+``docs/ports/hsd.md``).  Method names follow the C++ (snake_case).  State is kept in NumPy
 arrays with the C++ dtypes: sphere vertices float32, SH basis / coefficients / gradients float64,
 features float32, mean / variance float64.
 """
@@ -11,6 +12,7 @@ from __future__ import annotations
 
 import math
 import sys
+from pathlib import Path
 
 import numpy as np
 
@@ -26,11 +28,13 @@ from pybiscuit.sphere.spharm import (
 
 from . import gradient as G
 from . import kernels as K
+from .bobyqa import bobyqa
 from .geom import F, unit_rows_inplace
 from .guess import guess_init_coeff
 from .icosahedron import icosahedron
 
 FLT_MAX = 3.4028234663852886e38
+PI = 3.141592653589793238462643
 _SAMPLES = {642: 3, 2562: 4, 10242: 5, 40962: 6, 163842: 7}
 
 
@@ -51,6 +55,17 @@ def _tree(verts, faces, normals_from):
     t._fnormals = face_normals(normals_from, faces)
     t._refresh()
     return t
+
+
+def _read_landmark_ids(path) -> np.ndarray:
+    """``initLandmarks``: ``fscanf(fp, "%d", &id)`` until the first token that is not an integer."""
+    ids = []
+    for tok in Path(path).read_text().split():
+        try:
+            ids.append(int(tok))
+        except ValueError:
+            break
+    return np.array(ids, dtype=np.int64)
 
 
 def _patch_cache(faces: np.ndarray) -> np.ndarray:
@@ -94,22 +109,39 @@ class HSD:
         resampling=False,
         guess_unit_ico=True,
         robust_aabb=False,
+        landmarks=None,
+        surfaces=None,
+        weight_loc=0.0,
+        weight_map=1.0,
         verbose=True,
     ):
+        """``landmarks``/``surfaces``/``weight_loc``/``weight_map`` are the upstream options that the
+        image binary does not expose (``-l``, ``--surface``, ``--locationWeight``, ``--weightMap``):
+        one landmark file (vertex indices) and one surface file per subject.  As in ``main.cpp``
+        the location features exist only when ``surfaces`` is given and ``weight_loc > 0``, and
+        ``weight_map`` (eta) applies only together with landmarks."""
         self.verbose = verbose
         self.log: list[str] = []
         self.history: list[tuple[int, float]] = []
         self.nsubj = len(spheres)
-        self.nprop = len(properties[0])
-        if any(len(p) != self.nprop for p in properties) or len(properties) != self.nsubj:
+        self.nprop_files = len(properties[0])
+        if any(len(p) != self.nprop_files for p in properties) or len(properties) != self.nsubj:
             raise ValueError("every subject needs the same number of property files")
-        self.weight = np.ones(self.nprop, np.float32) if weight is None else np.asarray(weight, np.float32)
+        if self.nprop_files == 0:
+            raise ValueError("at least one property per subject is required (-p is required upstream)")
+        self.weight_loc = float(F(weight_loc)) if surfaces is not None else 0.0
+        self.nsurf = 3 if self.weight_loc > 0 else 0  # x, y, z of the surface model
+        self.nprop = self.nprop_files + self.nsurf  # m_nProperties + m_nSurfaceProperties
+        for name, lst in (("landmark", landmarks), ("surface", surfaces)):
+            if lst is not None and len(lst) != self.nsubj:
+                raise ValueError(f"# of {name} files must equal # of subjects")
+        self.weight = np.ones(self.nprop_files, np.float32) if weight is None else np.asarray(weight, np.float32)
         self.max_iter = int(max_iter)
         self.degree = int(degree)
         self.K = (self.degree + 1) ** 2
         self.lambda1 = 1.0
         self.lambda2 = float(F(idprior))
-        self.eta = 1.0
+        self.eta = float(F(weight_map)) if landmarks is not None else 1.0
         self.fine_res = 6
         self.guess = bool(guess)
         self.guess_active = bool(guess)
@@ -126,7 +158,7 @@ class HSD:
         self.mincost = np.float32(FLT_MAX)
         self.n_iter = 0
         self.n_success = 0
-        self.cost_prop = self.cost_area = self.cost_disp = 0.0
+        self.cost_prop = self.cost_area = self.cost_disp = self.cost_lm = 0.0
         self.coeff = np.zeros((self.nsubj, 3, self.K))
         self.coeff_prev = np.zeros_like(self.coeff)
         self.gradient = np.zeros_like(self.coeff)
@@ -136,7 +168,7 @@ class HSD:
             fixed[i] = True
         self.fixed = fixed
         self.ndef = int((~fixed).sum())
-        self._init(spheres, properties, coefficient, ico_mesh, tmp_variance)
+        self._init(spheres, properties, coefficient, ico_mesh, tmp_variance, landmarks, surfaces)
 
     # ------------------------------------------------------------------ utils
     def _say(self, msg: str = "") -> None:
@@ -146,7 +178,7 @@ class HSD:
             sys.stdout.flush()
 
     # ------------------------------------------------------------------- init
-    def _init(self, spheres, properties, coefficient, ico_mesh, tmp_variance):
+    def _init(self, spheres, properties, coefficient, ico_mesh, tmp_variance, landmarks=None, surfaces=None):
         nsubj = self.nsubj
         # icosahedron used for evaluation (uniform sampling points)
         if ico_mesh is None:
@@ -178,6 +210,12 @@ class HSD:
             sub.fixed = bool(self.fixed[s])
             raw, faces0 = _load_mesh(spheres[s])
             v0 = _unit(raw)
+            if landmarks is not None:  # initLandmarks: on the unit input sphere, before resampling
+                ids = _read_landmark_ids(landmarks[s])
+                if ids.size and (ids.min() < 0 or ids.max() >= len(v0)):
+                    raise ValueError(f"{landmarks[s]}: landmark vertex index out of range")
+                sub.lm_p = np.ascontiguousarray(v0[ids])
+                sub.lm_Y = basis(sub.lm_p.astype(np.float64), self.degree)
             tree0 = _tree(v0, faces0, raw)
             resample_here = self.resampling and not (self.pairwise and sub.fixed)
             if resample_here:
@@ -192,8 +230,14 @@ class HSD:
             nv0 = len(v0)
             nv = len(sub.v)
             raw_prop = np.empty((self.nprop, nv0), np.float32)
-            for k in range(self.nprop):
+            for k in range(self.nprop_files):
                 raw_prop[k] = _read_floats(properties[s][k], nv0)
+            if self.nsurf:  # location information: surface coordinates as three more properties
+                sv, _ = _load_mesh(surfaces[s])
+                if len(sv) < nv0:
+                    raise ValueError(f"{surfaces[s]}: fewer vertices than the sphere")
+                for k in range(3):
+                    raw_prop[self.nprop_files + k] = sv[:nv0, k]
             if self.resampling:
                 fid, bary = tree0.closest_face(sub.v)
                 prop = np.empty((self.nprop, nv), np.float32)
@@ -219,6 +263,8 @@ class HSD:
                 sub.Y = ico_Y
             sub.p = sub.v.copy()
             sub.p0 = np.zeros_like(sub.v)
+            if landmarks is not None and len(sub.lm_p):
+                self._landmark_pole(sub)
             self._set_tangent(sub)
             sub.patch_cache = None if self.resampling else _patch_cache(sub.faces)
             sub.flip = np.zeros(len(sub.faces), bool)
@@ -232,6 +278,13 @@ class HSD:
             sub.step_adjusted = False
             self.subj.append(sub)
             self._say(f"Subject {s} - {spheres[s]}")
+        self.nlm = 0
+        if landmarks is not None:
+            counts = {len(sub.lm_p) for sub in self.subj}
+            if len(counts) != 1:
+                raise ValueError("every subject needs the same number of landmarks")
+            self.nlm = counts.pop()
+            self.lm_x = np.zeros((nsubj, self.nlm, 3), np.float32)
         if self.resampling:
             pivot = None
             for sub in self.subj:
@@ -253,6 +306,8 @@ class HSD:
         guess = self.guess_active
         self.guess_active = False
         self.updated[:] = False
+        if self.nlm:
+            self.update_landmark()
         self.update_displacement()
         self.update_properties()
         if self.pairwise:
@@ -260,6 +315,19 @@ class HSD:
         self.guess_active = guess
         self.coeff_prev[:] = self.coeff
         self._say("Initialization done!")
+
+    def _landmark_pole(self, sub):
+        """``initTangentPlane`` with landmarks: Frechet-mean start, then BOBYQA on the pole offset
+        (``min_bobyqa(2, delta, costFunc, -PI, PI, 0.1, 1e-6, m_maxIter)``, npt = 5)."""
+        phi, theta = (F(v) for v in K.landmark_pole_mean(sub.pole[0], sub.pole[1], sub.lm_p))
+        sub.pole = np.array([phi, theta], np.float32)
+        lm = sub.lm_p
+
+        def cost(x):
+            return K.landmark_pole_cost(phi, theta, x[0], x[1], lm)
+
+        x, _, _, _ = bobyqa(cost, [0.0, 0.0], [-PI, -PI], [PI, PI], 0.1, 1e-6, self.max_iter)
+        sub.pole = np.array([F(phi + F(x[0])), F(theta + F(x[1]))], np.float32)  # pole += (float)delta
 
     def _set_tangent(self, sub):
         sub.axis0 = K.pole_axis(sub.pole[0], sub.pole[1])
@@ -299,6 +367,16 @@ class HSD:
             sub.p0 = K.update_coordinates(
                 sub.p, sub.Y, sub.coeff, (degree + 1) ** 2, sub.axis0, sub.tan1, sub.tan2
             )
+
+    # ---------------------------------------------------------------- landmarks
+    def update_landmark(self):
+        """``updateLandmark(-1)``: deformed landmark positions (degree ``m_degree_inc``, not unit)."""
+        n = (self.degree_inc + 1) ** 2
+        for s, sub in enumerate(self.subj):
+            self.lm_x[s] = K.update_coordinates(sub.lm_p, sub.lm_Y, sub.coeff, n, sub.axis0, sub.tan1, sub.tan2)
+
+    def _landmark_select(self):
+        return np.array([(self.ndef == self.nsubj) or (self.ndef < self.nsubj and f) for f in self.fixed])
 
     # ----------------------------------------------------------------- features
     def update_properties(self):
@@ -375,6 +453,9 @@ class HSD:
 
     # ------------------------------------------------------------------ energy
     def trace(self):
+        if self.nlm:
+            self.update_landmark()
+            self.cost_lm = K.var_landmarks(self.lm_x, self._landmark_select(), self.nsubj)
         self.update_properties()
         active = ~self.fixed
         self.cost_prop = K.var_properties(
@@ -398,7 +479,7 @@ class HSD:
                 if not sub.fixed:
                     c = K.var_displacement_add(sub.p0, sub.v, c)
             self.cost_disp = c / self.nsubj
-        cost_lm = 0.0  # uninitialised upstream when there are no landmarks
+        cost_lm = self.cost_lm  # uninitialised upstream when there are no landmarks: 0
         if not fine:
             return cost_lm + self.eta * self.cost_prop + self.lambda1 * self.cost_area
         return cost_lm + self.eta * self.cost_prop + self.lambda2 * self.cost_disp
@@ -449,6 +530,13 @@ class HSD:
             if sub.fixed or sub.step == 0:
                 continue
             H = np.zeros((3 * size, 3 * size)) if fine else None
+            if self.nlm:
+                Hl = G.accumulate_landmarks(
+                    self.lm_x, s, sub.lm_Y, sub.coeff, deg_beg, deg_end, axis0=sub.axis0,
+                    tan1=sub.tan1, tan2=sub.tan2, fine=fine, grad=self.gradient[s],
+                )  # fmt: skip
+                if fine:
+                    H += Hl
             ring = self._ring(sub)
             for k in range(self.nprop):
                 g, Hk = G.accumulate_properties(
@@ -542,6 +630,8 @@ class HSD:
                 self.coeff[:] = self.coeff_prev
                 for i in range(self.nsubj):
                     self.update_deformation(i, True)
+                if self.nlm:
+                    self.update_landmark()
                 self.update_properties()
                 t *= 0.5
                 for sub in self.subj:

@@ -1,0 +1,61 @@
+{
+ "tool": "hsd",
+ "case": "lm_newton_final",
+ "kind": "lm_eval",
+ "argv": [
+  "-s",
+  "s0.sphere.vtk",
+  "s1.sphere.vtk",
+  "s2.sphere.vtk",
+  "-p",
+  "s0.curv.txt",
+  "s1.curv.txt",
+  "s2.curv.txt",
+  "-l",
+  "s0.lm.txt",
+  "s1.lm.txt",
+  "s2.lm.txt",
+  "--surface",
+  "s0.surf.vtk",
+  "s1.surf.vtk",
+  "s2.surf.vtk",
+  "--weightMap",
+  "0.5",
+  "--locationWeight",
+  "0.7",
+  "-d",
+  "6",
+  "--icosahedron",
+  "6",
+  "--noguess"
+ ],
+ "params": {
+  "deg": 6,
+  "ico": 6,
+  "deginc": 6,
+  "beg": 0,
+  "end": 6,
+  "trans": 2,
+  "flags": [
+   "--weightMap",
+   "0.5",
+   "--locationWeight",
+   "0.7"
+  ]
+ },
+ "commit": "f169595",
+ "version": "v1.3.9",
+ "meshlib": "dcef807",
+ "compiler": "Apple clang version 21.0.0 (clang-2100.4.1.1)",
+ "oracle": "upstream-macos-arm64, -ffp-contract=off, Accelerate LAPACK/BLAS (hsd-lm-nofma: patches/hsd-landmarks)",
+ "inputs": "tests/fixtures/hsd_cases.py:write_landmark_case",
+ "env": {
+  "HSD_H_MODE": "eval",
+  "HSD_H_OUT": "/tmp/claude-502/tmphw_4wxbo/out",
+  "HSD_H_DEGINC": "6",
+  "HSD_H_BEG": "0",
+  "HSD_H_END": "6",
+  "HSD_H_TRANS": "2",
+  "HSD_H_NSUCC": "2"
+ }
+}

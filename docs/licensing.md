@@ -11,7 +11,8 @@ code (GCO/GCMex, FreeSurfer) was avoided: [clean-room.md](clean-room.md).
 | BISCUIT (`/opt/biscuit/LICENSE`, © 2019 Ilwoo Lyu) | MIT | yes | attribute |
 | CMorph (`/opt/cmorph/LICENSE`, © 2018 Ilwoo Lyu) | MIT | yes | attribute |
 | HSD, CurveExtraction, LocalGyrificationIndex, SphericalRemesh, SphericalLabeling, MeshLib | MIT (© Ilwoo Lyu) | yes | attribute |
-| `HSD/src/bobyqa.h` | © Powell (Fortran), Thiébaut (C), Lyu (header); see its LICENSE | verify text | read accompanying license before porting |
+| `HSD/src/bobyqa.h` | © Powell (Fortran), Thiébaut (C), Lyu (header); Thiébaut's LICENSE.md lists Powell's Fortran as LGPL | **no** (not translated) | replaced by NLopt's BOBYQA (below); compiled only as an oracle (Q19) |
+| NLopt BOBYQA (`src/algs/bobyqa`, Powell 2009 / S. G. Johnson) | MIT (© 2009 Powell; © 2010 MIT) | yes | ported in `hsd/bobyqa.py`; text in `LICENSES/NLopt-BOBYQA.txt`; credited in `NOTICE` |
 | MeshLib geodesic (`Geodesic/gw`) | © 2004 Gabriel Peyré; covered by MeshLib MIT (confirmed 2026-11-03) | yes | attribute |
 | klaplace | **no LICENSE file**; bundles SimpleOpt (MIT) | yes: authors approved Apache-2.0 (2026-11-03) | ported (`quant/klaplace.py`); credited in `NOTICE` |
 | SurfRemesh | **no LICENSE file** | unclear | not needed on MaCRUISE route |

@@ -17,8 +17,10 @@
 //     HSD_H_TRANS    1: phase transition at A as in optimization() (flipping init, displacement, property
 //                    statistics); 2: only updatePropertyStats()
 // Dumps: <tag>.<name>.npy with name in {samples, ico_faces, s<i>.vertex, s<i>.p0, s<i>.property,
-//   s<i>.tree_cache, s<i>.area0, s<i>.area1, s<i>.coeff, s<i>.gradient, s<i>.hessian, feature, mean,
-//   variance, energy}.
+//   s<i>.tree_cache, s<i>.area0, s<i>.area1, s<i>.coeff, s<i>.gradient, s<i>.hessian, s<i>.pole, s<i>.tan,
+//   feature, landmark (deformed landmarks, only with -l), mean, variance, energy, cost_lm}.
+// Landmarks / location features (-l, --surface, --locationWeight, --weightMap) are passed as in main.cpp; they
+// only parse when built with HSD_PATCH_LANDMARKS=1 (otherwise the lists stay empty and NULL is passed).
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
@@ -80,7 +82,9 @@ static std::vector<double> loadDoubles(const char *path, size_t n)
 static void dumpState(HSD &h, const std::string &tag, bool withEnergy)
 {
 	int csize = (h.m_degree + 1) * (h.m_degree + 1);
-	int nProp = h.m_nProperties;
+	int nProp = h.m_nProperties + h.m_nSurfaceProperties;
+	int nLm = h.m_spharm[0].landmark.size();
+	int stride = nLm * 3 + h.m_nSamples * nProp;
 	for (int s = 0; s < h.m_nSubj; s++)
 	{
 		std::string p = tag + ".s" + std::to_string(s);
@@ -100,8 +104,18 @@ static void dumpState(HSD &h, const std::string &tag, bool withEnergy)
 		npy(p + ".area1", h.m_spharm[s].area1, {nf});
 		npy(p + ".coeff", h.m_spharm[s].coeff, {3, csize});
 		npy(p + ".gradient", h.m_spharm[s].gradient, {3, csize});
+		npy(p + ".pole", h.m_spharm[s].pole, {2});
+		npy(p + ".tan", h.m_spharm[s].tan1, {2, 3});
 	}
-	npy(tag + ".feature", h.m_feature, {h.m_nSubj, nProp, h.m_nSamples});
+	std::vector<float> feat((size_t)h.m_nSubj * nProp * h.m_nSamples), lm((size_t)h.m_nSubj * nLm * 3);
+	for (int s = 0; s < h.m_nSubj; s++)
+	{
+		memcpy(&feat[(size_t)s * nProp * h.m_nSamples], &h.m_feature[(size_t)s * stride + nLm * 3], sizeof(float) * nProp * h.m_nSamples);
+		memcpy(&lm[(size_t)s * nLm * 3], &h.m_feature[(size_t)s * stride], sizeof(float) * nLm * 3);
+	}
+	npy(tag + ".feature", feat.data(), {h.m_nSubj, nProp, h.m_nSamples});
+	if (nLm) npy(tag + ".landmark", lm.data(), {h.m_nSubj, nLm, 3});
+	npy(tag + ".cost_lm", &h.m_cost_lm, {1});
 	npy(tag + ".mean", h.m_mean, {nProp, h.m_nSamples});
 	npy(tag + ".variance", h.m_variance, {nProp, h.m_nSamples});
 	if (withEnergy)
@@ -145,7 +159,13 @@ int main(int argc, char **argv)
 	for (int i = 0; i < nWeight; i++) weight[i] = listWeight[i];
 	for (int i = 0; i < nFixed; i++) fixedSubj[listFixedSubj[i]] = true;
 
-	HSD hsd(sphere, nSubj, property, nProperties / nSubj, output, outputcoeff, weight, degree, NULL, weightMap, 0, idprior, coeff, NULL, maxIter, fixedSubj, icosa, realtimeCoeff, prior, !noguess, guessRes, icomesh, nCThreads, resampling);
+	int nLandmark = listLandmark.size(), nSurf = listSurf.size();
+	const char **landmark = nLandmark ? new const char *[nLandmark] : NULL;
+	const char **surf = nSurf ? new const char *[nSurf] : NULL;
+	for (int i = 0; i < nLandmark; i++) landmark[i] = listLandmark[i].c_str();
+	for (int i = 0; i < nSurf; i++) surf[i] = listSurf[i].c_str();
+	if (surf == NULL) weightLoc = 0;
+	HSD hsd(sphere, nSubj, property, nProperties / nSubj, output, outputcoeff, weight, degree, landmark, weightMap, weightLoc, idprior, coeff, surf, maxIter, fixedSubj, icosa, realtimeCoeff, prior, !noguess, guessRes, icomesh, nCThreads, resampling);
 
 	std::string mode = env("HSD_H_MODE", "init");
 	OUT = env("HSD_H_OUT", ".");
@@ -198,6 +218,7 @@ int main(int argc, char **argv)
 		{
 			if (h.m_spharm[s].fixed || h.m_spharm[s].step == 0) continue;
 			memset(&h.m_Hessian[csize * 3 * csize * 3 * s], 0, sizeof(double) * size * size * 3 * 3);
+			if (h.m_spharm[0].landmark.size() > 0) h.updateGradientLandmark(beg, end, s);
 			h.updateGradientProperties(beg, end, s);
 			if (h.m_degree_inc > 0 && fine) h.updateGradientDisplacement(beg, end, s);
 		}

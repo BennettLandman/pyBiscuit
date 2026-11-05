@@ -15,6 +15,7 @@ upstream clones). See `docs/licensing.md` for the full inventory.
 | SphericalLabeling.txt | SphericalLabeling | (c) 2019 Ilwoo Lyu | `repos/SphericalLabeling/LICENSE` |
 | MeshLib.txt | MeshLib | (c) 2009 Ilwoo Lyu | `repos/MeshLib/LICENSE` |
 | VOXELISE.txt | Mesh voxelisation (VOXELISE.m) | (c) 2013 Adam H. Aitkenhead (BSD-3-Clause) | MATLAB File Exchange 27390 v1.20.0 `license.txt` (downloaded 2026-11-03) |
+| NLopt-BOBYQA.txt | BOBYQA (Powell), C translation in NLopt | (c) 2009 M. J. D. Powell; modifications (c) 2010 Massachusetts Institute of Technology (MIT) | `github.com/stevengj/nlopt` `src/algs/bobyqa/COPYRIGHT` (master, fetched 2026-11-04); ported in `hsd/bobyqa.py` |
 | UGSCNN-MeshConv.txt | UGSCNN MeshConv | (c) 2018 Chiyu "Max" Jiang, UC Berkeley (MIT) | `github.com/maxjiang93/ugscnn` LICENSE at commit `64e27969c65b4807e41c1e275972dab8bb72c512` (default-branch HEAD, fetched 2026-10-20) |
 
 ## Ported by permission (no upstream license file)
@@ -30,7 +31,8 @@ upstream clones). See `docs/licensing.md` for the full inventory.
 ## Not included (license unclear or incompatible)
 
 - SurfRemesh (no LICENSE file) - not needed on the MaCRUISE route.
-- HSD `bobyqa.h` (Powell / Thiebaut) - accompanying license to be verified.
+- HSD `bobyqa.h` (Powell / Thiebaut / Lyu) - not translated: Thiebaut's LICENSE lists Powell's Fortran
+  as LGPL (Q19). The BOBYQA in `hsd/bobyqa.py` is translated from NLopt's MIT version instead.
 - GCMex / GCO - research-only terms; not redistributable.
 - FreeSurfer - non-OSI license; clean-room replacements only.
 - Models/templates (parc `*.pth`, reg `mb101`/`oasis45`/`hcp1058`) - data

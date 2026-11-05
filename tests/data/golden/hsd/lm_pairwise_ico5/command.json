@@ -1,0 +1,51 @@
+{
+ "tool": "hsd",
+ "case": "lm_pairwise_ico5",
+ "kind": "lm_run",
+ "argv": [
+  "-s",
+  "s0.sphere.vtk",
+  "s1.sphere.vtk",
+  "-p",
+  "s0.curv.txt",
+  "s1.curv.txt",
+  "-o",
+  "o0.reg.vtk",
+  "o1.reg.vtk",
+  "--outputcoeff",
+  "o0.coeff",
+  "o1.coeff",
+  "-d",
+  "6",
+  "--icosahedron",
+  "5",
+  "--fixedSubjects",
+  "0",
+  "-l",
+  "s0.lm.txt",
+  "s1.lm.txt",
+  "--weightMap",
+  "0.2"
+ ],
+ "params": {
+  "nsub": 2,
+  "flags": [
+   "-d",
+   "6",
+   "--icosahedron",
+   "5",
+   "--fixedSubjects",
+   "0",
+   "LM",
+   "--weightMap",
+   "0.2"
+  ]
+ },
+ "commit": "f169595",
+ "version": "v1.3.9",
+ "meshlib": "dcef807",
+ "compiler": "Apple clang version 21.0.0 (clang-2100.4.1.1)",
+ "oracle": "upstream-macos-arm64, -ffp-contract=off, Accelerate LAPACK/BLAS (hsd-lm-nofma: patches/hsd-landmarks)",
+ "inputs": "tests/fixtures/hsd_cases.py:write_landmark_case",
+ "env": {}
+}

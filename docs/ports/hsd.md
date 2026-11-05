@@ -1,4 +1,4 @@
-# Port note: HSD spherical registration (plan rows B6.1, B6.3-B6.6)
+# Port note: HSD spherical registration (plan rows B6.1, B6.3-B6.8)
 
 Code: `src/pybiscuit/hsd/` (`register.py` class `HSD`, `kernels.py`, `gradient.py`, `guess.py`,
 `icosahedron.py`, `geom.py`, `cli.py`); CLI `pybiscuit hsd`. Tests: `tests/test_hsd.py`. Oracle:
@@ -10,7 +10,7 @@ Code: `src/pybiscuit/hsd/` (`register.py` class `HSD`, `kernels.py`, `gradient.p
 
 | Repo | Commit | Files |
 |---|---|---|
-| ilwoolyu/HSD | `f169595` (v1.3.9, = the version string of the image binary) | `src/HSD.cpp` (3122 lines), `src/HSD.h`, `src/bobyqa.h` (not ported), `wrapper/main.cpp`, `wrapper/PARSE_ARGS.h`; `src/cuda/*` out of scope (Q10) |
+| ilwoolyu/HSD | `f169595` (v1.3.9, = the version string of the image binary) | `src/HSD.cpp` (3122 lines), `src/HSD.h`, `src/bobyqa.h` (not translated; licence Q19, see below), `wrapper/main.cpp`, `wrapper/PARSE_ARGS.h`; `src/cuda/*` out of scope (Q10) |
 | ilwoolyu/MeshLib | `dcef807` | `Vector`/`Coordinate`/`Statistics` in `Util/Geom.cpp`, `AABB_Sphere`, `SphericalHarmonics::basis`, `SurfaceUtil::smoothing` (ported earlier: `sphere/aabb.py`, `sphere/spharm.py`, `mesh/geometry.py`) |
 
 ## Image binary vs upstream, and the CLI
@@ -22,8 +22,11 @@ Code: `src/pybiscuit/hsd/` (`register.py` class `HSD`, `kernels.py`, `gradient.p
 commented out upstream and absent from the image** (the brief lists them; they cannot be reached).
 `main.cpp` therefore always passes `landmark = NULL`, `surf = NULL`, `weightLoc = 0`, `weightMap = 1`:
 the landmark term, the location features and the BOBYQA pole search (`initTangentPlane`, only when landmarks
-exist) are dead code in the shipped tool. They are **not ported** (hand-back item). `tests::test_cli_flags_match_parse_args_h`
-parses the header and compares flag sets. Defaults are the CLI's (`idprior 625`, `degree 15`, `maxIter 20`,
+exist) are dead code in the shipped tool. They are ported as **opt-in extras** (B6.8, section "Landmarks, location
+features, pole search" below): `pybiscuit hsd` lists them in a separate help group marked as not part of the original
+binary (`cli.UPSTREAM_DISABLED`), and runs without them are unchanged. `tests::test_cli_flags_match_parse_args_h`
+parses the header and compares the image flag set (opt-in flags excluded; `test_hsd_landmarks.py` checks that they are
+the commented-out ones). Defaults are the CLI's (`idprior 625`, `degree 15`, `maxIter 20`,
 `icosahedron 7`, `gres 3`), not the C++ constructor's. `--nThreads 0` = `OMP_NUM_THREADS`, else all cores
 (upstream: 1; results do not depend on the thread count).
 
@@ -48,7 +51,10 @@ parses the header and compares flag sets. Defaults are the CLI's (`idprior 625`,
 | `guessInitCoeff` 2617-2845 | `guess.guess_init_coeff` | float loop variables kept (`c1 += step`) |
 | `optimization` 2847-2888 | `HSD.optimization` | |
 | `saveCoeff`, `saveSphere` 3071-3105 | `HSD.save_coeff`, `save_sphere` | `--resample`: output re-evaluated on the original sphere |
-| landmarks (`initLandmarks`, `updateLandmark`, `varLandmarks`, `updateGradientLandmark`, `optimalMeanCost`), location features, `bobyqa.h` | not ported | unreachable from the CLI |
+| `initLandmarks` 1142-1174, `initTangentPlane` with landmarks 831-854, `optimalMeanCost` 3107-3122 | `register._read_landmark_ids`, `HSD._landmark_pole`, `kernels.landmark_pole_mean/landmark_pole_cost` | opt-in (B6.8) |
+| `updateLandmark` 1317-1330, `varLandmarks` 1694-1749, `updateGradientLandmark` 2079-2213 | `HSD.update_landmark`, `kernels.var_landmarks`, `gradient.accumulate_landmarks` | opt-in (B6.8) |
+| location features (`initProperties` 961-969, `m_nSurfaceProperties`), `m_eta = weightMap` | `HSD._init` (`nsurf`), `HSD.eta` | opt-in (B6.8) |
+| `src/bobyqa.h` (`min_bobyqa`) | `hsd/bobyqa.py` (NLopt MIT translation, not `bobyqa.h`) | bit-identical traces vs `bobyqa.h` (Q19) |
 
 ## Algorithm as implemented (what "LM" really is)
 
@@ -135,14 +141,61 @@ Consequences found by replaying it (tests: `tests/test_hsd_chain.py`; report: [h
 
 ## Known gaps and quirks
 
-* Landmarks / location / BOBYQA not ported (above). `bobyqa.h` header says "Read the accompanying `LICENSE`":
-  check the HSD licence text before porting.
+* Landmarks / location / BOBYQA: ported opt-in (B6.8, below); `bobyqa.h` itself is not translated (Q19).
 * `--icosahedron 0-2` is accepted by the CLI but `m_nSamples` is uninitialised upstream (UB); port uses the real count.
 * `--icomesh` with a radius-100 mesh and without `--resample`: `guessInitCoeff` builds `AABB_Sphere` on the raw mesh;
   unit queries lie inside it, so no face is found and the template mean map becomes 0 (reproduced; this **is** BISCUIT's call,
   see the section above and golden `guess_icomesh`).
 * `const float *` into destroyed temporaries (`initTangentPlane`) assumed to keep their values (true in both builds tested).
 * `m_cost_lm` is uninitialised upstream when there are no landmarks; assumed 0 (constant offset).
+
+## Landmarks, location features, pole search (B6.8; options the image binary does not have)
+
+Report: [hsd-landmarks-2026-11-04](../reports/hsd-landmarks-2026-11-04.md). Oracle `hsd-lm-nofma`
+(`HSD_PATCH_LANDMARKS=1 scripts/oracles/build_hsd_nofma.sh`, `patches/hsd-landmarks/PARSE_ARGS.h.patch`); goldens
+`tests/data/golden/hsd/lm_*`, `tests/data/golden/bobyqa`; tests `tests/test_hsd_landmarks.py`.
+
+CLI (`pybiscuit hsd`, group "upstream-disabled options"): `-l/--landmark` (one file of vertex indices per subject),
+`--landmarkDir` (`*txt`, sorted, kept if the path contains a subject name = sphere file name without directory and the
+last 4 characters, cut at the first `.`), `--surface`, `--surfaceDir` (`*vtk`, sorted, not trimmed), `--weightMap`
+(eta, default 1; used only with landmarks), `--locationWeight` (default 0; forced to 0 without surfaces). Library:
+`HSD(..., landmarks=, surfaces=, weight_loc=, weight_map=)`.
+
+Behaviour as implemented (all upstream):
+
+* Landmarks are vertices of the unit-normalised **input** sphere (before `--resample` swaps in the icosahedron), with
+  their own float64 SH basis. Their deformed positions (`updateCoordinate` at `m_degree_inc`, not normalised) are
+  recomputed in `trace` and after a rejected step.
+* Energy: `E = cost_lm + eta * prop + lambda * reg`, `cost_lm = sum_i mean_s acos(m_i . x_si)^2 / (nsubj - 1)`, with
+  `m_i` the normalised double mean over the subjects that define the template (all, or the fixed ones), the sum over
+  **all** subjects.
+* Gradient: `x_bar` is the mean over **all** subjects (fixed included), unlike the energy; `delta` uses all
+  `(degree+1)^2` coefficients while `x_hat` was deformed at `m_degree_inc`; `x_hat . x_bar` is a float32 dot
+  (`Vector(double*)` rounds `x_bar`); rows scaled by `1/((nsubj-1) L)` and summed in landmark order **before** the
+  property terms; on fine levels `J^T diag J` (diag = the same normalisation) is added to the Hessian first.
+* Pole: `unit(sph2cart(pole) + sum p_i)` (float32; the pole from `-c` if given), then BOBYQA on a 2-D offset in
+  `[-PI, PI]^2`, `rhobeg 0.1`, `rhoend 1e-6`, `npt 5`, `maxfun = --maxIter` (default 20, so the search usually stops
+  at `maxfun`), cost `optimalMeanCost` in float32; `pole += (float)delta`. It runs for every subject, fixed ones too,
+  and the tangent plane is built from the new pole. `--maxIter 0`/`3` keep the first 1/3 BOBYQA points (oracle agrees).
+* Location: the surface model's first `nVertex` vertex coordinates are three more properties, normalised like the
+  others (median z-score, soft clamp twice), resampled with `--resample`, counted in every `nProperties` normaliser and
+  in `--tmpVar` (property-major).
+* Dead upstream and not reproduced: the guess's landmark branch (condition never true), `m_feature_weight`, landmark-only
+  runs (`-p` is required), unequal landmark counts / out-of-range indices (raise instead of UB).
+
+BOBYQA source: `bobyqa.h` adapts Thiébaut's C version, whose licence lists Powell's Fortran as LGPL, so it was not
+translated (only its `min_bobyqa` wrapper was read for the call interface). `hsd/bobyqa.py` translates NLopt's MIT C
+BOBYQA (same Powell 2009 Fortran) with Powell's stopping rules restored; on five test functions × five `maxfun` values
+the evaluation sequences are **bit-identical** to `bobyqa.h` compiled with `-ffp-contract=off`
+(`scripts/oracles/harness_bobyqa.cpp`). Possible differences: FMA builds, the untested `RESCUE` path.
+
+Precision: landmark positions, poles, tangents, the pole cost and `x_hat . x_bar` float32; `x_bar`, `m_i`, arc lengths,
+landmark energy and Jacobian rows float64 (`acos` double); BOBYQA float64.
+
+Validation: pole/tangents/initial landmark features bit-identical for `--maxIter` 0-100; unit level energies <= 3.3e-8,
+landmark cost exact, Newton direction/Hessian <= 8.7e-6; gradient-descent full runs (guess, location only, landmarks +
+location + `--resample`, pair-wise, `*Dir` forms) identical iteration counts, energies and outputs to the printed
+precision; the damped-Newton run is chaotic and sits inside the oracle's 1-ulp ensemble (Q15).
 
 ## Validation
 

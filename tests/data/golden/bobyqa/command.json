@@ -1,0 +1,26 @@
+{
+ "tool": "bobyqa.h (HSD f169595, black box)",
+ "harness": "scripts/oracles/harness_bobyqa.cpp",
+ "cases": [
+  "quad",
+  "rosen",
+  "bound",
+  "cosf",
+  "sphere"
+ ],
+ "maxfun": [
+  3,
+  5,
+  8,
+  20,
+  200
+ ],
+ "x0": "0,0 (rosen: -1.2,1)",
+ "bounds": "[-PI, PI]^2",
+ "rhobeg": 0.1,
+ "rhoend": 1e-06,
+ "npt": 5,
+ "compiler": "Apple clang version 21.0.0 (clang-2100.4.1.1)",
+ "flags": "-O2 -ffp-contract=off",
+ "libm": "macOS (cosf/sinf/acosf in cases cosf, sphere)"
+}

@@ -18,6 +18,7 @@ from .geom import (
     PI,
     D,
     F,
+    _cart2sph,
     _rot_point,
     _sph2cart,
     _unit3,
@@ -505,3 +506,72 @@ def pairwise_bary(v, faces, fid, samples, out):
         out[i, 0] = c0
         out[i, 1] = c1
         out[i, 2] = c2
+
+
+# --------------------------------------------------------------------------- #
+# landmarks (opt-in; dead code in the shipped HSD CLI)
+# --------------------------------------------------------------------------- #
+@njit(**SEQ)
+def var_landmarks(lm_x, select, nsubj):
+    """``varLandmarks(-1)``: mean of the selected subjects' landmarks (double, normalised), then
+    the mean squared arc length of every subject's landmark to it, summed over landmarks,
+    divided by ``nsubj - 1``."""
+    nlm = lm_x.shape[1]
+    cost = 0.0
+    for i in range(nlm):
+        m0 = 0.0
+        m1 = 0.0
+        m2 = 0.0
+        for s in range(nsubj):
+            if select[s]:
+                m0 += D(lm_x[s, i, 0])
+                m1 += D(lm_x[s, i, 1])
+                m2 += D(lm_x[s, i, 2])
+        nrm = math.sqrt(m0 * m0 + m1 * m1 + m2 * m2)
+        m0 /= nrm
+        m1 /= nrm
+        m2 /= nrm
+        sd = 0.0
+        for s in range(nsubj):
+            inner = 0.0
+            inner += m0 * D(lm_x[s, i, 0])
+            inner += m1 * D(lm_x[s, i, 1])
+            inner += m2 * D(lm_x[s, i, 2])
+            if inner > 1:
+                inner = 1.0
+            elif inner < -1:
+                inner = -1.0
+            arclen = math.acos(inner)
+            sd += arclen * arclen / nlm
+        cost += sd
+    return cost / (nsubj - 1)
+
+
+@njit(**SEQ)
+def landmark_pole_mean(phi, theta, lm):
+    """Start of ``initTangentPlane`` with landmarks: ``unit(sph2cart(pole) + sum p_i)`` (float32)
+    back to (phi, theta) with ``Coordinate::cart2sph``."""
+    x, y, z = _sph2cart(F(phi), F(theta))
+    for i in range(lm.shape[0]):
+        x = x + lm[i, 0]
+        y = y + lm[i, 1]
+        z = z + lm[i, 2]
+    x, y, z = _unit3(x, y, z)
+    return _cart2sph(x, y, z)
+
+
+@njit(**SEQ)
+def landmark_pole_cost(phi, theta, d0, d1, lm):
+    """``HSD::optimalMeanCost``: float32 sum of squared arc lengths from the pole
+    ``(phi + (float)d0, theta + (float)d1)`` to the landmarks."""
+    px, py, pz = _sph2cart(F(phi) + F(d0), F(theta) + F(d1))
+    cost = F(0)
+    for i in range(lm.shape[0]):
+        inner = dot3(px, py, pz, lm[i, 0], lm[i, 1], lm[i, 2])
+        if inner > F(1):
+            inner = F(1)
+        elif inner < F(-1):
+            inner = F(-1)
+        arclen = F(math.acos(D(inner)))
+        cost += arclen * arclen
+    return D(cost)
