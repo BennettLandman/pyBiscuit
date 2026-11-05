@@ -70,14 +70,15 @@ so they can be neither redistributed nor translated.
 
 | Component | Terms | Status in pyBiscuit |
 |---|---|---|
-| HSD `bobyqa.h` (Powell, Thiébaut) | separate license, not verified | **Not ported.** Only the landmark pole search uses it, and the CLI never reaches that code ([ports/hsd.md](ports/hsd.md)). |
+| HSD `bobyqa.h` (Powell, Thiébaut, Lyu) | points to a LICENSE that is not in HSD; Thiébaut's repository LICENSE lists Powell's BOBYQA Fortran as LGPL | **Not translated** (only its 10-line `min_bobyqa` call interface was read; it is compiled and run as a black-box oracle). The landmark pole search uses `hsd/bobyqa.py`, a translation of NLopt's MIT-licensed C BOBYQA (Powell 2009, S. G. Johnson), text in `LICENSES/NLopt-BOBYQA.txt`. Its evaluation sequences are bit-identical to `bobyqa.h` on the test set ([report](reports/hsd-landmarks-2026-11-04.md), Q19). **Resolved (2026-11-04); accepted by the owner 2026-11-05.** |
 | klaplace (Joohwi Lee, UNC) | no license file | **Ported from source; authors approved release under Apache-2.0 (2026-11-03).** Credited in `NOTICE`. |
 | ShapeComplexityIndex (Sun Hyung Kim, Martin Styner, UNC) | "Copyright (C) 2015", no license | **Ported from source; authors approved release under Apache-2.0 (2026-11-03).** The EMD is a closed-form 1D version; `transportSimplex.h` (MacDonald/Rubner) was not ported. Credited in `NOTICE`. |
 | MeshProperty, MeshDeform, MeshContour (Ilwoo Lyu) | closed binaries, no license | Ported from the binaries' observed behavior plus disassembly ([ports/meshproperty.md](ports/meshproperty.md)). **Approved by Ilwoo Lyu (2026-11-03).** |
 | MeshLib geodesic `gw` (Gabriel Peyré, 2004) | inside the MIT MeshLib repo; the files carry no license header | Ported in `quant/_fastmarch.py` and `mesh/geodesic.py`. **Confirmed covered by MeshLib's MIT license (2026-11-03).** |
 | `VOXELISE.m` (Adam Aitkenhead) | BSD-3-Clause, © 2013 Adam H. Aitkenhead (File Exchange 27390, v1.20.0) | Ported in `quant/_voxelise.py`, which keeps the notice in its header; text in `LICENSES/VOXELISE.txt`. **Resolved (2026-11-03).** |
+| gw `GW_Maths::ludcmp`/`lubksb` (Numerical Recipes, inside MeshLib) | Numerical Recipes code; not openly licensed | **Not translated.** `mesh/interpolation.py::_lu_solve` implements the same published algorithm (Crout LU with implicit pivoting) independently, after the upstream routine was read. **Kept by owner decision (Q21, 2026-11-05)**; LAPACK (max deviation 2.1e-13) is the measured fallback. |
 | SurfRemesh | no license file | Not ported (not used on the MaCRUISE route). |
 | Parcellation models, registration templates | dataset terms (HCP, OASIS, Mindboggle) | Not in git. Fetched on demand once redistribution is cleared ([licensing.md](licensing.md)). |
 
-All code rows are resolved as of 2026-11-03. Redistribution of the models and
+All code rows are resolved as of 2026-11-05. Redistribution of the models and
 templates is still open; they are not in git, so it does not block publishing the code.

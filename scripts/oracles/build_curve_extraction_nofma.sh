@@ -35,8 +35,8 @@ mkdir -p "$OUT/bin" "$OUT/obj"
   $CXX $FLAGS -D_USE_OPENMP -I"$SHIM" -I"$CLI" -I"$CE/src" $INC '-DTRACE_VERSION="v1.1.2"' \
     "$CE"/src/GyralCurve.cpp "$CE"/src/GyralPoint.cpp "$CE"/src/SulcalCurve.cpp "$CE"/src/SulcalPoint.cpp \
     "$CE"/src/Extraction.cpp "$CE/wrapper/main.cpp" ../libMesh.a -o "$OUT/bin/CurveExtraction"
-  # harnesses (geodesic distances / paths, slicer contours, curvature direction fields)
-  for h in harness_geodesic harness_slicer; do
+  # harnesses (geodesic distances / paths, slicer contours, gw triangular interpolation)
+  for h in harness_geodesic harness_slicer harness_interpolation; do
     [ -f "$HERE/$h.cpp" ] && $CXX $FLAGS $INC "$HERE/$h.cpp" ../libMesh.a -o "$OUT/bin/$h"
   done
 } > "$OUT/build.log" 2>&1 || { cat "$OUT/build.log" >&2; exit 1; }

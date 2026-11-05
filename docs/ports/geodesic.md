@@ -16,7 +16,7 @@ Only the call graph reached from CurveExtraction (`SulcalCurve::{detectNearestPo
 | heap functions | `std::make_heap/push_heap/pop_heap` with `GW_GeodesicVertex::CompareVertex` |
 | `GeodesicPath` | `Geodesic/GeodesicPath.cpp` |
 
-Not ported (not reached): `GeodesicA`, `GW_GeodesicMeshA`, `GW_Parameterization`, Voronoi/atlas code,
+Not ported (not reached): `GeodesicA`, `GW_GeodesicMeshA`, `GW_Parameterization`, Voronoi/atlas code (these three do not compile upstream; B2.8, Q20), the triangular interpolations (ported separately, [interpolation.md](interpolation.md)),
 `ComputeUpdate_MatrixMethod` (`USE_SETHIAN` is defined), the heuristic/`L` callbacks.
 
 ## Semantics reproduced

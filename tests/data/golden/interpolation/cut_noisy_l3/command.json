@@ -1,0 +1,24 @@
+{
+  "tool": "harness_interpolation (scripts/oracles/harness_interpolation.cpp)",
+  "argv": [
+    "harness_interpolation",
+    "mesh.vtk",
+    "dist.txt",
+    "queries.txt",
+    "out.txt"
+  ],
+  "fixture": {
+    "mesh": "cut_sphere",
+    "level": 3,
+    "z_cut": 0.5,
+    "sigma": 0.02,
+    "noise_seed": 7,
+    "radius": 30.0,
+    "source": 5,
+    "seed": 20261106,
+    "n_fixed": 32
+  },
+  "meshlib": "dcef807",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.4.1.1) -O2 -std=c++11 -DNDEBUG -ffp-contract=off",
+  "oracle": "upstream-macos-arm64 (-ffp-contract=off)"
+}
