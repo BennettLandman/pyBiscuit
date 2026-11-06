@@ -5,18 +5,45 @@ from __future__ import annotations
 import nibabel as nib
 import numpy as np
 from nibabel import gifti
+from nibabel.nifti1 import xform_codes
 
 from pybiscuit.mesh.model import Mesh
 
+# GIfTI coordinate-system dataspace -> Mesh.frame (others leave the frame unknown)
+_DATASPACE_FRAME = {
+    "NIFTI_XFORM_SCANNER_ANAT": "RAS",
+    "NIFTI_XFORM_TALAIRACH": "Talairach",
+    "NIFTI_XFORM_MNI_152": "MNI",
+}
+_FRAME_DATASPACE = {v: k for k, v in _DATASPACE_FRAME.items()}
+# metadata keys copied into mesh.meta["gifti"] (image-level, then POINTSET-level)
+_META_KEYS = ("AnatomicalStructurePrimary", "AnatomicalStructureSecondary", "GeometricType")
+
+
+def _xform_name(code) -> str:
+    return xform_codes.niistring[xform_codes.code[code]]
+
 
 def read_gifti(path) -> Mesh:
+    """Read a GIfTI surface (POINTSET + TRIANGLE); other arrays become ``point_data``.
+
+    ``mesh.frame`` follows the POINTSET dataspace (scanner -> ``"RAS"``); vertices are
+    returned as stored, never transformed. ``mesh.meta["gifti"]`` holds the anatomical
+    metadata and the coordinate system (``dataspace``, ``xformspace``, ``xform``).
+    """
     img = nib.load(str(path))
     verts = faces = None
     point_data: dict[str, np.ndarray] = {}
+    info: dict = {k: v for k, v in (img.meta or {}).items() if k in _META_KEYS}
     for i, da in enumerate(img.darrays):
         intent = gifti.gifti.intent_codes.niistring[da.intent] if da.intent else ""
         if intent == "NIFTI_INTENT_POINTSET":
             verts = da.data
+            info.update({k: v for k, v in (da.meta or {}).items() if k in _META_KEYS})
+            if da.coordsys is not None:
+                info["dataspace"] = _xform_name(da.coordsys.dataspace)
+                info["xformspace"] = _xform_name(da.coordsys.xformspace)
+                info["xform"] = np.asarray(da.coordsys.xform, float).tolist()
         elif intent == "NIFTI_INTENT_TRIANGLE":
             faces = da.data
         else:
@@ -24,15 +51,20 @@ def read_gifti(path) -> Mesh:
             point_data[name] = np.asarray(da.data)
     if verts is None or faces is None:
         raise ValueError(f"{path}: missing POINTSET or TRIANGLE array")
-    return Mesh(verts, faces, point_data, units="mm")
+    frame = _DATASPACE_FRAME.get(info.get("dataspace"))
+    return Mesh(verts, faces, point_data, frame=frame, units="mm", meta={"gifti": info})
 
 
 def write_gifti(path, mesh: Mesh) -> None:
+    """Write ``mesh`` (float32 vertices); a known ``mesh.frame`` sets the POINTSET dataspace."""
+    space = _FRAME_DATASPACE.get(mesh.frame)
+    cs = gifti.GiftiCoordSystem(dataspace=space, xformspace=space) if space else None
     arrays = [
         gifti.GiftiDataArray(
             mesh.vertices.astype(np.float32),
             intent="NIFTI_INTENT_POINTSET",
             datatype="NIFTI_TYPE_FLOAT32",
+            coordsys=cs,
         ),
         gifti.GiftiDataArray(
             mesh.faces.astype(np.int32), intent="NIFTI_INTENT_TRIANGLE", datatype="NIFTI_TYPE_INT32"

@@ -16,11 +16,10 @@ from pathlib import Path
 import numpy as np
 
 from pybiscuit.io import (
-    read_gifti,
     read_label_gii,
     read_protocol_table,
+    read_surface,
     read_vertex_txt,
-    read_vtk,
 )
 from pybiscuit.io.labels import LabelTable
 from pybiscuit.mesh.model import Mesh
@@ -82,8 +81,8 @@ def load_scenes(files, hemi: str | None = None, parc: str | None = None) -> dict
         h = _hemi_of(f, hemi)
         sc = scenes.setdefault(h, Scene(h))
         name = f.name
-        if name.endswith(".surf.gii") or name.endswith(".vtk"):
-            m = read_gifti(f) if name.endswith(".gii") else read_vtk(f)
+        if name.endswith((".surf.gii", ".vtk", ".asc")):
+            m = read_surface(f)
             sc.surfaces[_stem(f, h)] = m
             for k, v in m.point_data.items():  # VTK scalars become measures
                 if np.asarray(v).ndim == 1:

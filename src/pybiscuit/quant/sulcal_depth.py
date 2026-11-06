@@ -24,7 +24,7 @@ import numpy as np
 from numba import njit
 from scipy import ndimage
 
-from ..io import read_vtk
+from ..io import read_surface
 from ..mesh import Mesh
 from ._voxelise import voxelise
 from .hull import (
@@ -246,7 +246,7 @@ def sulcal_depth(
     surface, *, pad: int = PAD, scale: float = SCALE, seeds_outside_mask: str = "drop"
 ) -> np.ndarray:
     """Per-vertex sulcal depth (mm) of a pial surface (:class:`Mesh` or VTK path)."""
-    mesh = surface if isinstance(surface, Mesh) else read_vtk(surface)
+    mesh = surface if isinstance(surface, Mesh) else read_surface(surface)
     volume0, hull, v = outer_hull_volumes(mesh.vertices, mesh.faces, pad, scale)
     field = _field(volume0, hull)
     d = bwdistgeodesic(field, bwperim(hull, 18), seeds_outside_mask=seeds_outside_mask)

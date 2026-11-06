@@ -33,7 +33,7 @@ from pathlib import Path
 import numpy as np
 from numba import njit
 
-from pybiscuit.io import read_vtk
+from pybiscuit.io import read_surface
 from pybiscuit.mesh import Mesh
 from pybiscuit.sphere.aabb import SphereAABB
 from pybiscuit.sphere.spharm import basis, read_sh_coefficients, synthesize
@@ -184,10 +184,7 @@ def _unit_rows(v: np.ndarray) -> np.ndarray:
 def _load_mesh(m) -> tuple[np.ndarray, np.ndarray]:
     """float32 vertices (MeshLib ``float``) and int32 faces from a path or ``Mesh``."""
     if not isinstance(m, Mesh):
-        p = str(m)
-        if not p.endswith("vtk"):
-            raise ValueError(f"{p}: unsupported format (only .vtk is supported)")
-        m = read_vtk(p)
+        m = read_surface(m)
     return m.vertices.astype(np.float32), np.ascontiguousarray(m.faces, dtype=np.int32)
 
 

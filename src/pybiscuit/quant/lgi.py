@@ -30,7 +30,7 @@ from pathlib import Path
 import numpy as np
 from numba import njit
 
-from ..io import read_vtk
+from ..io import read_surface
 from ..mesh import Mesh
 from ..mesh.curvature import _eig3
 from ..mesh.geometry import vertex_areas, vertex_neighbor_lists
@@ -392,7 +392,7 @@ class LgiResult:
 
 
 def _as_mesh(m) -> Mesh:
-    return m if isinstance(m, Mesh) else read_vtk(m)
+    return m if isinstance(m, Mesh) else read_surface(m)
 
 
 def gyrification(

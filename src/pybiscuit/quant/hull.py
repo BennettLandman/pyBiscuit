@@ -29,7 +29,7 @@ from scipy import ndimage, sparse
 from scipy.sparse import csgraph
 from scipy.spatial import cKDTree
 
-from ..io import read_vtk, write_vtk
+from ..io import read_surface, write_vtk
 from ..mesh import Mesh
 from . import _mc_tables
 from ._voxelise import voxelise
@@ -464,7 +464,7 @@ def outer_hull(surface, *, grid: int = GRID, icp: bool = True) -> Mesh:
     ``surface``: :class:`Mesh` or VTK path.  ``grid``: voxels along the longest side (256 in the
     script).  ``icp=False`` skips the final rigid registration (diagnostics only).
     """
-    mesh = surface if isinstance(surface, Mesh) else read_vtk(surface)
+    mesh = surface if isinstance(surface, Mesh) else read_surface(surface)
     v = np.asarray(mesh.vertices, dtype=np.float64)
     f = np.asarray(mesh.faces, dtype=np.int64)
     ext = v.max(axis=0) - v.min(axis=0)

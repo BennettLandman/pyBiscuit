@@ -2,6 +2,8 @@
 
 ## Status
 
+**2026-11-06.** B2.1 follow-up: `io/surface.py` (`read_surface`/`write_surface`, dispatch on .vtk/.gii/.asc/FreeSurfer magic) now feeds the tool entry points (mesh-property, mesh-deform, trace, sci, lgi, outer-hull, sulcal-depth, lgi-pipeline, klaplace, spherical-remesh, hemi-split/mesh-contour, view/render), so they take GIfTI input; `read_gifti` keeps frame (POINTSET dataspace) and anatomical metadata, `write_gifti` writes the frame. New `pybiscuit surf-info` (`mesh/info.py`) summarises topology, geometry and per-vertex arrays (tests/test_io_surface.py; mesh-property on 0050971 `lh.white.reg.vtk` and its `.surf.gii` copy gives byte-identical output). Uncommitted.
+
 **2026-11-05.** B2.7: gw triangular interpolation (linear, quadratic, "cubic") ported and checked against a MeshLib harness, bit-identical apart from macOS's fused sincos ([note](docs/ports/interpolation.md)). B2.8 (gw Voronoi mesh, atlas, parameterization) blocked: upstream does not build them (Q20). Q21: owner kept the bit-exact LU solve. B7.6 SphericalLabeling training ported (B7.7 blocked on Q18). Uncommitted.
 
 **2026-11-04.** B6.8: HSD landmark term, location features and BOBYQA pole search ported as opt-in `pybiscuit hsd` options (not in the image binary), validated against an oracle built with the options enabled; BOBYQA translated from NLopt's MIT version, not `bobyqa.h` (Q19, accepted by the owner 2026-11-05) ([report](docs/reports/hsd-landmarks-2026-11-04.md)). Uncommitted.

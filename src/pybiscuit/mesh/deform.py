@@ -381,9 +381,9 @@ def run_mesh_deform(
     rng: np.random.Generator | None = None,
 ) -> MeshDeformResult:
     """Run ``MeshDeform`` on ``input_path`` and optionally write ``output_path``."""
-    from pybiscuit.io.vtk import read_vtk
+    from pybiscuit.io.surface import read_surface
 
-    mesh = read_vtk(input_path)
+    mesh = read_surface(input_path)
     res = mesh_deform(
         mesh,
         matrix=matrix,

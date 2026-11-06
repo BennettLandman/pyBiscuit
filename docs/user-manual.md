@@ -154,7 +154,27 @@ For backwards-compatibility with existing SLURM batch scripts, cluster pipelines
 
 ## 4. Standalone CLI Tools
 
-Each core algorithm can also be invoked as a standalone CLI utility:
+Each core algorithm can also be invoked as a standalone CLI utility.
+
+Surface inputs: wherever a tool takes an input surface (`-i`, `--inputSurface`,
+positional mesh), it accepts legacy VTK (`.vtk`, `.vtk.gz`), GIfTI (`.gii`, e.g.
+`lh.white.surf.gii`), FreeSurfer ASCII (`.asc`, read as scanner RAS) or a FreeSurfer
+binary surface (`lh.white`, detected by its magic number). Outputs keep the original
+binary's formats. GIfTI vertices are float32, so a double-precision VTK input converted
+to GIfTI is rounded; results from a float VTK and its GIfTI copy are identical.
+
+### Surface Information (`pybiscuit surf-info`)
+```bash
+# Counts, Euler characteristic/genus, components, boundary loops, manifold and orientation
+# flags, bounding box, area, edge lengths, enclosed volume and normal direction (closed
+# surfaces), per-vertex arrays, and GIfTI metadata (structure, geometric type, dataspace)
+pybiscuit surf-info lh.white.surf.gii rh.pial.vtk lh.sphere
+
+# Machine-readable output; data-only GIfTI files (*.func.gii, *.label.gii) list their arrays
+pybiscuit surf-info --json lh.white.surf.gii lh.curv.func.gii
+```
+Python: `pybiscuit.io.read_surface` / `write_surface` dispatch on format, and
+`pybiscuit.mesh.info.surface_info(mesh)` returns the same summary as a dict.
 
 ### HSD Registration (`pybiscuit hsd` / `pybiscuit register`)
 ```bash

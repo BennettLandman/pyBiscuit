@@ -676,9 +676,9 @@ def run_mesh_property(
     invert: bool = False,
 ) -> MeshPropertyResult:
     """Run ``MeshProperty`` on ``input_path`` and write requested outputs to ``output_prefix``."""
-    from pybiscuit.io.vtk import read_vtk
+    from pybiscuit.io.surface import read_surface
 
-    mesh = read_vtk(input_path)
+    mesh = read_surface(input_path)
     res = mesh_property(
         mesh,
         curvedness=curvedness,

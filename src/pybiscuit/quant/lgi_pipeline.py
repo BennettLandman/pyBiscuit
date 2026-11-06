@@ -25,7 +25,7 @@ import numba
 import numpy as np
 from scipy.spatial import cKDTree
 
-from ..io import read_vtk, write_vtk
+from ..io import read_surface, write_vtk
 from ..mesh import Mesh
 from ..mesh.geometry import vertex_areas
 from .hull import outer_hull
@@ -146,7 +146,7 @@ def lgi_pipeline(
     out_dir = Path(out_dir)
     tmp = out_dir / f"tmp-lgi-{hemi}.gray"
     tmp.mkdir(parents=True, exist_ok=True)
-    surf = read_vtk(pial)
+    surf = read_surface(pial)
     if hull is None and outer is None:
         hull = outer_hull(surf)
     if outer is None:

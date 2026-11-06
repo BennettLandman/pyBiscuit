@@ -14,6 +14,11 @@ def main(argv: list[str] | None = None) -> int:
     sub = p.add_subparsers(dest="cmd")
     sub.add_parser("info", help="print versions and asset registry status")
     sub.add_parser(
+        "surf-info",
+        help="summarise surfaces (.vtk, .gii, .asc, FreeSurfer) and GIfTI data files",
+        add_help=False,
+    )
+    sub.add_parser(
         "spherical-remesh",
         help="port of SphericalRemesh (same flags as the original binary; see its --help)",
         add_help=False,
@@ -32,7 +37,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     argv = list(sys.argv[1:] if argv is None else argv)
     _known = {
-        "info", "spherical-remesh", "trace", "hsd", "register", "fetch-assets",
+        "info", "surf-info", "spherical-remesh", "trace", "hsd", "register", "fetch-assets",
         "lgi", "outer-hull", "sulcal-depth", "lgi-pipeline", "sci", "klaplace",
         "run", "view", "render", "report", "cohort",
         "mesh-contour", "hemi-split", "mesh-property", "mesh-deform", "parc", "stats",
@@ -42,6 +47,10 @@ def main(argv: list[str] | None = None) -> int:
         from .pipeline.cli import main as run_main
 
         return run_main(argv)
+    if argv and argv[0] == "surf-info":
+        from .mesh.info import main as surf_info_main
+
+        return surf_info_main(argv[1:])
     if argv and argv[0] == "fetch-assets":
         from .assets import fetch_assets_main
 

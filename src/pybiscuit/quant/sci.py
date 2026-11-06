@@ -31,7 +31,7 @@ from pathlib import Path
 import numpy as np
 from numba import njit
 
-from ..io.vtk import read_vtk
+from ..io.surface import read_surface
 from ..mesh.curvature import curvature
 from ..mesh.geodesic import GeodesicSolver, _march, _reset
 from ..mesh.geometry import smooth_vertices
@@ -210,7 +210,7 @@ def shape_complexity_index(
     np.ndarray:
         float32 array of shape (N,) containing per-vertex Shape Complexity Index in [0, 1].
     """
-    mesh = read_vtk(mesh_or_path) if not isinstance(mesh_or_path, Mesh) else mesh_or_path
+    mesh = read_surface(mesh_or_path) if not isinstance(mesh_or_path, Mesh) else mesh_or_path
 
     # Step 1: 2 iterations of Laplacian (NN mean) smoothing
     smoothed_v = smooth_vertices(mesh.vertices, faces=mesh.faces, iterations=2)

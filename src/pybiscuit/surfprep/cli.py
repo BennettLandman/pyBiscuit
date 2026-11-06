@@ -14,14 +14,9 @@ from pybiscuit.surfprep.contour import DEFAULT_RULE, PLANE_RULES, mesh_contour
 
 
 def _read_surface(path) -> object:
-    path = Path(path)
-    if path.suffix == ".asc":
-        from pybiscuit.io.freesurfer import read_asc
+    from pybiscuit.io.surface import read_surface
 
-        return read_asc(path, frame="RAS")
-    from pybiscuit.io.vtk import read_vtk
-
-    return read_vtk(path)
+    return read_surface(path)  # .asc is read as scanner RAS (MaCRUISE)
 
 
 def mesh_contour_main(argv: list[str]) -> int:

@@ -34,6 +34,7 @@ import numpy as np
 from numba import njit, prange
 from scipy.spatial import cKDTree
 
+from ..io.surface import read_surface
 from ..io.vtk import read_vtk, write_vtk
 from ..mesh.model import Mesh
 from ._voxelise import _internal
@@ -232,8 +233,8 @@ def surface_correspondence(
         Warped surface with identical vertex count and face connectivity as ``surface``,
         whose vertices lie on the ``hull`` boundary.
     """
-    src = read_vtk(surface) if not isinstance(surface, Mesh) else surface
-    dst = read_vtk(hull) if not isinstance(hull, Mesh) else hull
+    src = read_surface(surface) if not isinstance(surface, Mesh) else surface
+    dst = read_surface(hull) if not isinstance(hull, Mesh) else hull
 
     # 1. Grid bounds from destination (hull) surface
     dst_v = np.ascontiguousarray(dst.vertices, dtype=np.float64)

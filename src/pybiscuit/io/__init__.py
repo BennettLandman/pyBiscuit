@@ -26,6 +26,7 @@ from .gifti import (
 )
 from .labels import LabelTable, read_label_table, read_protocol_table
 from .stats import read_stats_tsv, write_stats_tsv
+from .surface import read_surface, surface_format, write_surface
 from .txt import read_vertex_txt, write_vertex_txt
 from .vtk import read_vtk, write_vtk
 
@@ -35,6 +36,9 @@ __all__ = [
     "read_label_table",
     "read_protocol_table",
     "read_stats_tsv",
+    "read_surface",
+    "surface_format",
+    "write_surface",
     "write_func_gii",
     "write_label_gii",
     "write_stats_tsv",

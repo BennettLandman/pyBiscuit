@@ -18,7 +18,7 @@ from pathlib import Path
 
 import numpy as np
 
-from ..io import read_vtk
+from ..io import read_surface
 from ..mesh.geodesic import GeodesicPath, GeodesicSolver
 from ..mesh.geometry import smooth_vertices
 from .curves import Curves
@@ -194,7 +194,7 @@ def main(argv=None) -> int:
     if not a.sulcus and not a.gyrus:
         print("Specify at least one extraction type! --sulcus / --gyrus")
         return -1
-    mesh = read_vtk(a.inputSurface)
+    mesh = read_surface(a.inputSurface)
     out = a.outputCurve
     ip = None
     if a.inputPoints:
