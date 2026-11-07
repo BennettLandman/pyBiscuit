@@ -3,7 +3,7 @@
 Python-native port of **BISCUIT** (Brain Shape Computing Toolbox; Ilwoo Lyu) and
 the CMorph tools it wraps, packaged as one `pip`-installable library and CLI.
 pyBiscuit takes the cortical surfaces and labels produced by
-[PyMaCRUISE](https://github.com/BennettLandman/pymacruise) and produces
+[PyMaCRUISE](https://github.com/BennettLandman/pyMaCruise) and produces
 spherical registration, cortical parcellation, sulcal/gyral curves (TRACE), and
 per-vertex, per-ROI, and per-curve shape measures (curvature, shape index,
 thickness, sulcal depth, local gyrification index, shape complexity index),
